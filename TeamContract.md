@@ -81,4 +81,4 @@ By signing below, we acknowledge that we have read, discussed, and agreed to the
 
 Team Member Signatures:
 
-Hyde Yoo, Mark Peng, Ryan Yang, Boyan Litchev, Steven Zhuang
+Hyde Yoo, Mark Peng, Ryan Yang, Boyan Litchev, Steven Zhuang, Jaehyuk Ryu
