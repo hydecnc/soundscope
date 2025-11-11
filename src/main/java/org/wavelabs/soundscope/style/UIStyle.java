@@ -66,7 +66,7 @@ public class UIStyle {
         public static final int WINDOW_WIDTH = 900;
         public static final int WINDOW_HEIGHT = 500;
         public static final int WAVEFORM_WIDTH = 800;
-        public static final int WAVEFORM_HEIGHT = 200;
+        public static final int WAVEFORM_HEIGHT = 100; // Standard height for waveform display
     }
 
     // ========== Borders ==========

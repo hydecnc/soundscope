@@ -16,6 +16,18 @@
 
     <dependencies>
         <!-- Swing is included in the JDK, no external dependencies needed -->
+        
+        <!-- MP3 support library -->
+        <dependency>
+            <groupId>org.tritonus</groupId>
+            <artifactId>tritonus-share</artifactId>
+            <version>0.3.7-2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.soundlibs</groupId>
+            <artifactId>mp3spi</artifactId>
+            <version>1.9.5.4</version>
+        </dependency>
     </dependencies>
 
     <build>

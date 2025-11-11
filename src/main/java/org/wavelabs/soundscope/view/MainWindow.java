@@ -1,7 +1,8 @@
 package org.wavelabs.soundscope.view;
 
 import org.wavelabs.soundscope.style.UIStyle;
-import org.wavelabs.soundscope.view.components.WaveformPanel;
+import org.wavelabs.soundscope.view.components.ScrollableWaveformPanel;
+import org.wavelabs.soundscope.view.components.TimelinePanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,7 +12,8 @@ import java.awt.*;
  */
 public class MainWindow extends JFrame {
     private final TopToolbar topToolbar;
-    private final WaveformPanel waveformPanel;
+    private final ScrollableWaveformPanel waveformPanel;
+    private final TimelinePanel timelinePanel;
     private final BottomControlPanel bottomControlPanel;
     
     public MainWindow() {
@@ -19,7 +21,8 @@ public class MainWindow extends JFrame {
         
         // Create components
         topToolbar = new TopToolbar();
-        waveformPanel = new WaveformPanel();
+        timelinePanel = new TimelinePanel();
+        waveformPanel = new ScrollableWaveformPanel(timelinePanel);
         bottomControlPanel = new BottomControlPanel();
         
         // Layout components
@@ -27,8 +30,15 @@ public class MainWindow extends JFrame {
         contentPane.setLayout(new BorderLayout());
         contentPane.setBackground(UIStyle.Colors.BACKGROUND_PRIMARY);
         
+        // Create waveform container with timeline
+        JPanel waveformContainer = new JPanel(new BorderLayout());
+        waveformContainer.setBackground(UIStyle.Colors.BACKGROUND_PRIMARY);
+        waveformContainer.add(waveformPanel, BorderLayout.CENTER);
+        waveformContainer.add(waveformPanel.getHorizontalScrollBar(), BorderLayout.SOUTH);
+        waveformContainer.add(timelinePanel, BorderLayout.NORTH);
+        
         contentPane.add(topToolbar, BorderLayout.NORTH);
-        contentPane.add(waveformPanel, BorderLayout.CENTER);
+        contentPane.add(waveformContainer, BorderLayout.CENTER);
         contentPane.add(bottomControlPanel, BorderLayout.SOUTH);
     }
     
@@ -44,8 +54,12 @@ public class MainWindow extends JFrame {
         return topToolbar;
     }
     
-    public WaveformPanel getWaveformPanel() {
+    public ScrollableWaveformPanel getWaveformPanel() {
         return waveformPanel;
+    }
+    
+    public TimelinePanel getTimelinePanel() {
+        return timelinePanel;
     }
     
     public BottomControlPanel getBottomControlPanel() {
