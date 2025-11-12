@@ -1,9 +1,8 @@
-package org.wavelabs.soundscope.view.components;
+package org.wavelabs.soundscope.framework.ui.components;
 
-import org.wavelabs.soundscope.style.UIStyle;
+import org.wavelabs.soundscope.framework.style.UIStyle;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 

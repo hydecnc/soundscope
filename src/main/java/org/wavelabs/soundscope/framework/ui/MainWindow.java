@@ -1,8 +1,8 @@
-package org.wavelabs.soundscope.view;
+package org.wavelabs.soundscope.framework.ui;
 
-import org.wavelabs.soundscope.style.UIStyle;
-import org.wavelabs.soundscope.view.components.ScrollableWaveformPanel;
-import org.wavelabs.soundscope.view.components.TimelinePanel;
+import org.wavelabs.soundscope.framework.style.UIStyle;
+import org.wavelabs.soundscope.framework.ui.components.ScrollableWaveformPanel;
+import org.wavelabs.soundscope.framework.ui.components.TimelinePanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,18 +19,15 @@ public class MainWindow extends JFrame {
     public MainWindow() {
         initializeWindow();
         
-        // Create components
         topToolbar = new TopToolbar();
         timelinePanel = new TimelinePanel();
         waveformPanel = new ScrollableWaveformPanel(timelinePanel);
         bottomControlPanel = new BottomControlPanel();
         
-        // Layout components
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
         contentPane.setBackground(UIStyle.Colors.BACKGROUND_PRIMARY);
         
-        // Create waveform container with timeline
         JPanel waveformContainer = new JPanel(new BorderLayout());
         waveformContainer.setBackground(UIStyle.Colors.BACKGROUND_PRIMARY);
         waveformContainer.add(waveformPanel, BorderLayout.CENTER);
@@ -49,7 +46,6 @@ public class MainWindow extends JFrame {
         setLocationRelativeTo(null);
     }
     
-    // Getters for component access
     public TopToolbar getTopToolbar() {
         return topToolbar;
     }

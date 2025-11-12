@@ -1,7 +1,8 @@
-package org.wavelabs.soundscope.model;
+package org.wavelabs.soundscope.domain;
 
 /**
- * Data class to hold audio information and samples.
+ * Entity representing audio data.
+ * Pure domain object with no external dependencies.
  */
 public class AudioData {
     private final double[] amplitudeSamples;
@@ -39,9 +40,6 @@ public class AudioData {
         return channels;
     }
     
-    /**
-     * Gets the duration in seconds.
-     */
     public double getDurationSeconds() {
         return durationMillis / 1000.0;
     }

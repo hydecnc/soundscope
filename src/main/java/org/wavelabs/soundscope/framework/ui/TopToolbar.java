@@ -1,7 +1,7 @@
-package org.wavelabs.soundscope.view;
+package org.wavelabs.soundscope.framework.ui;
 
-import org.wavelabs.soundscope.style.UIStyle;
-import org.wavelabs.soundscope.view.components.StyledButton;
+import org.wavelabs.soundscope.framework.style.UIStyle;
+import org.wavelabs.soundscope.framework.ui.components.StyledButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,20 +25,17 @@ public class TopToolbar extends JPanel {
             UIStyle.Spacing.TOOLBAR_PADDING
         ));
         
-        // Create buttons
         openButton = new StyledButton("Open");
         saveButton = new StyledButton("Save As");
         fingerprintButton = new StyledButton("Fingerprint");
         identifyButton = new StyledButton("Identify");
         
-        // Add buttons to toolbar
         add(openButton);
         add(saveButton);
         add(fingerprintButton);
         add(identifyButton);
     }
     
-    // Getters for button access
     public StyledButton getOpenButton() {
         return openButton;
     }

@@ -1,7 +1,7 @@
-package org.wavelabs.soundscope.view;
+package org.wavelabs.soundscope.framework.ui;
 
-import org.wavelabs.soundscope.style.UIStyle;
-import org.wavelabs.soundscope.view.components.StyledButton;
+import org.wavelabs.soundscope.framework.style.UIStyle;
+import org.wavelabs.soundscope.framework.ui.components.StyledButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +24,6 @@ public class BottomControlPanel extends JPanel {
             UIStyle.Spacing.BOTTOM_PADDING
         ));
         
-        // Output label
         outputLabel = new JLabel();
         outputLabel.setFont(UIStyle.Fonts.DEFAULT);
         outputLabel.setForeground(UIStyle.Colors.TEXT_PRIMARY);
@@ -32,7 +31,6 @@ public class BottomControlPanel extends JPanel {
         outputLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, UIStyle.Spacing.MD, 0));
         setOutputText("Most similar to \"Viva La Vida\"<br>Fingerprint: abE671deF");
         
-        // Control buttons panel
         JPanel controlButtons = new JPanel(new FlowLayout(
             FlowLayout.CENTER,
             UIStyle.Spacing.CONTROL_BUTTONS_GAP,
@@ -46,19 +44,14 @@ public class BottomControlPanel extends JPanel {
         controlButtons.add(playButton);
         controlButtons.add(recordButton);
         
-        // Add components
         add(outputLabel);
         add(controlButtons);
     }
     
-    /**
-     * Sets the output text with HTML formatting for center alignment.
-     */
     public void setOutputText(String text) {
         outputLabel.setText("<html><center>" + text + "</center></html>");
     }
     
-    // Getters for component access
     public JLabel getOutputLabel() {
         return outputLabel;
     }

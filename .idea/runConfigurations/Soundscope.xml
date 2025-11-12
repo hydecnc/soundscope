@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Soundscope" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="org.wavelabs.soundscope.Main" />
-    <module name="soundscope" />
-    <method v="2">
-      <option name="Make" enabled="true" />
-    </method>
-  </configuration>
-</component>
