@@ -5,10 +5,6 @@ import org.wavelabs.soundscope.view.UIStyle;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 
 /**
  * Scrollable waveform panel that displays a 10-second window of audio.
@@ -29,6 +25,7 @@ public class ScrollableWaveformPanel extends JPanel {
     private JScrollBar horizontalScrollBar;
     private TimelinePanel timelinePanel;
     private Timer refreshTimer;
+    private boolean isUpdatingScrollbar = false;
     
     /**
      * Constructs a ScrollableWaveformPanel with the specified timeline panel.
@@ -45,9 +42,8 @@ public class ScrollableWaveformPanel extends JPanel {
         setLayout(new BorderLayout());
         
         horizontalScrollBar = new JScrollBar(JScrollBar.HORIZONTAL, 0, 100, 0, 100);
-        horizontalScrollBar.addAdjustmentListener(new AdjustmentListener() {
-            @Override
-            public void adjustmentValueChanged(AdjustmentEvent e) {
+        horizontalScrollBar.addAdjustmentListener(e -> {
+            if (!isUpdatingScrollbar) {
                 updateViewFromScrollbar();
             }
         });
@@ -61,12 +57,7 @@ public class ScrollableWaveformPanel extends JPanel {
      * The timer fires every 10ms to ensure smooth visual updates.
      */
     private void startRefreshTimer() {
-        refreshTimer = new Timer(10, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                repaint();
-            }
-        });
+        refreshTimer = new Timer(10, e -> repaint());
         refreshTimer.setRepeats(true);
         refreshTimer.start();
     }
@@ -89,9 +80,13 @@ public class ScrollableWaveformPanel extends JPanel {
         if (audioData != null) {
             this.waveformData = audioData.getAmplitudeSamples();
             this.durationSeconds = audioData.getDurationSeconds();
-            updateScrollbarRange();
-            viewStartTime = 0;
-            horizontalScrollBar.setValue(0);
+            
+            isUpdatingScrollbar = true;
+            try {
+                updateScrollbarRange();
+            } finally {
+                isUpdatingScrollbar = false;
+            }
         } else {
             this.waveformData = null;
             this.durationSeconds = 0;
@@ -107,17 +102,23 @@ public class ScrollableWaveformPanel extends JPanel {
     /**
      * Updates the horizontal scrollbar range based on the audio duration.
      * Disables scrolling if the audio fits within the visible window.
+     * Preserves the current scroll position when updating the range.
      */
     private void updateScrollbarRange() {
         if (durationSeconds <= viewDuration) {
             horizontalScrollBar.setEnabled(false);
             horizontalScrollBar.setMaximum(100);
             horizontalScrollBar.setVisibleAmount(100);
+            horizontalScrollBar.setValue(0);
         } else {
             horizontalScrollBar.setEnabled(true);
             int maxValue = (int) ((durationSeconds - viewDuration) * 100);
+            int currentScrollValue = (int) ((viewStartTime / (durationSeconds - viewDuration)) * maxValue);
+            currentScrollValue = Math.max(0, Math.min(currentScrollValue, maxValue));
+            
             horizontalScrollBar.setMaximum(maxValue + 100);
             horizontalScrollBar.setVisibleAmount(100);
+            horizontalScrollBar.setValue(currentScrollValue);
         }
     }
     
@@ -131,8 +132,14 @@ public class ScrollableWaveformPanel extends JPanel {
         } else {
             int scrollValue = horizontalScrollBar.getValue();
             int scrollMax = horizontalScrollBar.getMaximum() - horizontalScrollBar.getVisibleAmount();
-            double scrollRatio = scrollMax > 0 ? (double) scrollValue / scrollMax : 0;
-            viewStartTime = scrollRatio * (durationSeconds - viewDuration);
+            
+            if (scrollMax <= 0) {
+                viewStartTime = 0;
+            } else {
+                double scrollRatio = (double) scrollValue / scrollMax;
+                double maxStartTime = durationSeconds - viewDuration;
+                viewStartTime = scrollRatio * maxStartTime;
+            }
         }
         
         repaint();
@@ -183,8 +190,6 @@ public class ScrollableWaveformPanel extends JPanel {
         int height = getHeight();
         
         double verticalPadding = 10.0;
-        double topY = verticalPadding;
-        double bottomY = height - verticalPadding;
         double usableHeight = height - (verticalPadding * 2);
         
         double samplesPerSecond = waveformData.length / durationSeconds;
@@ -239,7 +244,6 @@ public class ScrollableWaveformPanel extends JPanel {
                 normalizedAmplitude = Math.max(-maxNormalizedValue, Math.min(maxNormalizedValue, normalizedAmplitude));
                 
                 double y = centerY - (normalizedAmplitude * usableHeight / 2.0);
-                y = Math.max(topY, Math.min(bottomY, y));
                 
                 if (firstPoint) {
                     waveformPath.moveTo(x, y);
