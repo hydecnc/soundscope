@@ -132,14 +132,14 @@ public class JavaSoundAudioFileGateway implements AudioFileGateway {
      * 
      * <p>This method processes the audio bytes according to the audio format
      * (sample size, endianness, signed/unsigned) and converts them to normalized
-     * amplitude values in the range [-1.0, 1.0]. The samples are downsampled to
-     * a maximum of 3000 samples for efficient processing.
+     * amplitude values in the range [-1.0, 1.0]. Samples are downsampled to half
+     * the original count for efficient processing.
      * 
      * @param audioBytes The raw audio byte data
      * @param format The audio format specification
      * @param bytesRead The number of bytes actually read from the audio stream
      * @param channels The number of audio channels
-     * @return Array of normalized amplitude samples (downsampled to max 3000 samples)
+     * @return Array of normalized amplitude samples (downsampled to half)
      */
     private double[] convertToAmplitudeSamples(byte[] audioBytes, AudioFormat format, 
                                                int bytesRead, int channels) {
@@ -148,15 +148,12 @@ public class JavaSoundAudioFileGateway implements AudioFileGateway {
         
         int bytesPerSample = sampleSizeInBits / 8;
         int totalSamples = bytesRead / (bytesPerSample * channels);
-        
-        int maxSamples = 3000;
-        int step = Math.max(1, totalSamples / maxSamples);
-        int downsampledCount = totalSamples / step;
+        int downsampledCount = totalSamples / 2;
         
         double[] samples = new double[downsampledCount];
         
         for (int i = 0; i < downsampledCount; i++) {
-            int sampleIndex = i * step;
+            int sampleIndex = i * 2;
             int byteIndex = sampleIndex * bytesPerSample * channels;
             
             if (byteIndex + bytesPerSample * channels > bytesRead) {
