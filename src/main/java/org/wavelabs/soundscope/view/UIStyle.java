@@ -1,12 +1,22 @@
-package org.wavelabs.soundscope.framework.style;
+package org.wavelabs.soundscope.view;
 
 import java.awt.*;
 
 /**
  * Centralized UI styling constants and theme configuration.
- * All color, font, and spacing values are defined here for consistency.
+ * 
+ * <p>This class is part of the Frameworks & Drivers layer and provides
+ * a centralized location for all UI styling constants including colors,
+ * fonts, spacing, dimensions, borders, and cursors. All UI components
+ * should reference these constants to ensure visual consistency.
+ * 
+ * <p>This class cannot be instantiated and contains only static nested
+ * classes with public static final fields.
  */
 public class UIStyle {
+    /**
+     * Private constructor to prevent instantiation.
+     */
     private UIStyle() {}
 
     public static final class Colors {
@@ -20,8 +30,8 @@ public class UIStyle {
         public static final Color TEXT_PRIMARY = new Color(51, 51, 51);
         public static final Color TEXT_SECONDARY = new Color(102, 102, 102);
         
-        public static final Color WAVEFORM_STROKE = Color.RED;
-        public static final Color WAVEFORM_BACKGROUND = BACKGROUND_PRIMARY;
+        public static final Color WAVEFORM_STROKE = new Color(0, 100, 255);
+        public static final Color WAVEFORM_BACKGROUND = Color.WHITE;
     }
 
     public static final class Fonts {

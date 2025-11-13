@@ -1,4 +1,4 @@
-package org.wavelabs.soundscope.usecase;
+package org.wavelabs.soundscope.use_case.process_audio_file;
 
 /**
  * Output boundary interface for ProcessAudioFileUseCase.

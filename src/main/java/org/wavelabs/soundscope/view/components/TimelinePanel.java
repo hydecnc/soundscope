@@ -1,43 +1,81 @@
-package org.wavelabs.soundscope.framework.ui.components;
+package org.wavelabs.soundscope.view.components;
 
-import org.wavelabs.soundscope.framework.style.UIStyle;
+import org.wavelabs.soundscope.view.UIStyle;
 
 import javax.swing.*;
 import java.awt.*;
 
 /**
  * Timeline panel that displays time intervals below the waveform.
+ * 
+ * <p>This class is part of the Frameworks & Drivers layer and provides
+ * a visual timeline showing time markers (in MM:SS format) synchronized
+ * with the waveform display. It displays markers at 10-second intervals
+ * for the currently visible portion of the audio.
  */
 public class TimelinePanel extends JPanel {
     private double durationSeconds = 0;
     private double viewStartTime = 0;
     private double viewDuration = 2.0;
     
+    /**
+     * Constructs a TimelinePanel with default settings.
+     */
     public TimelinePanel() {
         setBackground(UIStyle.Colors.BACKGROUND_PRIMARY);
         setPreferredSize(new Dimension(UIStyle.Dimensions.WAVEFORM_WIDTH, 30));
         setMinimumSize(new Dimension(UIStyle.Dimensions.WAVEFORM_WIDTH, 30));
     }
     
+    /**
+     * Sets the total duration of the audio file.
+     * 
+     * @param durationSeconds The total duration in seconds
+     */
     public void setDuration(double durationSeconds) {
         this.durationSeconds = durationSeconds;
         repaint();
     }
     
+    /**
+     * Sets the visible time range for the timeline.
+     * 
+     * @param startTime The start time of the visible range in seconds
+     * @param duration The duration of the visible range in seconds
+     */
     public void setViewRange(double startTime, double duration) {
         this.viewStartTime = Math.max(0, Math.min(startTime, durationSeconds - duration));
         this.viewDuration = duration;
         repaint();
     }
     
+    /**
+     * Gets the start time of the currently visible range.
+     * 
+     * @return The start time in seconds
+     */
     public double getViewStartTime() {
         return viewStartTime;
     }
     
+    /**
+     * Gets the duration of the currently visible range.
+     * 
+     * @return The duration in seconds
+     */
     public double getViewDuration() {
         return viewDuration;
     }
     
+    /**
+     * Paints the timeline with time markers.
+     * 
+     * <p>Draws a horizontal line and time markers at 10-second intervals
+     * for the currently visible portion of the audio. Time labels are
+     * displayed in MM:SS format below each marker.
+     * 
+     * @param g The Graphics context for drawing
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -82,6 +120,12 @@ public class TimelinePanel extends JPanel {
         }
     }
     
+    /**
+     * Formats a time value in seconds to MM:SS format.
+     * 
+     * @param seconds The time in seconds
+     * @return Formatted time string in MM:SS format
+     */
     private String formatTime(double seconds) {
         int minutes = (int) (seconds / 60);
         int secs = (int) (seconds % 60);

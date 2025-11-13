@@ -1,7 +1,7 @@
-package org.wavelabs.soundscope.adapter.gateway;
+package org.wavelabs.soundscope.data_access;
 
-import org.wavelabs.soundscope.domain.AudioData;
-import org.wavelabs.soundscope.usecase.AudioFileGateway;
+import org.wavelabs.soundscope.entity.AudioData;
+import org.wavelabs.soundscope.use_case.process_audio_file.AudioFileGateway;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -13,10 +13,27 @@ import java.io.IOException;
 
 /**
  * Java Sound API implementation of AudioFileGateway.
- * Framework-specific implementation for audio file processing.
+ * Framework-specific implementation for audio file processing using Java Sound API.
+ * This class handles reading WAV audio files and converting them to PCM format.
+ * 
+ * <p>This implementation is part of the Frameworks & Drivers layer and provides
+ * the concrete implementation of the AudioFileGateway interface defined in the
+ * Use Case layer.
  */
 public class JavaSoundAudioFileGateway implements AudioFileGateway {
     
+    /**
+     * Processes an audio file and extracts amplitude samples.
+     * 
+     * <p>This method reads the audio file, converts it to PCM format if necessary,
+     * extracts amplitude samples, and returns an AudioData object containing
+     * the processed audio information.
+     * 
+     * @param file The audio file to process (must be a valid WAV file)
+     * @return AudioData containing amplitude samples and metadata (duration, sample rate, channels)
+     * @throws UnsupportedAudioFileException if the audio format is not supported by Java Sound API
+     * @throws IOException if the file cannot be read, does not exist, or is corrupted
+     */
     @Override
     public AudioData processAudioFile(File file) throws UnsupportedAudioFileException, IOException {
         if (file == null || !file.exists()) {
@@ -48,14 +65,6 @@ public class JavaSoundAudioFileGateway implements AudioFileGateway {
             }
             
             AudioFormat format = audioInputStream.getFormat();
-            
-            if (!isFormatSupported(format)) {
-                throw new UnsupportedAudioFileException(
-                    "Unsupported audio format. Please use MP3 format only. " +
-                    "Detected format: " + format.getEncoding() + ", " + format.getSampleRate() + " Hz"
-                );
-            }
-            
             int sampleRate = (int) format.getSampleRate();
             int channels = format.getChannels();
             int frameSize = format.getFrameSize();
@@ -118,18 +127,24 @@ public class JavaSoundAudioFileGateway implements AudioFileGateway {
         }
     }
     
-    private boolean isFormatSupported(AudioFormat format) {
-        AudioFormat.Encoding encoding = format.getEncoding();
-        return encoding == AudioFormat.Encoding.PCM_SIGNED ||
-               encoding == AudioFormat.Encoding.PCM_UNSIGNED ||
-               encoding == AudioFormat.Encoding.PCM_FLOAT;
-    }
-    
+    /**
+     * Converts raw audio bytes to normalized amplitude samples.
+     * 
+     * <p>This method processes the audio bytes according to the audio format
+     * (sample size, endianness, signed/unsigned) and converts them to normalized
+     * amplitude values in the range [-1.0, 1.0]. The samples are downsampled to
+     * a maximum of 3000 samples for efficient processing.
+     * 
+     * @param audioBytes The raw audio byte data
+     * @param format The audio format specification
+     * @param bytesRead The number of bytes actually read from the audio stream
+     * @param channels The number of audio channels
+     * @return Array of normalized amplitude samples (downsampled to max 3000 samples)
+     */
     private double[] convertToAmplitudeSamples(byte[] audioBytes, AudioFormat format, 
                                                int bytesRead, int channels) {
         int sampleSizeInBits = format.getSampleSizeInBits();
         boolean bigEndian = format.isBigEndian();
-        boolean signed = format.getEncoding() == AudioFormat.Encoding.PCM_SIGNED;
         
         int bytesPerSample = sampleSizeInBits / 8;
         int totalSamples = bytesRead / (bytesPerSample * channels);
@@ -139,31 +154,48 @@ public class JavaSoundAudioFileGateway implements AudioFileGateway {
         int downsampledCount = totalSamples / step;
         
         double[] samples = new double[downsampledCount];
-        double maxAmplitude = Math.pow(2, sampleSizeInBits - 1);
         
         for (int i = 0; i < downsampledCount; i++) {
             int sampleIndex = i * step;
             int byteIndex = sampleIndex * bytesPerSample * channels;
             
-            if (byteIndex + bytesPerSample > bytesRead) {
+            if (byteIndex + bytesPerSample * channels > bytesRead) {
                 break;
             }
             
-            long sampleValue = 0;
-            for (int j = 0; j < bytesPerSample; j++) {
-                int byteValue = audioBytes[byteIndex + j] & 0xFF;
-                if (bigEndian) {
-                    sampleValue = (sampleValue << 8) | byteValue;
-                } else {
-                    sampleValue = sampleValue | (byteValue << (j * 8));
+            long totalSample = 0;
+            
+            for (int c = 0; c < channels; c++) {
+                int offset = byteIndex + c * bytesPerSample;
+                
+                if (offset + bytesPerSample > bytesRead) {
+                    break;
                 }
+                
+                int sample = 0;
+                
+                if (bytesPerSample == 2) {
+                    if (bigEndian) {
+                        sample = ((audioBytes[offset] << 8) | (audioBytes[offset + 1] & 0xFF));
+                    } else {
+                        sample = ((audioBytes[offset + 1] << 8) | (audioBytes[offset] & 0xFF));
+                    }
+                    
+                    if (sample > 32767) {
+                        sample -= 65536;
+                    }
+                } else if (bytesPerSample == 1) {
+                    sample = audioBytes[offset] & 0xFF;
+                    if (sample > 127) {
+                        sample -= 256;
+                    }
+                }
+                
+                totalSample += sample;
             }
             
-            if (!signed && sampleValue >= maxAmplitude) {
-                sampleValue -= 2 * maxAmplitude;
-            }
-            
-            samples[i] = sampleValue / maxAmplitude;
+            double avgSample = totalSample / (double) channels;
+            samples[i] = avgSample / 32768.0;
         }
         
         return samples;

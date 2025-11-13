@@ -1,7 +1,7 @@
-package org.wavelabs.soundscope.framework.ui.components;
+package org.wavelabs.soundscope.view.components;
 
-import org.wavelabs.soundscope.domain.AudioData;
-import org.wavelabs.soundscope.framework.style.UIStyle;
+import org.wavelabs.soundscope.entity.AudioData;
+import org.wavelabs.soundscope.view.UIStyle;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,11 +9,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
-import java.awt.geom.Line2D;
 
 /**
  * Scrollable waveform panel that displays a 10-second window of audio.
- * Supports horizontal scrolling to view different portions of the waveform.
+ * 
+ * <p>This class is part of the Frameworks & Drivers layer and provides
+ * a custom JPanel for displaying audio waveforms. It supports horizontal
+ * scrolling to view different portions of longer audio files and synchronizes
+ * with a TimelinePanel to display time markers.
+ * 
+ * <p>The panel displays a 10-second window of the audio at a time and
+ * automatically normalizes the waveform to fit within vertical bounds.
  */
 public class ScrollableWaveformPanel extends JPanel {
     private double[] waveformData;
@@ -24,6 +30,11 @@ public class ScrollableWaveformPanel extends JPanel {
     private TimelinePanel timelinePanel;
     private Timer refreshTimer;
     
+    /**
+     * Constructs a ScrollableWaveformPanel with the specified timeline panel.
+     * 
+     * @param timelinePanel The timeline panel to synchronize with for time markers
+     */
     public ScrollableWaveformPanel(TimelinePanel timelinePanel) {
         this.timelinePanel = timelinePanel;
         setBackground(UIStyle.Colors.WAVEFORM_BACKGROUND);
@@ -45,6 +56,10 @@ public class ScrollableWaveformPanel extends JPanel {
         startRefreshTimer();
     }
     
+    /**
+     * Starts a refresh timer that continuously repaints the waveform panel.
+     * The timer fires every 10ms to ensure smooth visual updates.
+     */
     private void startRefreshTimer() {
         refreshTimer = new Timer(10, new ActionListener() {
             @Override
@@ -56,12 +71,20 @@ public class ScrollableWaveformPanel extends JPanel {
         refreshTimer.start();
     }
     
+    /**
+     * Stops the refresh timer used for continuous repainting.
+     */
     public void stopRefreshTimer() {
         if (refreshTimer != null && refreshTimer.isRunning()) {
             refreshTimer.stop();
         }
     }
     
+    /**
+     * Updates the waveform display with new audio data.
+     * 
+     * @param audioData The AudioData object containing amplitude samples and metadata
+     */
     public void updateWaveform(AudioData audioData) {
         if (audioData != null) {
             this.waveformData = audioData.getAmplitudeSamples();
@@ -81,6 +104,10 @@ public class ScrollableWaveformPanel extends JPanel {
         }
     }
     
+    /**
+     * Updates the horizontal scrollbar range based on the audio duration.
+     * Disables scrolling if the audio fits within the visible window.
+     */
     private void updateScrollbarRange() {
         if (durationSeconds <= viewDuration) {
             horizontalScrollBar.setEnabled(false);
@@ -94,6 +121,10 @@ public class ScrollableWaveformPanel extends JPanel {
         }
     }
     
+    /**
+     * Updates the visible time range based on the scrollbar position.
+     * Calculates the start time of the visible window and synchronizes with the timeline panel.
+     */
     private void updateViewFromScrollbar() {
         if (durationSeconds <= viewDuration) {
             viewStartTime = 0;
@@ -110,6 +141,10 @@ public class ScrollableWaveformPanel extends JPanel {
         }
     }
     
+    /**
+     * Generates a placeholder waveform for display when no audio file is loaded.
+     * Creates a simple sine wave pattern for visual feedback.
+     */
     private void generatePlaceholderWaveform() {
         int numSamples = 200;
         waveformData = new double[numSamples];
@@ -119,6 +154,15 @@ public class ScrollableWaveformPanel extends JPanel {
         durationSeconds = 10.0;
     }
     
+    /**
+     * Paints the waveform on the panel.
+     * 
+     * <p>Renders the audio waveform as a continuous blue line, normalizing
+     * amplitude values to fit within the panel bounds. Only displays the
+     * portion of the waveform corresponding to the current scroll position.
+     * 
+     * @param g The Graphics context for drawing
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -133,14 +177,15 @@ public class ScrollableWaveformPanel extends JPanel {
         }
         
         g2d.setColor(UIStyle.Colors.WAVEFORM_STROKE);
-        g2d.setStroke(new BasicStroke(UIStyle.Borders.WAVEFORM_STROKE_WIDTH));
+        g2d.setStroke(new BasicStroke(1.0f));
         
         int width = getWidth();
         int height = getHeight();
         
         double verticalPadding = 10.0;
-        double usableHeight = height - verticalPadding;
+        double topY = verticalPadding;
         double bottomY = height - verticalPadding;
+        double usableHeight = height - (verticalPadding * 2);
         
         double samplesPerSecond = waveformData.length / durationSeconds;
         int startSample = (int) (viewStartTime * samplesPerSecond);
@@ -179,34 +224,40 @@ public class ScrollableWaveformPanel extends JPanel {
         }
         
         double maxNormalizedValue = 0.90;
+        double centerY = height / 2.0;
         
-        for (int i = startSample; i < endSample && i < waveformData.length - 1; i++) {
-            int localIndex = i - startSample;
-            double x1 = localIndex * sampleWidth;
+        if (visibleSamples > 1) {
+            java.awt.geom.GeneralPath waveformPath = new java.awt.geom.GeneralPath();
+            boolean firstPoint = true;
             
-            double amplitude1 = Math.max(-1.0, Math.min(1.0, waveformData[i]));
-            double magnitude1 = Math.abs(amplitude1);
-            double normalizedMagnitude1 = magnitude1 * normalizationFactor;
-            normalizedMagnitude1 = Math.min(normalizedMagnitude1, maxNormalizedValue);
+            for (int i = startSample; i <= endSample && i < waveformData.length; i++) {
+                int localIndex = i - startSample;
+                double x = localIndex * sampleWidth;
+                
+                double amplitude = Math.max(-1.0, Math.min(1.0, waveformData[i]));
+                double normalizedAmplitude = amplitude * normalizationFactor;
+                normalizedAmplitude = Math.max(-maxNormalizedValue, Math.min(maxNormalizedValue, normalizedAmplitude));
+                
+                double y = centerY - (normalizedAmplitude * usableHeight / 2.0);
+                y = Math.max(topY, Math.min(bottomY, y));
+                
+                if (firstPoint) {
+                    waveformPath.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    waveformPath.lineTo(x, y);
+                }
+            }
             
-            double y1 = bottomY - (normalizedMagnitude1 * usableHeight);
-            
-            double x2 = (localIndex + 1) * sampleWidth;
-            double amplitude2 = Math.max(-1.0, Math.min(1.0, waveformData[i + 1]));
-            double magnitude2 = Math.abs(amplitude2);
-            double normalizedMagnitude2 = magnitude2 * normalizationFactor;
-            normalizedMagnitude2 = Math.min(normalizedMagnitude2, maxNormalizedValue);
-            
-            double y2 = bottomY - (normalizedMagnitude2 * usableHeight);
-            
-            double topBoundary = verticalPadding + (usableHeight * 0.10);
-            y1 = Math.max(topBoundary, Math.min(bottomY, y1));
-            y2 = Math.max(topBoundary, Math.min(bottomY, y2));
-            
-            g2d.draw(new Line2D.Double(x1, y1, x2, y2));
+            g2d.draw(waveformPath);
         }
     }
     
+    /**
+     * Gets the horizontal scroll bar for navigating through the waveform.
+     * 
+     * @return The JScrollBar component for horizontal scrolling
+     */
     public JScrollBar getHorizontalScrollBar() {
         return horizontalScrollBar;
     }

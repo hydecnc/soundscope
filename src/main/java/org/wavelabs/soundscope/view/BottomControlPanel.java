@@ -1,19 +1,24 @@
-package org.wavelabs.soundscope.framework.ui;
-
-import org.wavelabs.soundscope.framework.style.UIStyle;
-import org.wavelabs.soundscope.framework.ui.components.StyledButton;
+package org.wavelabs.soundscope.view;
+import org.wavelabs.soundscope.view.components.StyledButton;
 
 import javax.swing.*;
 import java.awt.*;
 
 /**
  * Bottom control panel containing output label and playback/recording controls.
+ * 
+ * <p>This class is part of the Frameworks & Drivers layer and provides
+ * a panel at the bottom of the main window that displays output messages
+ * and contains playback and recording control buttons.
  */
 public class BottomControlPanel extends JPanel {
     private final JLabel outputLabel;
     private final StyledButton playButton;
     private final StyledButton recordButton;
     
+    /**
+     * Constructs a BottomControlPanel with output label and control buttons.
+     */
     public BottomControlPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(UIStyle.Colors.BACKGROUND_PRIMARY);
@@ -48,18 +53,39 @@ public class BottomControlPanel extends JPanel {
         add(controlButtons);
     }
     
+    /**
+     * Sets the output text to be displayed in the label.
+     * The text is wrapped in HTML for formatting support.
+     * 
+     * @param text The text to display (may contain HTML formatting)
+     */
     public void setOutputText(String text) {
         outputLabel.setText("<html><center>" + text + "</center></html>");
     }
     
+    /**
+     * Gets the output label component.
+     * 
+     * @return The JLabel used for displaying output text
+     */
     public JLabel getOutputLabel() {
         return outputLabel;
     }
     
+    /**
+     * Gets the Play button.
+     * 
+     * @return The Play button component
+     */
     public StyledButton getPlayButton() {
         return playButton;
     }
     
+    /**
+     * Gets the Record button.
+     * 
+     * @return The Record button component
+     */
     public StyledButton getRecordButton() {
         return recordButton;
     }

@@ -1,6 +1,6 @@
-package org.wavelabs.soundscope.usecase;
+package org.wavelabs.soundscope.use_case.process_audio_file;
 
-import org.wavelabs.soundscope.domain.AudioData;
+import org.wavelabs.soundscope.entity.AudioData;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
