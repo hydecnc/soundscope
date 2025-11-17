@@ -9,7 +9,7 @@ public class SaveRecording implements SaveRecordingIB {
     private final SaveRecordingDAI saveRecordingDAO;
     private final SaveRecordingOB saveRecordingPresenter;
 
-    public SaveRecording (SaveRecordingDAI saveRecordingDAI, SaveRecordingOB saveRecordingOB) {
+    public SaveRecording(SaveRecordingDAI saveRecordingDAI, SaveRecordingOB saveRecordingOB) {
         this.saveRecordingDAO = saveRecordingDAI;
         this.saveRecordingPresenter = saveRecordingOB;
     }
@@ -20,11 +20,10 @@ public class SaveRecording implements SaveRecordingIB {
         final AudioRecording audioRecording = saveRecordingDAO.getAudioRecording();
 
         final FileSaver fileSaver = saveRecordingDAO.getFileSaver();
-        boolean success;
         try {
-            success = fileSaver.save(filePath, audioRecording);
+            boolean success = fileSaver.save(filePath, audioRecording);
         } catch (IOException ex) {
-            success = false;
+            // TODO: appropriate error handling
         }
 
         // TODO: show error according to success

@@ -14,6 +14,7 @@ public class ByteArrayFileSaver implements FileSaver {
     /**
      *
      * @param filePath path to save the data
+     * @param audioRecording the data to be saved at {@code filePath}
      * @return true iff save was success
      */
     public boolean save(String filePath, AudioRecording audioRecording) throws IOException {

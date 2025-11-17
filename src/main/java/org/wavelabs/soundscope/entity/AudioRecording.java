@@ -1,7 +1,6 @@
 package org.wavelabs.soundscope.entity;
 
 import javax.sound.sampled.AudioFormat;
-import java.io.ByteArrayOutputStream;
 
 /**
  * Audio Recording entity class.
