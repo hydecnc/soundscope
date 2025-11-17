@@ -11,7 +11,7 @@ public class JavaMicRecorder implements Recorder {
     private final AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
 
     /**
-     * Create a new JavaMicRecorder, with default audio format.
+     * Creates a new JavaMicRecorder, with default audio format.
      * At creation, checks for the audio format and audio line compatibility.
      *
      * @throws UnsupportedOperationException if the audio format is not supported
@@ -34,7 +34,7 @@ public class JavaMicRecorder implements Recorder {
     }
 
     /**
-     * Start recording by starting the line,
+     * Starts recording by starting the line,
      * and open a thread that will end as the recording ends.
      */
     @Override
@@ -75,7 +75,7 @@ public class JavaMicRecorder implements Recorder {
     public AudioFormat getAudioFormat() { return format; }
 
     /**
-     * Create a thread that will be active as long as isRecording is true.
+     * Creates a thread that will be active as long as isRecording is true.
      * At termination, line is closed.
      */
     private void startRecordingThread() {
