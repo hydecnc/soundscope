@@ -1,4 +1,4 @@
-package org.wavelabs.soundscope.use_cases.startRecording;
+package org.wavelabs.soundscope.use_case.start_recording;
 
 import org.wavelabs.soundscope.infrastructure.Recorder;
 

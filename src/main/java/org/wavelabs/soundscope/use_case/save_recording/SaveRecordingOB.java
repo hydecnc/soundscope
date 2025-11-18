@@ -1,4 +1,4 @@
-package org.wavelabs.soundscope.use_cases.saveRecording;
+package org.wavelabs.soundscope.use_case.save_recording;
 
 public interface SaveRecordingOB {
     /**

@@ -1,4 +1,4 @@
-package org.wavelabs.soundscope.use_cases.saveRecording;
+package org.wavelabs.soundscope.use_case.save_recording;
 
 import org.wavelabs.soundscope.entity.AudioRecording;
 import org.wavelabs.soundscope.infrastructure.FileSaver;

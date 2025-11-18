@@ -1,4 +1,4 @@
-package org.wavelabs.soundscope.use_cases.stopRecording;
+package org.wavelabs.soundscope.use_case.stop_recording;
 
 public interface StopRecordingOB {
     /**
