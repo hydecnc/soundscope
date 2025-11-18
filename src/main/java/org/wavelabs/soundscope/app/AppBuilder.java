@@ -22,6 +22,7 @@ public class AppBuilder {
     private final JPanel mainPanel = new JPanel();
     private final JPanel mainButtonPanel = new JPanel();
     private final JPanel titlePanel = new JPanel();
+    private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     public AppBuilder() {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
@@ -68,33 +69,55 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addPlayUseCase() {
+        JButton playPauseButton = new JButton("Play");
+
+        playPauseButton.setPreferredSize(new Dimension(400, 200));
+        mainButtonPanel.add(playPauseButton);
+        playPauseButton.addActionListener(e -> {
+            playing = !playing;
+            if(playing){
+                playPauseButton.setText("Pause");
+            }else{
+                playPauseButton.setText("Play");
+            }
+
+            // TODO: implement correct use case calls
+        });
+
+        return this;
+    }
+
     public AppBuilder addRecordUseCase() {
-        JButton fingerprintButton = new JButton("Record");
+        JButton fingerprintButton = new JButton("Start Recording");
         fingerprintButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(fingerprintButton);
+
+        FileDAO fileDAO = new FileDAO();
+        fileDAO.setFileSaver(new ByteArrayFileSaver());
+        fileDAO.setRecorder(new JavaMicRecorder());
+
+        DummyPresenter dummyPresenter = new DummyPresenter();
+
+        StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
+        StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
+        SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+
         fingerprintButton.addActionListener(e -> {
             // TODO: properly implement recording, stopping, saving
-            System.out.println("Record");
-
-            FileDAO fileDAO = new FileDAO();
-            fileDAO.setFileSaver(new ByteArrayFileSaver());
-            fileDAO.setRecorder(new JavaMicRecorder());
-
-            DummyPresenter dummyPresenter = new DummyPresenter();
-
-            StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
-            StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
-            SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
-
-            startRecording.execute();
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                ex.printStackTrace();
+            if(fileDAO.getRecorder().isRecording()){
+                stopRecording.execute();
+                saveRecording.execute(new SaveRecordingID("./output.wav"));
+                System.out.println("Recording Ended");
+            }else{
+                startRecording.execute();
             }
-            stopRecording.execute();
-            saveRecording.execute(new SaveRecordingID("./output.wav"));
-            System.out.println("Record End");
+
+            if(fileDAO.getRecorder().isRecording()){
+                fingerprintButton.setText("Stop Recording");
+            }else{
+                fingerprintButton.setText("Start Recording");
+            }
         });
 
         return this;

@@ -9,6 +9,7 @@ public class Main {
                 .addTitle()
                 .addOpenFileUseCase()
                 .addFileSaveUseCase()
+                .addPlayUseCase()
                 .addRecordUseCase()
                 .addFingerprintUseCase()
                 .addIdentifyUseCase()
