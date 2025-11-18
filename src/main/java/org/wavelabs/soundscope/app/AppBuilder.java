@@ -1,13 +1,19 @@
 package org.wavelabs.soundscope.app;
 
+import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
@@ -26,7 +32,9 @@ import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
+import org.wavelabs.soundscope.view.UIStyle;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
+import org.wavelabs.soundscope.view.components.TimelinePanel;
 
 import java.io.File;
 
@@ -36,6 +44,8 @@ public class AppBuilder {
     private final JPanel mainButtonPanel = new JPanel();
     private final JPanel titlePanel = new JPanel();
     private WaveformPanel waveformPanel;
+    private TimelinePanel timelinePanel;
+    private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
     private DisplayRecordingWaveform displayRecordingWaveformUseCase;
@@ -61,18 +71,71 @@ public class AppBuilder {
     // NOTE: Currently, this is missing controllers, presenters, view models, etc.
     public AppBuilder addWaveFormView() {
         waveformPanel = new WaveformPanel();
+        timelinePanel = new TimelinePanel();
         waveformViewModel = new WaveformViewModel();
         
         WaveformPresenter presenter = new WaveformPresenter(waveformViewModel);
         JavaSoundAudioFileGateway gateway = new JavaSoundAudioFileGateway();
         processAudioFileUseCase = new ProcessAudioFile(gateway, presenter);
         
-        mainPanel.add(waveformPanel);
+        // Create synchronized scroll panes for timeline and waveform
+        JScrollPane timelineScrollPane = new JScrollPane(timelinePanel);
+        timelineScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        timelineScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        timelineScrollPane.setBorder(null);
+        
+        waveformScrollPane = new JScrollPane(waveformPanel);
+        waveformScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        waveformScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        waveformScrollPane.setBorder(null);
+        // Ensure scrollbar is always visible when content is larger than viewport
+        waveformScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
+        
+        // Synchronize scrolling between timeline and waveform
+        timelineScrollPane.getViewport().addChangeListener(e -> {
+            JViewport timelineViewport = timelineScrollPane.getViewport();
+            JViewport waveformViewport = waveformScrollPane.getViewport();
+            waveformViewport.setViewPosition(timelineViewport.getViewPosition());
+        });
+        
+        waveformScrollPane.getViewport().addChangeListener(e -> {
+            JViewport timelineViewport = timelineScrollPane.getViewport();
+            JViewport waveformViewport = waveformScrollPane.getViewport();
+            timelineViewport.setViewPosition(waveformViewport.getViewPosition());
+        });
+        
+        // Calculate width for 30 seconds: account for 256x downsampling
+        int widthFor30Seconds = ((44100 * 30) / 256) / 8;
+        timelineScrollPane.setPreferredSize(new Dimension(
+            widthFor30Seconds,
+            30
+        ));
+        waveformScrollPane.setPreferredSize(new Dimension(
+            widthFor30Seconds,
+            UIStyle.Dimensions.WAVEFORM_HEIGHT
+        ));
+        
+        // Create container for timeline and waveform
+        JPanel waveformContainer = new JPanel(new BorderLayout());
+        waveformContainer.add(timelineScrollPane, BorderLayout.NORTH);
+        waveformContainer.add(waveformScrollPane, BorderLayout.CENTER);
+        
+        mainPanel.add(waveformContainer);
         mainPanel.add(mainButtonPanel);
         
         javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
             if (waveformViewModel.getAudioData() != null) {
                 waveformPanel.updateWaveform(waveformViewModel.getAudioData());
+                // Update timeline with same data
+                if (timelinePanel != null) {
+                    timelinePanel.updateTimeline(
+                        waveformViewModel.getAudioData().getDurationSeconds(),
+                        waveformViewModel.getAudioData().getSampleRate()
+                    );
+                }
+                // Ensure scroll pane is updated after waveform changes
+                waveformScrollPane.revalidate();
+                waveformScrollPane.repaint();
             }
         });
         timer.start();
@@ -163,6 +226,18 @@ public class AppBuilder {
             if (fileDAO.getRecorder() != null && fileDAO.getRecorder().isRecording()) {
                 DisplayRecordingWaveformID inputData = new DisplayRecordingWaveformID();
                 displayRecordingWaveformUseCase.execute(inputData);
+                // Force immediate update and auto-scroll to show latest
+                if (waveformViewModel.getAudioData() != null && waveformPanel != null) {
+                    waveformPanel.updateWaveform(waveformViewModel.getAudioData());
+                    if (timelinePanel != null) {
+                        timelinePanel.updateTimeline(
+                            waveformViewModel.getAudioData().getDurationSeconds(),
+                            waveformViewModel.getAudioData().getSampleRate()
+                        );
+                    }
+                    // Auto-scroll to show the latest part
+                    scrollToLatest(waveformPanel);
+                }
             }
         });
         recordingWaveformTimer.start();
@@ -180,9 +255,29 @@ public class AppBuilder {
                 if (savedFile.exists() && processAudioFileUseCase != null) {
                     ProcessAudioFileID inputData = new ProcessAudioFileID(savedFile);
                     processAudioFileUseCase.execute(inputData);
+                    // Ensure scroll pane is updated after loading - force revalidation
+                    SwingUtilities.invokeLater(() -> {
+                        if (waveformScrollPane != null && waveformPanel != null) {
+                            // Force the panel to update its size
+                            waveformPanel.revalidate();
+                            // Force the scroll pane to recognize the new size
+                            waveformScrollPane.revalidate();
+                            waveformScrollPane.repaint();
+                            // Force update the scrollbar
+                            JViewport viewport = waveformScrollPane.getViewport();
+                            if (viewport != null && waveformPanel.getPreferredSize().width > viewport.getWidth()) {
+                                waveformScrollPane.getHorizontalScrollBar().setEnabled(true);
+                                waveformScrollPane.getHorizontalScrollBar().setVisible(true);
+                            }
+                        }
+                    });
                 }
             }else{
                 startRecording.execute();
+                // Clear previous waveform when starting new recording
+                if (waveformPanel != null) {
+                    waveformPanel.updateWaveform(null);
+                }
             }
 
             if(fileDAO.getRecorder().isRecording()){
@@ -193,6 +288,39 @@ public class AppBuilder {
         });
 
         return this;
+    }
+    
+    /**
+     * Scrolls the scroll pane to show the latest part of the waveform during recording.
+     * Only scrolls after 30 seconds of recording.
+     */
+    private void scrollToLatest(WaveformPanel panel) {
+        Container parent = panel.getParent();
+        if (parent instanceof JViewport && waveformViewModel.getAudioData() != null) {
+            JViewport viewport = (JViewport) parent;
+            int sampleRate = waveformViewModel.getAudioData().getSampleRate();
+            // Account for 256x downsampling
+            int samplesIn30Seconds = (sampleRate * 30) / 256;
+            int widthFor30Seconds = samplesIn30Seconds / 8;
+            
+            int totalSamples = waveformViewModel.getAudioData().getAmplitudeSamples().length;
+            
+            // During recording: scroll to show the latest part continuously
+            // Calculate the x position of the latest sample
+            int latestSampleX = (int) (totalSamples * ((double) widthFor30Seconds / samplesIn30Seconds));
+            int viewportWidth = viewport.getWidth();
+            
+            // Scroll so the latest part is visible, but keep it smooth
+            if (totalSamples > samplesIn30Seconds) {
+                // After 30 seconds: scroll to show the latest part
+                // Position viewport so latest sample is near the right edge
+                int targetX = Math.max(0, latestSampleX - viewportWidth + 50); // 50px padding from right edge
+                viewport.setViewPosition(new Point(targetX, 0));
+            } else {
+                // Before 30 seconds: stay at the beginning
+                viewport.setViewPosition(new Point(0, 0));
+            }
+        }
     }
 
     public AppBuilder addFingerprintUseCase() {
