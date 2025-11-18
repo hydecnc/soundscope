@@ -8,6 +8,14 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
+import org.wavelabs.soundscope.data_access.FileDAO;
+import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
+import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
+import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
+import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
+import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
+import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
+import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 
 
 public class AppBuilder {
@@ -65,7 +73,28 @@ public class AppBuilder {
         fingerprintButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(fingerprintButton);
         fingerprintButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            // TODO: properly implement recording, stopping, saving
+            System.out.println("Record");
+
+            FileDAO fileDAO = new FileDAO();
+            fileDAO.setFileSaver(new ByteArrayFileSaver());
+            fileDAO.setRecorder(new JavaMicRecorder());
+
+            DummyPresenter dummyPresenter = new DummyPresenter();
+
+            StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
+            StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
+            SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+
+            startRecording.execute();
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+            stopRecording.execute();
+            saveRecording.execute(new SaveRecordingID("./output.wav"));
+            System.out.println("Record End");
         });
 
         return this;
