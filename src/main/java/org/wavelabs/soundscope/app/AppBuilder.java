@@ -35,12 +35,15 @@ public class AppBuilder {
     private WaveformPanel waveformPanel;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
+    private final FileDAO fileDAO;
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     public AppBuilder() {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(titlePanel);
+
+        fileDAO = new FileDAO();
     }
 
     public AppBuilder addTitle() {
@@ -107,7 +110,10 @@ public class AppBuilder {
         saveAsButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(saveAsButton);
         saveAsButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            DummyPresenter dummyPresenter = new DummyPresenter();
+            SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+            saveRecording.execute(new SaveRecordingID("./output.wav"));
+            System.out.println("Recording saved");
         });
 
         return this;
@@ -133,11 +139,10 @@ public class AppBuilder {
     }
 
     public AppBuilder addRecordUseCase() {
-        JButton fingerprintButton = new JButton("Start Recording");
-        fingerprintButton.setPreferredSize(new Dimension(400, 200));
-        mainButtonPanel.add(fingerprintButton);
+        JButton recordButton = new JButton("Start Recording");
+        recordButton.setPreferredSize(new Dimension(400, 200));
+        mainButtonPanel.add(recordButton);
 
-        FileDAO fileDAO = new FileDAO();
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
@@ -145,22 +150,20 @@ public class AppBuilder {
 
         StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
         StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
-        SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
 
-        fingerprintButton.addActionListener(e -> {
+        recordButton.addActionListener(e -> {
             // TODO: properly implement recording, stopping, saving
-            if(fileDAO.getRecorder().isRecording()){
+            if (fileDAO.getRecorder().isRecording()) {
                 stopRecording.execute();
-                saveRecording.execute(new SaveRecordingID("./output.wav"));
                 System.out.println("Recording Ended");
-            }else{
+            } else {
                 startRecording.execute();
             }
 
-            if(fileDAO.getRecorder().isRecording()){
-                fingerprintButton.setText("Stop Recording");
-            }else{
-                fingerprintButton.setText("Start Recording");
+            if (fileDAO.getRecorder().isRecording()) {
+                recordButton.setText("Stop Recording");
+            } else {
+                recordButton.setText("Start Recording");
             }
         });
 
