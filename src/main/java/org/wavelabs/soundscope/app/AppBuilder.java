@@ -15,8 +15,11 @@ import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
@@ -35,6 +38,9 @@ public class AppBuilder {
     private WaveformPanel waveformPanel;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
+    private DisplayRecordingWaveform displayRecordingWaveformUseCase;
+    private FileDAO fileDAO;
+    private javax.swing.Timer recordingWaveformTimer;
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     public AppBuilder() {
@@ -137,7 +143,7 @@ public class AppBuilder {
         fingerprintButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(fingerprintButton);
 
-        FileDAO fileDAO = new FileDAO();
+        fileDAO = new FileDAO();
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
@@ -146,13 +152,35 @@ public class AppBuilder {
         StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
         StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
         SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+        
+        // Set up DisplayRecordingWaveform use case
+        DisplayRecordingWaveformPresenter recordingPresenter = 
+            new DisplayRecordingWaveformPresenter(waveformViewModel);
+        displayRecordingWaveformUseCase = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
+        
+        // Timer to update waveform during recording
+        recordingWaveformTimer = new javax.swing.Timer(50, e -> {
+            if (fileDAO.getRecorder() != null && fileDAO.getRecorder().isRecording()) {
+                DisplayRecordingWaveformID inputData = new DisplayRecordingWaveformID();
+                displayRecordingWaveformUseCase.execute(inputData);
+            }
+        });
+        recordingWaveformTimer.start();
 
         fingerprintButton.addActionListener(e -> {
             // TODO: properly implement recording, stopping, saving
             if(fileDAO.getRecorder().isRecording()){
                 stopRecording.execute();
-                saveRecording.execute(new SaveRecordingID("./output.wav"));
+                String outputPath = "./output.wav";
+                saveRecording.execute(new SaveRecordingID(outputPath));
                 System.out.println("Recording Ended");
+                
+                // Automatically load and display the saved recording
+                File savedFile = new File(outputPath);
+                if (savedFile.exists() && processAudioFileUseCase != null) {
+                    ProcessAudioFileID inputData = new ProcessAudioFileID(savedFile);
+                    processAudioFileUseCase.execute(inputData);
+                }
             }else{
                 startRecording.execute();
             }

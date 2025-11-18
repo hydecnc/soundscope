@@ -3,13 +3,15 @@ package org.wavelabs.soundscope.data_access;
 import org.wavelabs.soundscope.entity.AudioRecording;
 import org.wavelabs.soundscope.infrastructure.FileSaver;
 import org.wavelabs.soundscope.infrastructure.Recorder;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformDAI;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingDAI;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecordingDAI;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingDAI;
 
 public class FileDAO implements StartRecordingDAI,
                                 StopRecordingDAI,
-                                SaveRecordingDAI {
+                                SaveRecordingDAI,
+                                DisplayRecordingWaveformDAI {
     private FileSaver fileSaver;
     private Recorder recorder;
     private AudioRecording audioRecording;
@@ -31,4 +33,16 @@ public class FileDAO implements StartRecordingDAI,
 
     @Override
     public AudioRecording getAudioRecording() { return audioRecording; }
+    
+    @Override
+    public org.wavelabs.soundscope.entity.AudioData getCurrentRecordingBuffer() {
+        if (recorder == null || !recorder.isRecording()) {
+            return null;
+        }
+        
+        // Delegate to the gateway implementation
+        org.wavelabs.soundscope.data_access.JavaSoundRecordingGateway gateway = 
+            new org.wavelabs.soundscope.data_access.JavaSoundRecordingGateway(recorder);
+        return gateway.getCurrentRecordingBuffer();
+    }
 }
