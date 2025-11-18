@@ -4,32 +4,43 @@ import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
+import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
+import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
+import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
+import org.wavelabs.soundscope.view.components.WaveformPanel;
+
+import java.io.File;
 
 
 public class AppBuilder {
     private final JPanel mainPanel = new JPanel();
     private final JPanel mainButtonPanel = new JPanel();
     private final JPanel titlePanel = new JPanel();
+    private WaveformPanel waveformPanel;
+    private WaveformViewModel waveformViewModel;
+    private ProcessAudioFile processAudioFileUseCase;
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     public AppBuilder() {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(titlePanel);
-        mainPanel.add(mainButtonPanel);
-
     }
 
     public AppBuilder addTitle() {
@@ -43,6 +54,23 @@ public class AppBuilder {
     // Use case view views & view models
     // NOTE: Currently, this is missing controllers, presenters, view models, etc.
     public AppBuilder addWaveFormView() {
+        waveformPanel = new WaveformPanel();
+        waveformViewModel = new WaveformViewModel();
+        
+        WaveformPresenter presenter = new WaveformPresenter(waveformViewModel);
+        JavaSoundAudioFileGateway gateway = new JavaSoundAudioFileGateway();
+        processAudioFileUseCase = new ProcessAudioFile(gateway, presenter);
+        
+        mainPanel.add(waveformPanel);
+        mainPanel.add(mainButtonPanel);
+        
+        javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
+            if (waveformViewModel.getAudioData() != null) {
+                waveformPanel.updateWaveform(waveformViewModel.getAudioData());
+            }
+        });
+        timer.start();
+        
         return this;
     }
 
@@ -52,7 +80,23 @@ public class AppBuilder {
         mainButtonPanel.add(openButton);
 
         openButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Select Audio File");
+            
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "WAV Audio Files", "wav");
+            fileChooser.setFileFilter(filter);
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            
+            int result = fileChooser.showOpenDialog(mainPanel);
+            
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                if (processAudioFileUseCase != null) {
+                    ProcessAudioFileID inputData = new ProcessAudioFileID(selectedFile);
+                    processAudioFileUseCase.execute(inputData);
+                }
+            }
         });
 
         return this;
