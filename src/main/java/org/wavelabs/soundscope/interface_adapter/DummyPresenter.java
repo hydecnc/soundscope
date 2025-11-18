@@ -1,8 +1,8 @@
 package org.wavelabs.soundscope.interface_adapter;
 
-import org.wavelabs.soundscope.use_cases.saveRecording.SaveRecordingOB;
-import org.wavelabs.soundscope.use_cases.startRecording.StartRecordingOB;
-import org.wavelabs.soundscope.use_cases.stopRecording.StopRecordingOB;
+import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingOB;
+import org.wavelabs.soundscope.use_case.start_recording.StartRecordingOB;
+import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingOB;
 
 public class DummyPresenter implements StartRecordingOB,
                                        StopRecordingOB,
