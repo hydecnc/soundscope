@@ -110,10 +110,26 @@ public class AppBuilder {
         saveAsButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(saveAsButton);
         saveAsButton.addActionListener(e -> {
-            DummyPresenter dummyPresenter = new DummyPresenter();
-            SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
-            saveRecording.execute(new SaveRecordingID("./output.wav"));
-            System.out.println("Recording saved");
+            JFileChooser chooser = new JFileChooser();
+            chooser.setCurrentDirectory(new java.io.File("."));
+            chooser.setDialogTitle("Save Audio File");
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            File outputFolder = null;
+            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                outputFolder = chooser.getSelectedFile();
+                DummyPresenter dummyPresenter = new DummyPresenter();
+                SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+
+                // Saves audio file as "output.wav"
+                // TODO: (Time permitting) allow user to change name of output file?
+                saveRecording.execute(new SaveRecordingID(outputFolder.getAbsolutePath() + "/output.wav"));
+                System.out.println("Recording saved");
+            }
+            else {
+                System.out.println("No Selection");
+                // TODO: create an error code or something; alternate flow
+                return;
+            }
         });
 
         return this;
