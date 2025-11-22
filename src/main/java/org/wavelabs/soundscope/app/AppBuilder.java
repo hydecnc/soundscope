@@ -2,16 +2,19 @@ package org.wavelabs.soundscope.app;
 
 import java.awt.Dimension;
 import java.awt.Font;
+import java.io.File;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
+import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
@@ -19,6 +22,10 @@ import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPres
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterInteractor;
+import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
+import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
+import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingID;
+import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingOB;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
@@ -26,8 +33,6 @@ import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
-
-import java.io.File;
 
 
 public class AppBuilder {
@@ -40,6 +45,9 @@ public class AppBuilder {
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play
                                             // use case
     private FileDAO fileDAO = new FileDAO();
+    private PlayRecordingIB playRecordingUseCase;
+    private JButton playPauseButton;
+    private String currentAudioSourcePath;
 
     public AppBuilder() {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
@@ -72,6 +80,12 @@ public class AppBuilder {
             if (waveformViewModel.getAudioData() != null) {
                 waveformPanel.updateWaveform(waveformViewModel.getAudioData());
             }
+            if (playRecordingUseCase != null && playPauseButton != null) {
+                String desired = playRecordingUseCase.isPlaying() ? "Pause" : "Play";
+                if (!desired.equals(playPauseButton.getText())) {
+                    playPauseButton.setText(desired);
+                }
+            }
         });
         timer.start();
 
@@ -99,6 +113,13 @@ public class AppBuilder {
                     ProcessAudioFileID inputData = new ProcessAudioFileID(selectedFile);
                     processAudioFileUseCase.execute(inputData);
                 }
+                currentAudioSourcePath = selectedFile.getAbsolutePath();
+                if (playRecordingUseCase != null) {
+                    playRecordingUseCase.stop();
+                }
+                if (playPauseButton != null) {
+                    playPauseButton.setText("Play");
+                }
             }
         });
 
@@ -117,19 +138,35 @@ public class AppBuilder {
     }
 
     public AppBuilder addPlayUseCase() {
-        JButton playPauseButton = new JButton("Play");
+        if (playRecordingUseCase == null) {
+            playRecordingUseCase = new PlayRecording(new JavaSoundPlaybackGateway(), new PlayRecordingOB() {});
+        }
 
+        playPauseButton = new JButton("Play");
         playPauseButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(playPauseButton);
         playPauseButton.addActionListener(e -> {
-            playing = !playing;
-            if (playing) {
-                playPauseButton.setText("Pause");
-            } else {
-                playPauseButton.setText("Play");
+            if (currentAudioSourcePath == null || currentAudioSourcePath.isBlank()) {
+                JOptionPane.showMessageDialog(mainPanel, "Please open or record audio before playing.",
+                        "No audio selected", JOptionPane.WARNING_MESSAGE);
+                return;
             }
 
-            // TODO: implement correct use case calls
+            try {
+                if (playRecordingUseCase.isPlaying()) {
+                    playRecordingUseCase.pause();
+                    playPauseButton.setText("Play");
+                } else {
+                    if (playRecordingUseCase.getTotalFrames() == playRecordingUseCase.getFramesPlayed()) {
+                        playRecordingUseCase.play(new PlayRecordingID(currentAudioSourcePath, true));
+                    } else {
+                        playRecordingUseCase.play(new PlayRecordingID(currentAudioSourcePath, false));
+                        playPauseButton.setText("Pause");
+                    }
+                }
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(mainPanel, ex.getMessage(), "Playback error", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         return this;
