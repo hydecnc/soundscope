@@ -1,7 +1,7 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
+import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.entity.AudioRecording;
-import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingDAI;
 
 /**
  * Fingerprinter interactor. This takes in the entire audio clip stored in {@code AudioRecording}
@@ -9,15 +9,15 @@ import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingDAI;
  */
 public class FingerprinterInteractor implements FingerprinterIB {
 
-    private final SaveRecordingDAI saveRecordingDAO;
+    private final FileDAO fileDAO;
 
-    public FingerprinterInteractor(SaveRecordingDAI saveRecordingDAI) {
-        this.saveRecordingDAO = saveRecordingDAI;
+    public FingerprinterInteractor(FileDAO saveRecordingDAI) {
+        this.fileDAO = saveRecordingDAI;
     }
 
     @Override
     public FingerprinterOD execute() {
-        final AudioRecording inputData = saveRecordingDAO.getAudioRecording();
+        final AudioRecording inputData = fileDAO.getAudioRecording();
 
         final byte[] audioData = inputData.getData();
 

@@ -15,14 +15,10 @@ import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
-import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprinterController;
-import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprinterPresenter;
-import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprinterViewModel;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterInteractor;
-import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterOB;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
@@ -43,7 +39,6 @@ public class AppBuilder {
     private ProcessAudioFile processAudioFileUseCase;
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play
                                             // use case
-    private FingerprinterViewModel fingerprinterViewModel;
     private FileDAO fileDAO = new FileDAO();
 
     public AppBuilder() {
@@ -175,9 +170,7 @@ public class AppBuilder {
     }
 
     public AppBuilder addFingerprintUseCase() {
-        final FingerprinterOB fingerprinterOB = new FingerprinterPresenter(fingerprinterViewModel);
-        final FingerprinterIB fingerprinterInteractor =
-                new FingerprinterInteractor(fingerprinterOB, fileDAO);
+        final FingerprinterIB fingerprinterInteractor = new FingerprinterInteractor(fileDAO);
 
         JButton fingerprintButton = new JButton("Fingerprint");
         fingerprintButton.setPreferredSize(new Dimension(200, 200));
