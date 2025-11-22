@@ -1,18 +1,18 @@
-package org.wavelabs.soundscope.use_cases.fingerprint;
+package org.wavelabs.soundscope.use_case.fingerprint;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
-import org.wavelabs.soundscope.use_cases.fingerprint.chromaprint.ChromaprintException;
-import org.wavelabs.soundscope.use_cases.fingerprint.chromaprint.chromaprint_h;
+import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.ChromaprintException;
+import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.chromaprint_h;
 
 
 /**
  * Wrapper of the native chromaprint shared library, extracted using jextract. Provides fingerprint
  * extraction and manages native resources.
  */
-public class AudioFingerprinter implements AudioProcessor, AutoCloseable {
+public class Fingerprinter implements AudioProcessor, AutoCloseable {
     private final Arena arena;
     private final MemorySegment ctx;
     private final int sampleRate;
@@ -20,20 +20,20 @@ public class AudioFingerprinter implements AudioProcessor, AutoCloseable {
     private MemorySegment fingerprintAddress;
 
     /**
-     * Creates a new AudioFingerprinter with the standard sample rate of 44.1 kHz and 2 (stereo)
+     * Creates a new Fingerprinter with the standard sample rate of 44.1 kHz and 2 (stereo)
      * channels.
      */
-    public AudioFingerprinter() {
+    public Fingerprinter() {
         this(44100, 2);
     }
 
     /**
-     * Creates a new AudioFingerprinter given the audio's sample rate and number of channels.
+     * Creates a new Fingerprinter given the audio's sample rate and number of channels.
      * 
      * @param sampleRate same rate of the audio stream
      * @param numChannels numbers of channels in the audio stream (1 or 2)
      */
-    public AudioFingerprinter(final int sampleRate, final int numChannels) {
+    public Fingerprinter(final int sampleRate, final int numChannels) {
         arena = Arena.ofConfined();
         ctx = chromaprint_h.chromaprint_new(chromaprint_h.CHROMAPRINT_ALGORITHM_DEFAULT());
         this.sampleRate = sampleRate;

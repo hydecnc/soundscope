@@ -15,8 +15,14 @@ import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
+import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprinterController;
+import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprinterPresenter;
+import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprinterViewModel;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
+import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterIB;
+import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterInteractor;
+import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterOB;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
@@ -37,6 +43,8 @@ public class AppBuilder {
     private ProcessAudioFile processAudioFileUseCase;
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play
                                             // use case
+    private FingerprinterViewModel fingerprinterViewModel;
+    private FileDAO fileDAO = new FileDAO();
 
     public AppBuilder() {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
@@ -133,11 +141,10 @@ public class AppBuilder {
     }
 
     public AppBuilder addRecordUseCase() {
-        JButton fingerprintButton = new JButton("Start Recording");
-        fingerprintButton.setPreferredSize(new Dimension(200, 200));
-        mainButtonPanel.add(fingerprintButton);
+        JButton recordButton = new JButton("Start Recording");
+        recordButton.setPreferredSize(new Dimension(200, 200));
+        mainButtonPanel.add(recordButton);
 
-        FileDAO fileDAO = new FileDAO();
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
@@ -147,7 +154,7 @@ public class AppBuilder {
         StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
         SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
 
-        fingerprintButton.addActionListener(e -> {
+        recordButton.addActionListener(e -> {
             // TODO: properly implement recording, stopping, saving
             if (fileDAO.getRecorder().isRecording()) {
                 stopRecording.execute();
@@ -158,9 +165,9 @@ public class AppBuilder {
             }
 
             if (fileDAO.getRecorder().isRecording()) {
-                fingerprintButton.setText("Stop Recording");
+                recordButton.setText("Stop Recording");
             } else {
-                fingerprintButton.setText("Start Recording");
+                recordButton.setText("Start Recording");
             }
         });
 
@@ -168,11 +175,16 @@ public class AppBuilder {
     }
 
     public AppBuilder addFingerprintUseCase() {
+        final FingerprinterOB fingerprinterOB = new FingerprinterPresenter(fingerprinterViewModel);
+        final FingerprinterIB fingerprinterInteractor =
+                new FingerprinterInteractor(fingerprinterOB, fileDAO);
+
         JButton fingerprintButton = new JButton("Fingerprint");
         fingerprintButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(fingerprintButton);
         fingerprintButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            // TODO: Use this and identify recording
+            System.out.println(fingerprinterInteractor.execute());
         });
 
         return this;

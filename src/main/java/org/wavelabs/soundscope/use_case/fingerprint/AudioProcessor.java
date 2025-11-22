@@ -1,4 +1,4 @@
-package org.wavelabs.soundscope.use_cases.fingerprint;
+package org.wavelabs.soundscope.use_case.fingerprint;
 
 
 public interface AudioProcessor {

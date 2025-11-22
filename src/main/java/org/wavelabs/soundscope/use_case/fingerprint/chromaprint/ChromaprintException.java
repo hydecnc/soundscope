@@ -1,4 +1,4 @@
-package org.wavelabs.soundscope.use_cases.fingerprint.chromaprint;
+package org.wavelabs.soundscope.use_case.fingerprint.chromaprint;
 
 public class ChromaprintException extends RuntimeException {
     public ChromaprintException(String message) {
