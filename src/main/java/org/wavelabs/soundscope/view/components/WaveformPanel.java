@@ -65,31 +65,9 @@ public class WaveformPanel extends JPanel {
             this.durationSeconds = newDurationSeconds;
             this.sampleRate = newSampleRate;
             
-            // Adjust panel width to accommodate waveform (for both recording and loaded files)
-            // Panel width = number of 30-second intervals * width per interval
-            // Account for 256x downsampling
-            if (waveformData != null && waveformData.length > 0) {
-                int samplesIn30Seconds = (sampleRate * DISPLAY_INTERVAL_SECONDS) / 256;
-                int numberOfIntervals = (int) Math.ceil((double) waveformData.length / samplesIn30Seconds);
-                int widthFor30Seconds = samplesIn30Seconds / SAMPLES_PER_PIXEL;
-                int preferredWidth = numberOfIntervals * widthFor30Seconds;
-                // Ensure minimum width for first window
-                preferredWidth = Math.max(preferredWidth, widthFor30Seconds);
-                Dimension newSize = new Dimension(preferredWidth, UIStyle.Dimensions.WAVEFORM_HEIGHT);
-                setPreferredSize(newSize);
-                setSize(newSize); // Also set actual size, not just preferred
-                setMinimumSize(newSize);
-                setMaximumSize(new Dimension(Integer.MAX_VALUE, UIStyle.Dimensions.WAVEFORM_HEIGHT));
-                revalidate();
-                // Notify parent scroll pane of size change
-                Container parent = getParent();
-                if (parent != null) {
-                    parent.revalidate();
-                    // If parent is a viewport, force it to update
-                    if (parent instanceof JViewport) {
-                        ((JViewport) parent).revalidate();
-                    }
-                }
+            // Only update panel size when audio data actually changes
+            if (audioDataChanged) {
+                updatePanelSize();
             }
         } else {
             if (waveformData != null) {
@@ -97,11 +75,15 @@ public class WaveformPanel extends JPanel {
             }
             this.waveformData = null;
             this.durationSeconds = 0;
-            setPreferredSize(new Dimension(
-                UIStyle.Dimensions.WAVEFORM_WIDTH,
-                UIStyle.Dimensions.WAVEFORM_HEIGHT
-            ));
-            revalidate();
+            
+            // Reset panel size when clearing audio data
+            if (audioDataChanged) {
+                setPreferredSize(new Dimension(
+                    UIStyle.Dimensions.WAVEFORM_WIDTH,
+                    UIStyle.Dimensions.WAVEFORM_HEIGHT
+                ));
+                revalidate();
+            }
         }
         
         // Only recalculate waveform paths if audio data changed
@@ -111,6 +93,39 @@ public class WaveformPanel extends JPanel {
         }
         
         repaint();
+    }
+    
+    /**
+     * Updates the panel size based on the current waveform data.
+     * This should only be called when audio data changes.
+     */
+    private void updatePanelSize() {
+        if (waveformData != null && waveformData.length > 0) {
+            // Adjust panel width to accommodate waveform (for both recording and loaded files)
+            // Panel width = number of 30-second intervals * width per interval
+            // Account for 256x downsampling
+            int samplesIn30Seconds = (sampleRate * DISPLAY_INTERVAL_SECONDS) / 256;
+            int numberOfIntervals = (int) Math.ceil((double) waveformData.length / samplesIn30Seconds);
+            int widthFor30Seconds = samplesIn30Seconds / SAMPLES_PER_PIXEL;
+            int preferredWidth = numberOfIntervals * widthFor30Seconds;
+            // Ensure minimum width for first window
+            preferredWidth = Math.max(preferredWidth, widthFor30Seconds);
+            Dimension newSize = new Dimension(preferredWidth, UIStyle.Dimensions.WAVEFORM_HEIGHT);
+            setPreferredSize(newSize);
+            setSize(newSize); // Also set actual size, not just preferred
+            setMinimumSize(newSize);
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, UIStyle.Dimensions.WAVEFORM_HEIGHT));
+            revalidate();
+            // Notify parent scroll pane of size change
+            Container parent = getParent();
+            if (parent != null) {
+                parent.revalidate();
+                // If parent is a viewport, force it to update
+                if (parent instanceof JViewport) {
+                    ((JViewport) parent).revalidate();
+                }
+            }
+        }
     }
     
     /**
