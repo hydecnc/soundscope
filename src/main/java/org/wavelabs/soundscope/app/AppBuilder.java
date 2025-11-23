@@ -177,7 +177,6 @@ public class AppBuilder {
                     ProcessAudioFileID inputData = new ProcessAudioFileID(selectedFile);
                     processAudioFileUseCase.execute(inputData);
                 }
-                // Add playback logic from main
                 currentAudioSourcePath = selectedFile.getAbsolutePath();
                 if (playRecordingUseCase != null) {
                     playRecordingUseCase.stop();
@@ -205,6 +204,7 @@ public class AppBuilder {
         if (playRecordingUseCase == null) {
             playRecordingUseCase = new PlayRecording(new JavaSoundPlaybackGateway(), new PlayRecordingOB() {});
         }
+
         playPauseButton = new JButton("Play");
         playPauseButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(playPauseButton);
