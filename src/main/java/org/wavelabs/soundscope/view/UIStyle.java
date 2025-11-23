@@ -31,7 +31,9 @@ public class UIStyle {
         public static final Color TEXT_SECONDARY = new Color(102, 102, 102);
         
         public static final Color WAVEFORM_STROKE = new Color(0, 100, 255);
+        public static final Color WAVEFORM_PLAYED = Color.RED; // Red for played portion
         public static final Color WAVEFORM_BACKGROUND = Color.WHITE;
+        public static final Color PLAYBACK_INDICATOR = Color.RED;
     }
 
     public static final class Fonts {

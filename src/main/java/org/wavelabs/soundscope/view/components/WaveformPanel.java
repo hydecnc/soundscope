@@ -16,6 +16,7 @@ public class WaveformPanel extends JPanel {
     private double[] waveformData;
     private double durationSeconds = 0;
     private int sampleRate = 44100;
+    private double currentPlaybackPositionSeconds = 0.0; // Current playback position in seconds
     private static final int SAMPLES_PER_PIXEL = 8; // Compression factor
     private static final int DISPLAY_INTERVAL_SECONDS = 30; // 30-second window
     
@@ -81,10 +82,21 @@ public class WaveformPanel extends JPanel {
     }
     
     /**
+     * Updates the waveform display with new audio data and playback position.
+     * 
+     * @param audioData The AudioData object containing amplitude samples and metadata
+     * @param playbackPositionSeconds The current playback position in seconds
+     */
+    public void updateWaveform(AudioData audioData, double playbackPositionSeconds) {
+        this.currentPlaybackPositionSeconds = playbackPositionSeconds;
+        updateWaveform(audioData);
+    }
+    
+    /**
      * Paints the waveform on the panel.
      * 
-     * <p>Renders the audio waveform as a continuous blue line, normalizing
-     * amplitude values to fit within the panel bounds.
+     * <p>Renders the audio waveform with played and unplayed portions in different colors,
+     * normalizing amplitude values to fit within the panel bounds.
      * 
      * @param g The Graphics context for drawing
      */
@@ -106,22 +118,12 @@ public class WaveformPanel extends JPanel {
             durationSeconds = (double) waveformData.length / sampleRate;
         }
         
-        g2d.setColor(UIStyle.Colors.WAVEFORM_STROKE);
-        g2d.setStroke(new BasicStroke(1.0f));
-        
         int height = getHeight();
         
-        // Show data progressively from left to right
-        // Account for 256x downsampling: samplesIn30Seconds = (sampleRate * 30) / 256
+        // Account for 256x downsampling
         int samplesIn30Seconds = (sampleRate * DISPLAY_INTERVAL_SECONDS) / 256;
         int startSample = 0;
         int endSample = waveformData.length;
-        
-        // Always show all data continuously from the start (both during recording and after)
-        // This ensures the whole waveform is visible and can be scrolled through
-        startSample = 0;
-        endSample = waveformData.length;
-        
         int samplesToDisplay = endSample - startSample;
         if (samplesToDisplay <= 0) {
             return;
@@ -130,9 +132,6 @@ public class WaveformPanel extends JPanel {
         double verticalPadding = 10.0;
         double usableHeight = height - (verticalPadding * 2);
         
-        // Calculate sample width using fixed width per sample based on 30-second window
-        // This ensures consistent scaling for both recording and loaded files
-        // The waveform will grow continuously and can be scrolled through
         int widthFor30Seconds = samplesIn30Seconds / SAMPLES_PER_PIXEL;
         double sampleWidth = (double) widthFor30Seconds / samplesIn30Seconds;
         
@@ -159,18 +158,20 @@ public class WaveformPanel extends JPanel {
         double maxNormalizedValue = 0.90;
         double centerY = height / 2.0;
         
+        // Calculate playback position in terms of sample index (accounting for 256x downsampling)
+        int playbackSampleIndex = -1;
+        if (currentPlaybackPositionSeconds > 0 && durationSeconds > 0 && sampleRate > 0) {
+            playbackSampleIndex = (int) (currentPlaybackPositionSeconds * sampleRate / 256);
+        }
+        
         if (samplesToDisplay > 1) {
-            java.awt.geom.GeneralPath waveformPath = new java.awt.geom.GeneralPath();
-            boolean firstPoint = true;
+            java.awt.geom.GeneralPath playedPath = new java.awt.geom.GeneralPath();
+            java.awt.geom.GeneralPath unplayedPath = new java.awt.geom.GeneralPath();
+            boolean playedFirstPoint = true;
+            boolean unplayedFirstPoint = true;
             
-            // Draw only the actual recorded samples from left to right
-            // During recording: draw all samples continuously from x=0
-            // For loaded files: draw samples within the current 30-second window
             for (int i = 0; i < samplesToDisplay; i++) {
                 int sampleIndex = startSample + i;
-                
-                // Calculate x position based on absolute sample index (continuous)
-                // This ensures the waveform is displayed continuously from left to right
                 double x = sampleIndex * sampleWidth;
                 
                 double amplitude = Math.max(-1.0, Math.min(1.0, waveformData[sampleIndex]));
@@ -179,15 +180,46 @@ public class WaveformPanel extends JPanel {
                 
                 double y = centerY - (normalizedAmplitude * usableHeight / 2.0);
                 
-                if (firstPoint) {
-                    waveformPath.moveTo(x, y);
-                    firstPoint = false;
+                boolean isPlayed = playbackSampleIndex >= 0 && sampleIndex <= playbackSampleIndex;
+                
+                if (isPlayed) {
+                    if (playedFirstPoint) {
+                        playedPath.moveTo(x, y);
+                        playedFirstPoint = false;
+                    } else {
+                        playedPath.lineTo(x, y);
+                    }
                 } else {
-                    waveformPath.lineTo(x, y);
+                    if (unplayedFirstPoint) {
+                        unplayedPath.moveTo(x, y);
+                        unplayedFirstPoint = false;
+                    } else {
+                        unplayedPath.lineTo(x, y);
+                    }
                 }
             }
             
-            g2d.draw(waveformPath);
+            if (!unplayedFirstPoint) {
+                g2d.setColor(UIStyle.Colors.WAVEFORM_STROKE);
+                g2d.setStroke(new BasicStroke(1.0f));
+                g2d.draw(unplayedPath);
+            }
+            
+            if (!playedFirstPoint) {
+                g2d.setColor(UIStyle.Colors.WAVEFORM_PLAYED);
+                g2d.setStroke(new BasicStroke(1.0f));
+                g2d.draw(playedPath);
+            }
+            
+            // Draw red vertical line for playback position indicator
+            if (playbackSampleIndex >= 0) {
+                double x = playbackSampleIndex * sampleWidth;
+                if (x >= 0 && x <= getWidth()) {
+                    g2d.setColor(UIStyle.Colors.PLAYBACK_INDICATOR);
+                    g2d.setStroke(new BasicStroke(2.0f));
+                    g2d.drawLine((int) x, 0, (int) x, getHeight());
+                }
+            }
         }
     }
 }
