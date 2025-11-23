@@ -130,8 +130,21 @@ public class AppBuilder {
         
         javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
             if (waveformViewModel.getAudioData() != null) {
-                waveformPanel.updateWaveform(waveformViewModel.getAudioData());
-                // Update timeline with same data
+                // Get real-time playback position from playback use case
+                double playbackPositionSeconds = 0.0;
+                if (playRecordingUseCase != null && playRecordingUseCase.isPlaying()) {
+                    int framesPlayed = playRecordingUseCase.getFramesPlayed();
+                    int sampleRate = waveformViewModel.getAudioData().getSampleRate();
+                    if (sampleRate > 0) {
+                        playbackPositionSeconds = (double) framesPlayed / sampleRate;
+                    }
+                }
+                
+                // Only update audio data if it changed, otherwise just update playback position
+                // This avoids recalculating waveform paths every 100ms
+                waveformPanel.updateWaveform(waveformViewModel.getAudioData(), playbackPositionSeconds);
+                
+                // Update timeline with same data (only if audio data changed)
                 if (timelinePanel != null) {
                     timelinePanel.updateTimeline(
                         waveformViewModel.getAudioData().getDurationSeconds(),
@@ -286,6 +299,8 @@ public class AppBuilder {
                 if (savedFile.exists() && processAudioFileUseCase != null) {
                     ProcessAudioFileID inputData = new ProcessAudioFileID(savedFile);
                     processAudioFileUseCase.execute(inputData);
+                    // Set current audio source path for playback
+                    currentAudioSourcePath = savedFile.getAbsolutePath();
                     // Ensure scroll pane is updated after loading - force revalidation
                     SwingUtilities.invokeLater(() -> {
                         if (waveformScrollPane != null && waveformPanel != null) {
