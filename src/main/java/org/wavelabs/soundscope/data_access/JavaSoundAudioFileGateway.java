@@ -132,14 +132,14 @@ public class JavaSoundAudioFileGateway implements ProcessAudioFileDAI {
      * 
      * <p>This method processes the audio bytes according to the audio format
      * (sample size, endianness, signed/unsigned) and converts them to normalized
-     * amplitude values in the range [-1.0, 1.0]. Samples are downsampled to one-quarter
-     * the original count for efficient processing.
+     * amplitude values in the range [-1.0, 1.0]. Samples are downsampled by 256
+     * to match the live recording display format.
      * 
      * @param audioBytes The raw audio byte data
      * @param format The audio format specification
      * @param bytesRead The number of bytes actually read from the audio stream
      * @param channels The number of audio channels
-     * @return Array of normalized amplitude samples (downsampled to one-quarter)
+     * @return Array of normalized amplitude samples (downsampled by 256)
      */
     private double[] convertToAmplitudeSamples(byte[] audioBytes, AudioFormat format, 
                                                int bytesRead, int channels) {
@@ -148,12 +148,17 @@ public class JavaSoundAudioFileGateway implements ProcessAudioFileDAI {
         
         int bytesPerSample = sampleSizeInBits / 8;
         int totalSamples = bytesRead / (bytesPerSample * channels);
-        int downsampledCount = totalSamples / 4;
+        // Downsample by 256 to match live recording format
+        int downsampledCount = totalSamples / 256;
+        
+        if (downsampledCount == 0) {
+            return new double[0];
+        }
         
         double[] samples = new double[downsampledCount];
         
         for (int i = 0; i < downsampledCount; i++) {
-            int sampleIndex = i * 4;
+            int sampleIndex = i * 256;
             int byteIndex = sampleIndex * bytesPerSample * channels;
             
             if (byteIndex + bytesPerSample * channels > bytesRead) {
