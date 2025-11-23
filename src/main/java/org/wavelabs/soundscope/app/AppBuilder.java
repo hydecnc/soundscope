@@ -2,13 +2,7 @@ package org.wavelabs.soundscope.app;
 
 import java.awt.Dimension;
 import java.awt.Font;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
@@ -32,6 +26,7 @@ public class AppBuilder {
     private final JPanel mainPanel = new JPanel();
     private final JPanel mainButtonPanel = new JPanel();
     private final JPanel titlePanel = new JPanel();
+    private final JPanel infoPanel = new JPanel();
     private WaveformPanel waveformPanel;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
@@ -42,6 +37,7 @@ public class AppBuilder {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(titlePanel);
+        mainPanel.add(infoPanel);
     }
 
     public AppBuilder addTitle() {
@@ -63,7 +59,7 @@ public class AppBuilder {
         processAudioFileUseCase = new ProcessAudioFile(gateway, presenter);
 
         mainPanel.add(waveformPanel);
-        mainPanel.add(mainButtonPanel);
+        mainPanel.add(mainButtonPanel); //TODO: why is this inside addWaveformView?
 
         javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
             if (waveformViewModel.getAudioData() != null) {
@@ -182,8 +178,20 @@ public class AppBuilder {
         JButton identifyButton = new JButton("Identify");
         identifyButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(identifyButton);
+
+        JTextArea songTitle = new JTextArea("Song: ");
+        songTitle.setPreferredSize(new Dimension(200, 200));
+        infoPanel.add(songTitle);
+
+        JTextArea songArtist = new JTextArea("Artist: ");
+        songArtist.setPreferredSize(new Dimension(200, 200));
+        infoPanel.add(songArtist);
+
+
+
         identifyButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            //TODO: move this into a use case
+
         });
 
         return this;

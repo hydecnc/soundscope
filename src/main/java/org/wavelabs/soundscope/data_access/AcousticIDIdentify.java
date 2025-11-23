@@ -7,7 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.wavelabs.soundscope.entity.Song;
-import org.wavelabs.soundscope.use_case.fingerprint.FingerprintLookupDAI;
+import org.wavelabs.soundscope.use_case.identify.IdentifyDAI;
 
 import java.io.IOException;
 import java.util.concurrent.*;
@@ -16,7 +16,7 @@ import static org.wavelabs.soundscope.data_access.AcousticIDAPIConstants.*;
 /**
  * Looks up fingerprints using the AcousticID API, and retrieves corresponding song IDs and metadata
  */
-public class AcousticIDFingerprintLookup implements FingerprintLookupDAI {
+public class AcousticIDIdentify implements IdentifyDAI {
     private final static String ACOUSTICID_API_KEY = getAPIKey();
 
     private final static OkHttpClient client = new OkHttpClient();
@@ -164,7 +164,7 @@ public class AcousticIDFingerprintLookup implements FingerprintLookupDAI {
         }
 
         //Schedules the next API request to be processed after the appropriate spacing
-        requestScheduler.schedule(AcousticIDFingerprintLookup::processNextAPIRequest, REQUEST_SPACING_MILLIS, TimeUnit.MILLISECONDS);
+        requestScheduler.schedule(AcousticIDIdentify::processNextAPIRequest, REQUEST_SPACING_MILLIS, TimeUnit.MILLISECONDS);
     }
 
 

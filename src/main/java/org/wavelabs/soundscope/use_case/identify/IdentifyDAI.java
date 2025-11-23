@@ -1,11 +1,11 @@
-package org.wavelabs.soundscope.use_case.fingerprint;
+package org.wavelabs.soundscope.use_case.identify;
 
 import org.wavelabs.soundscope.entity.Song;
 
 /**
  * DAI for looking up closest match IDs and metadata from a fingerprint
  */
-public interface FingerprintLookupDAI {
+public interface IdentifyDAI {
     /**
      * Returns the closest acoustID track ID associated with a song.
      * @param fingerprint
