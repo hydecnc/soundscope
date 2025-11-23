@@ -23,10 +23,12 @@ public class WaveformPanel extends JPanel {
     // Cached computed values (only recalculated when audio data changes)
     private double cachedNormalizationFactor;
     private double cachedSampleWidth;
-    private double cachedCenterY;
-    private double cachedUsableHeight;
     private int cachedSamplesIn30Seconds;
     private boolean dataChanged = true; // Flag to indicate if data needs recalculation
+    
+    // Cached complete waveform path (only recalculated when audio data or panel height changes)
+    private java.awt.geom.GeneralPath cachedCompletePath;
+    private int cachedPathHeight = -1; // Track height when path was cached
     
     /**
      * Constructs a WaveformPanel with default settings.
@@ -161,14 +163,15 @@ public class WaveformPanel extends JPanel {
     }
     
     /**
-     * Recalculates the waveform cached values.
-     * This should only be called when the audio data changes.
-     * Note: Waveform paths are rebuilt in paintComponent because y-coordinates depend on current panel height.
+     * Recalculates the waveform cached values and builds the complete path.
+     * This should only be called when the audio data or panel height changes.
      */
     private void recalculateWaveformPaths() {
         if (waveformData == null || waveformData.length == 0) {
             cachedNormalizationFactor = 0;
             cachedSampleWidth = 0;
+            cachedCompletePath = null;
+            cachedPathHeight = -1;
             dataChanged = false;
             return;
         }
@@ -185,11 +188,13 @@ public class WaveformPanel extends JPanel {
         if (samplesToDisplay <= 0) {
             cachedNormalizationFactor = 0;
             cachedSampleWidth = 0;
+            cachedCompletePath = null;
+            cachedPathHeight = -1;
             dataChanged = false;
             return;
         }
         
-        // Calculate and cache values that don't change with playback position or panel height
+        // Calculate and cache values that don't change with playback position
         cachedSamplesIn30Seconds = (sampleRate * DISPLAY_INTERVAL_SECONDS) / 256;
         int widthFor30Seconds = cachedSamplesIn30Seconds / SAMPLES_PER_PIXEL;
         cachedSampleWidth = (double) widthFor30Seconds / cachedSamplesIn30Seconds;
@@ -206,6 +211,8 @@ public class WaveformPanel extends JPanel {
         if (maxMagnitude < 0.001) {
             cachedNormalizationFactor = 0;
             cachedSampleWidth = 0;
+            cachedCompletePath = null;
+            cachedPathHeight = -1;
             dataChanged = false;
             return;
         }
@@ -217,7 +224,46 @@ public class WaveformPanel extends JPanel {
             cachedNormalizationFactor = 10.0;
         }
         
+        // Build the complete waveform path (only when height changes or data changes)
+        int currentHeight = getHeight();
+        if (cachedCompletePath == null || cachedPathHeight != currentHeight) {
+            buildCompletePath(currentHeight, startSample, samplesToDisplay);
+            cachedPathHeight = currentHeight;
+        }
+        
         dataChanged = false;
+    }
+    
+    /**
+     * Builds the complete waveform path for the given height.
+     * This path includes all samples and is used for both played and unplayed portions.
+     */
+    private void buildCompletePath(int height, int startSample, int samplesToDisplay) {
+        double verticalPadding = 10.0;
+        double usableHeight = height - (verticalPadding * 2);
+        double centerY = height / 2.0;
+        double maxNormalizedValue = 0.90;
+        
+        cachedCompletePath = new java.awt.geom.GeneralPath();
+        boolean firstPoint = true;
+        
+        for (int i = 0; i < samplesToDisplay; i++) {
+            int sampleIndex = startSample + i;
+            double x = sampleIndex * cachedSampleWidth;
+            
+            double amplitude = Math.max(-1.0, Math.min(1.0, waveformData[sampleIndex]));
+            double normalizedAmplitude = amplitude * cachedNormalizationFactor;
+            normalizedAmplitude = Math.max(-maxNormalizedValue, Math.min(maxNormalizedValue, normalizedAmplitude));
+            
+            double y = centerY - (normalizedAmplitude * usableHeight / 2.0);
+            
+            if (firstPoint) {
+                cachedCompletePath.moveTo(x, y);
+                firstPoint = false;
+            } else {
+                cachedCompletePath.lineTo(x, y);
+            }
+        }
     }
     
     /**
@@ -248,87 +294,54 @@ public class WaveformPanel extends JPanel {
         }
         
         // If still no valid cached values, return
-        if (cachedNormalizationFactor == 0 || cachedSampleWidth == 0) {
+        if (cachedNormalizationFactor == 0 || cachedSampleWidth == 0 || cachedCompletePath == null) {
             return;
         }
         
         int height = getHeight();
-        int startSample = 0;
-        int endSample = waveformData.length;
-        int samplesToDisplay = endSample - startSample;
         
-        if (samplesToDisplay <= 0) {
-            return;
+        // Rebuild path if height changed
+        if (cachedPathHeight != height) {
+            int startSample = 0;
+            int samplesToDisplay = waveformData.length;
+            buildCompletePath(height, startSample, samplesToDisplay);
+            cachedPathHeight = height;
         }
-        
-        double verticalPadding = 10.0;
-        cachedUsableHeight = height - (verticalPadding * 2);
-        cachedCenterY = height / 2.0;
-        
-        double maxNormalizedValue = 0.90;
         
         // Calculate playback position in terms of sample index (accounting for 256x downsampling)
         int playbackSampleIndex = -1;
+        double playbackX = -1;
         if (currentPlaybackPositionSeconds > 0 && durationSeconds > 0 && sampleRate > 0) {
             playbackSampleIndex = (int) (currentPlaybackPositionSeconds * sampleRate / 256);
+            playbackX = playbackSampleIndex * cachedSampleWidth;
         }
         
-        if (samplesToDisplay > 1) {
-            // Build paths using cached normalization factor and sample width
-            java.awt.geom.GeneralPath playedPath = new java.awt.geom.GeneralPath();
-            java.awt.geom.GeneralPath unplayedPath = new java.awt.geom.GeneralPath();
-            boolean playedFirstPoint = true;
-            boolean unplayedFirstPoint = true;
+        // Draw unplayed portion (complete path in blue)
+        g2d.setColor(UIStyle.Colors.WAVEFORM_STROKE);
+        g2d.setStroke(new BasicStroke(1.0f));
+        g2d.draw(cachedCompletePath);
+        
+        // Draw played portion (same path in red, clipped to played region)
+        if (playbackSampleIndex >= 0 && playbackX >= 0) {
+            // Save current clip
+            Shape originalClip = g2d.getClip();
             
-            for (int i = 0; i < samplesToDisplay; i++) {
-                int sampleIndex = startSample + i;
-                double x = sampleIndex * cachedSampleWidth;
-                
-                double amplitude = Math.max(-1.0, Math.min(1.0, waveformData[sampleIndex]));
-                double normalizedAmplitude = amplitude * cachedNormalizationFactor;
-                normalizedAmplitude = Math.max(-maxNormalizedValue, Math.min(maxNormalizedValue, normalizedAmplitude));
-                
-                double y = cachedCenterY - (normalizedAmplitude * cachedUsableHeight / 2.0);
-                
-                boolean isPlayed = playbackSampleIndex >= 0 && sampleIndex <= playbackSampleIndex;
-                
-                if (isPlayed) {
-                    if (playedFirstPoint) {
-                        playedPath.moveTo(x, y);
-                        playedFirstPoint = false;
-                    } else {
-                        playedPath.lineTo(x, y);
-                    }
-                } else {
-                    if (unplayedFirstPoint) {
-                        unplayedPath.moveTo(x, y);
-                        unplayedFirstPoint = false;
-                    } else {
-                        unplayedPath.lineTo(x, y);
-                    }
-                }
-            }
+            // Set clip to only the played portion (left side up to playback position)
+            g2d.setClip(0, 0, (int) Math.min(playbackX + 1, getWidth()), getHeight());
             
-            if (!unplayedFirstPoint) {
-                g2d.setColor(UIStyle.Colors.WAVEFORM_STROKE);
-                g2d.setStroke(new BasicStroke(1.0f));
-                g2d.draw(unplayedPath);
-            }
+            // Draw the same path in red
+            g2d.setColor(UIStyle.Colors.WAVEFORM_PLAYED);
+            g2d.setStroke(new BasicStroke(1.0f));
+            g2d.draw(cachedCompletePath);
             
-            if (!playedFirstPoint) {
-                g2d.setColor(UIStyle.Colors.WAVEFORM_PLAYED);
-                g2d.setStroke(new BasicStroke(1.0f));
-                g2d.draw(playedPath);
-            }
+            // Restore original clip
+            g2d.setClip(originalClip);
             
             // Draw red vertical line for playback position indicator
-            if (playbackSampleIndex >= 0) {
-                double x = playbackSampleIndex * cachedSampleWidth;
-                if (x >= 0 && x <= getWidth()) {
-                    g2d.setColor(UIStyle.Colors.PLAYBACK_INDICATOR);
-                    g2d.setStroke(new BasicStroke(2.0f));
-                    g2d.drawLine((int) x, 0, (int) x, getHeight());
-                }
+            if (playbackX >= 0 && playbackX <= getWidth()) {
+                g2d.setColor(UIStyle.Colors.PLAYBACK_INDICATOR);
+                g2d.setStroke(new BasicStroke(2.0f));
+                g2d.drawLine((int) playbackX, 0, (int) playbackX, getHeight());
             }
         }
     }
