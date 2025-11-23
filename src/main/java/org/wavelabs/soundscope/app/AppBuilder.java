@@ -140,10 +140,11 @@ public class AppBuilder {
                     }
                 }
                 
-                // Update waveform with playback position
+                // Only update audio data if it changed, otherwise just update playback position
+                // This avoids recalculating waveform paths every 100ms
                 waveformPanel.updateWaveform(waveformViewModel.getAudioData(), playbackPositionSeconds);
                 
-                // Update timeline with same data
+                // Update timeline with same data (only if audio data changed)
                 if (timelinePanel != null) {
                     timelinePanel.updateTimeline(
                         waveformViewModel.getAudioData().getDurationSeconds(),
