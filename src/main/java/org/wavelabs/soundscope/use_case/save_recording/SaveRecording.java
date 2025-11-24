@@ -18,15 +18,23 @@ public class SaveRecording implements SaveRecordingIB {
     public void execute(SaveRecordingID inputData) {
         final String filePath = inputData.getFilePath();
         final AudioRecording audioRecording = saveRecordingDAO.getAudioRecording();
-
         final FileSaver fileSaver = saveRecordingDAO.getFileSaver();
-        try {
-            boolean success = fileSaver.save(filePath, audioRecording);
-        } catch (IOException ex) {
-            // TODO: appropriate error handling
+
+        // check if audio recording is null for preventing NPE
+        if (audioRecording == null) {
+            saveRecordingPresenter.presentError("Recording is empty");
+            return;
         }
 
-        // TODO: show error according to success
+        try {
+            boolean success = fileSaver.save(filePath, audioRecording);
+            if (!success) {
+                saveRecordingPresenter.presentError("Save failed");
+            }
+        } catch (IOException ex) {
+            saveRecordingPresenter.presentError("IO error while saving");
+        }
+
         saveRecordingPresenter.presentSaveSuccessView(); // end use case
     }
 }

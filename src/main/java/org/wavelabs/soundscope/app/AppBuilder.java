@@ -2,19 +2,14 @@ package org.wavelabs.soundscope.app;
 
 import java.awt.Dimension;
 import java.awt.Font;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
-import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
+import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
+import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
@@ -117,14 +112,22 @@ public class AppBuilder {
             File outputFolder = null;
             if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 outputFolder = chooser.getSelectedFile();
-                SaveRecording saveRecording = new SaveRecording(fileDAO, new DummyPresenter());
+                SaveFileState state = new SaveFileState();
+                SaveFilePresenter presenter = new SaveFilePresenter(state);
+                SaveRecording saveRecording = new SaveRecording(fileDAO, presenter);
 
                 // Saves audio file as "output.wav"
                 // TODO: (Time permitting) allow user to change name of output file?
                 saveRecording.execute(new SaveRecordingID(outputFolder.getAbsolutePath() + "/output.wav"));
-                System.out.println("Recording saved");
-            }
-            else {
+
+                if(state.isSuccess()) {
+                    System.out.println("Recording saved");
+                } else {
+                    JOptionPane.showMessageDialog(mainPanel, state.getErrorMessage(),
+                            "Error during save", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            } else {
                 System.out.println("No Selection");
                 // TODO: create an error code or something; alternate flow
                 return;
@@ -161,10 +164,8 @@ public class AppBuilder {
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
-        DummyPresenter dummyPresenter = new DummyPresenter();
-
-        StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
-        StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
+        StartRecording startRecording = new StartRecording(fileDAO);
+        StopRecording stopRecording = new StopRecording(fileDAO);
 
         recordButton.addActionListener(e -> {
             // TODO: properly implement recording, stopping, saving

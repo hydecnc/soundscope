@@ -7,11 +7,9 @@ import javax.sound.sampled.AudioFormat;
 
 public class StopRecording implements StopRecordingIB {
     private final StopRecordingDAI stopRecordingDAO;
-    private final StopRecordingOB stopRecordingPresenter;
 
-    public StopRecording(StopRecordingDAI stopRecordingDAI, StopRecordingOB stopRecordingOB) {
+    public StopRecording(StopRecordingDAI stopRecordingDAI) {
         this.stopRecordingDAO = stopRecordingDAI;
-        this.stopRecordingPresenter = stopRecordingOB;
     }
 
     @Override
@@ -25,6 +23,5 @@ public class StopRecording implements StopRecordingIB {
         AudioRecording audioRecording = new AudioRecording(recorder.getRecordingBytes(), format);
         // toss the object to the DAO
         stopRecordingDAO.setAudioRecording(audioRecording);
-        stopRecordingPresenter.presentRecordEndView();
     }
 }
