@@ -130,12 +130,12 @@ public class AppBuilder {
         
         javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
             if (waveformViewModel.getAudioData() != null) {
-                // Get real-time playback position from playback use case
+                // Get playback position from playback use case (works for both playing and paused)
                 double playbackPositionSeconds = 0.0;
-                if (playRecordingUseCase != null && playRecordingUseCase.isPlaying()) {
+                if (playRecordingUseCase != null) {
                     int framesPlayed = playRecordingUseCase.getFramesPlayed();
                     int sampleRate = waveformViewModel.getAudioData().getSampleRate();
-                    if (sampleRate > 0) {
+                    if (sampleRate > 0 && framesPlayed > 0) {
                         playbackPositionSeconds = (double) framesPlayed / sampleRate;
                     }
                 }
