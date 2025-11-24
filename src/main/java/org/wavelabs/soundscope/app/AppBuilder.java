@@ -117,8 +117,7 @@ public class AppBuilder {
             File outputFolder = null;
             if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 outputFolder = chooser.getSelectedFile();
-                DummyPresenter dummyPresenter = new DummyPresenter();
-                SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+                SaveRecording saveRecording = new SaveRecording(fileDAO, new DummyPresenter());
 
                 // Saves audio file as "output.wav"
                 // TODO: (Time permitting) allow user to change name of output file?
