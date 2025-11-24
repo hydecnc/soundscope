@@ -162,10 +162,8 @@ public class AppBuilder {
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
-        DummyPresenter dummyPresenter = new DummyPresenter();
-
-        StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
-        StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
+        StartRecording startRecording = new StartRecording(fileDAO);
+        StopRecording stopRecording = new StopRecording(fileDAO);
 
         recordButton.addActionListener(e -> {
             // TODO: properly implement recording, stopping, saving

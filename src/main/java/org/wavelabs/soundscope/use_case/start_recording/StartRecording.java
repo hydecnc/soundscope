@@ -4,11 +4,9 @@ import org.wavelabs.soundscope.infrastructure.Recorder;
 
 public class StartRecording implements StartRecordingIB {
     private final StartRecordingDAI startRecordingDataObject;
-    private final StartRecordingOB startRecordingPresenter;
 
-    public StartRecording(StartRecordingDAI startRecordingDAI, StartRecordingOB startRecordingPresenter) {
+    public StartRecording(StartRecordingDAI startRecordingDAI) {
         this.startRecordingDataObject = startRecordingDAI;
-        this.startRecordingPresenter = startRecordingPresenter;
     }
 
     /**
@@ -19,7 +17,5 @@ public class StartRecording implements StartRecordingIB {
         final Recorder recorder = startRecordingDataObject.getRecorder();
         if (!recorder.isRecording())
             recorder.start();
-
-        startRecordingPresenter.presentRecordingView();
     }
 }
