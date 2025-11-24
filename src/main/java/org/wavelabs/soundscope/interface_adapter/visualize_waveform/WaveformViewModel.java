@@ -21,7 +21,7 @@ public class WaveformViewModel {
      */
     public WaveformViewModel() {
         this.outputText = "Most similar to \"Viva La Vida\"<br>Fingerprint: abE671deF";
-    }
+    } //TODO: why is this the default text... this is from the identify use case, no?
     
     /**
      * Gets the audio data to be visualized.

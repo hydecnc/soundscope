@@ -4,11 +4,14 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
+import java.io.File;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
+import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
@@ -19,6 +22,7 @@ import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterInteractor;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
+import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingID;
@@ -37,14 +41,13 @@ public class AppBuilder {
     private final JPanel mainPanel = new JPanel();
     private final JPanel mainButtonPanel = new JPanel();
     private final JPanel titlePanel = new JPanel();
-    private final JPanel infoPanel = new JPanel();
     private WaveformPanel waveformPanel;
     private TimelinePanel timelinePanel;
     private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
-    private static boolean playing = false; // TODO: decide if it's worth moving this into the play
-                                            // use case
+
+    private Song song = new Song(); //TODO: refactor this to use clean architecture; entities probably shouldn't be directly referenced here?
     private FileDAO fileDAO = new FileDAO();
     private DisplayRecordingWaveform displayRecordingWaveformUseCase;
     private javax.swing.Timer recordingWaveformTimer;
@@ -56,7 +59,6 @@ public class AppBuilder {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(titlePanel);
-        mainPanel.add(infoPanel);
     }
 
     public AppBuilder addTitle() {
@@ -333,6 +335,7 @@ public class AppBuilder {
         return this;
     }
 
+    //TODO: should this be moved into the WaveformPanel class?
     /**
      * Scrolls the scroll pane to show the latest part of the waveform during recording.
      * Only scrolls after 30 seconds of recording.
@@ -373,8 +376,10 @@ public class AppBuilder {
         fingerprintButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(fingerprintButton);
         fingerprintButton.addActionListener(e -> {
-            // TODO: Use this and identify recording
-            System.out.println(fingerprinterInteractor.execute());
+
+            song.setFingerprint(fingerprinterInteractor.execute().getFingerprint());
+
+            System.out.println(song.getFingerprint()); //TODO: remove this once done with debugging
         });
         return this;
     }
@@ -384,19 +389,21 @@ public class AppBuilder {
         identifyButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(identifyButton);
 
-        JTextArea songTitle = new JTextArea("Song: ");
-        songTitle.setPreferredSize(new Dimension(200, 200));
-        infoPanel.add(songTitle);
+        // TODO: add UI elements to display the Identify information
+//        JTextArea songTitle = new JTextArea("Song: ");
+//        songTitle.setPreferredSize(new Dimension(200, 200));
+//        infoPanel.add(songTitle);
+//
+//        JTextArea songArtist = new JTextArea("Artist: ");
+//        songArtist.setPreferredSize(new Dimension(200, 200));
+//        infoPanel.add(songArtist);
 
-        JTextArea songArtist = new JTextArea("Artist: ");
-        songArtist.setPreferredSize(new Dimension(200, 200));
-        infoPanel.add(songArtist);
-
-
+        final IdentifyInteractor identifyInteractor = new IdentifyInteractor(song);
 
         identifyButton.addActionListener(e -> {
-            //TODO: move this into a use case
-
+            //TODO: handle errors and failure case
+            identifyInteractor.identify((int)fileDAO.getAudioRecording().getDurationSeconds());
+            System.out.println(song.getMetadata());
         });
         return this;
     }

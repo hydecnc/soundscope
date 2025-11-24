@@ -1,6 +1,25 @@
 package org.wavelabs.soundscope.entity;
 
-public class Song {
+public class Song { //TODO: javadoc
+    private SongMetadata metadata;
+    private String fingerprint;
+
+    public void setFingerprint(String fingerprint){
+        this.fingerprint = fingerprint;
+    }
+
+    public void setMetadata(SongMetadata metadata){
+        this.metadata = metadata;
+    }
+
+    public SongMetadata getMetadata() {
+        return metadata;
+    }
+
+    public  String getFingerprint() {
+        return fingerprint;
+    }
+
 
     /**
      * Stores all metadata needed for a song
