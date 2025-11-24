@@ -59,5 +59,3 @@ public class WaveformViewModel {
         this.outputText = outputText;
     }
 }
-
-
