@@ -21,12 +21,12 @@ public class SaveRecording implements SaveRecordingIB {
 
         final FileSaver fileSaver = saveRecordingDAO.getFileSaver();
         try {
-            boolean success = fileSaver.save(filePath, audioRecording);
+            fileSaver.save(filePath, audioRecording);
         } catch (IOException ex) {
             // TODO: appropriate error handling
         }
 
-        // TODO: show error according to success
+        // TODO: show error message to user if save failed
         saveRecordingPresenter.presentSaveSuccessView(); // end use case
     }
 }
