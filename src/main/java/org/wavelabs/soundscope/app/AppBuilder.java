@@ -6,21 +6,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.io.File;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
+import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
@@ -31,6 +22,7 @@ import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterInteractor;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
+import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingID;
@@ -54,8 +46,8 @@ public class AppBuilder {
     private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
-    private static boolean playing = false; // TODO: decide if it's worth moving this into the play
-                                            // use case
+
+    private Song song = new Song(); //TODO: refactor this to use clean architecture; entities probably shouldn't be directly referenced here?
     private FileDAO fileDAO = new FileDAO();
     private DisplayRecordingWaveform displayRecordingWaveformUseCase;
     private javax.swing.Timer recordingWaveformTimer;
@@ -82,37 +74,41 @@ public class AppBuilder {
         waveformPanel = new WaveformPanel();
         timelinePanel = new TimelinePanel();
         waveformViewModel = new WaveformViewModel();
-        
+
         WaveformPresenter presenter = new WaveformPresenter(waveformViewModel);
         JavaSoundAudioFileGateway gateway = new JavaSoundAudioFileGateway();
         processAudioFileUseCase = new ProcessAudioFile(gateway, presenter);
-        
+
+        mainPanel.add(waveformPanel);
+        mainPanel.add(mainButtonPanel); //TODO: why is this inside addWaveformView?
+
+
         // Create synchronized scroll panes for timeline and waveform
         JScrollPane timelineScrollPane = new JScrollPane(timelinePanel);
         timelineScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         timelineScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         timelineScrollPane.setBorder(null);
-        
+
         waveformScrollPane = new JScrollPane(waveformPanel);
         waveformScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         waveformScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         waveformScrollPane.setBorder(null);
         // Ensure scrollbar is always visible when content is larger than viewport
         waveformScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
-        
+
         // Synchronize scrolling between timeline and waveform
         timelineScrollPane.getViewport().addChangeListener(e -> {
             JViewport timelineViewport = timelineScrollPane.getViewport();
             JViewport waveformViewport = waveformScrollPane.getViewport();
             waveformViewport.setViewPosition(timelineViewport.getViewPosition());
         });
-        
+
         waveformScrollPane.getViewport().addChangeListener(e -> {
             JViewport timelineViewport = timelineScrollPane.getViewport();
             JViewport waveformViewport = waveformScrollPane.getViewport();
             timelineViewport.setViewPosition(waveformViewport.getViewPosition());
         });
-        
+
         // Calculate width for 30 seconds: account for 256x downsampling
         int widthFor30Seconds = ((44100 * 30) / 256) / 8;
         timelineScrollPane.setPreferredSize(new Dimension(
@@ -123,15 +119,15 @@ public class AppBuilder {
             widthFor30Seconds,
             UIStyle.Dimensions.WAVEFORM_HEIGHT
         ));
-        
+
         // Create container for timeline and waveform
         JPanel waveformContainer = new JPanel(new BorderLayout());
         waveformContainer.add(timelineScrollPane, BorderLayout.NORTH);
         waveformContainer.add(waveformScrollPane, BorderLayout.CENTER);
-        
+
         mainPanel.add(waveformContainer);
         mainPanel.add(mainButtonPanel);
-        
+
         javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
             if (waveformViewModel.getAudioData() != null) {
                 // Get playback position from playback use case (works for both playing and paused)
@@ -143,11 +139,11 @@ public class AppBuilder {
                         playbackPositionSeconds = (double) framesPlayed / sampleRate;
                     }
                 }
-                
+
                 // Only update audio data if it changed, otherwise just update playback position
                 // This avoids recalculating waveform paths every 100ms
                 waveformPanel.updateWaveform(waveformViewModel.getAudioData(), playbackPositionSeconds);
-                
+
                 // Update timeline with same data (only if audio data changed)
                 if (timelinePanel != null) {
                     timelinePanel.updateTimeline(
@@ -168,7 +164,7 @@ public class AppBuilder {
             }
         });
         timer.start();
-        
+
         return this;
     }
 
@@ -180,14 +176,14 @@ public class AppBuilder {
         openButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Select Audio File");
-            
+
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "WAV Audio Files", "wav");
             fileChooser.setFileFilter(filter);
             fileChooser.setAcceptAllFileFilterUsed(false);
-            
+
             int result = fileChooser.showOpenDialog(mainPanel);
-            
+
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (processAudioFileUseCase != null) {
@@ -262,12 +258,12 @@ public class AppBuilder {
         StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
         StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
         SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
-        
+
         // Set up DisplayRecordingWaveform use case
-        DisplayRecordingWaveformPresenter recordingPresenter = 
+        DisplayRecordingWaveformPresenter recordingPresenter =
             new DisplayRecordingWaveformPresenter(waveformViewModel);
         displayRecordingWaveformUseCase = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
-        
+
         // Timer to update waveform during recording
         recordingWaveformTimer = new javax.swing.Timer(50, e -> {
             if (fileDAO.getRecorder() != null && fileDAO.getRecorder().isRecording()) {
@@ -296,7 +292,7 @@ public class AppBuilder {
                 String outputPath = "./output.wav";
                 saveRecording.execute(new SaveRecordingID(outputPath));
                 System.out.println("Recording Ended");
-                
+
                 // Automatically load and display the saved recording
                 File savedFile = new File(outputPath);
                 if (savedFile.exists() && processAudioFileUseCase != null) {
@@ -338,7 +334,8 @@ public class AppBuilder {
 
         return this;
     }
-    
+
+    //TODO: should this be moved into the WaveformPanel class?
     /**
      * Scrolls the scroll pane to show the latest part of the waveform during recording.
      * Only scrolls after 30 seconds of recording.
@@ -351,14 +348,14 @@ public class AppBuilder {
             // Account for 256x downsampling
             int samplesIn30Seconds = (sampleRate * 30) / 256;
             int widthFor30Seconds = samplesIn30Seconds / 8;
-            
+
             int totalSamples = waveformViewModel.getAudioData().getAmplitudeSamples().length;
-            
+
             // During recording: scroll to show the latest part continuously
             // Calculate the x position of the latest sample
             int latestSampleX = (int) (totalSamples * ((double) widthFor30Seconds / samplesIn30Seconds));
             int viewportWidth = viewport.getWidth();
-            
+
             // Scroll so the latest part is visible, but keep it smooth
             if (totalSamples > samplesIn30Seconds) {
                 // After 30 seconds: scroll to show the latest part
@@ -379,8 +376,10 @@ public class AppBuilder {
         fingerprintButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(fingerprintButton);
         fingerprintButton.addActionListener(e -> {
-            // TODO: Use this and identify recording
-            System.out.println(fingerprinterInteractor.execute());
+
+            song.setFingerprint(fingerprinterInteractor.execute().getFingerprint());
+
+            System.out.println(song.getFingerprint()); //TODO: remove this once done with debugging
         });
         return this;
     }
@@ -389,8 +388,22 @@ public class AppBuilder {
         JButton identifyButton = new JButton("Identify");
         identifyButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(identifyButton);
+
+        // TODO: add UI elements to display the Identify information
+//        JTextArea songTitle = new JTextArea("Song: ");
+//        songTitle.setPreferredSize(new Dimension(200, 200));
+//        infoPanel.add(songTitle);
+//
+//        JTextArea songArtist = new JTextArea("Artist: ");
+//        songArtist.setPreferredSize(new Dimension(200, 200));
+//        infoPanel.add(songArtist);
+
+        final IdentifyInteractor identifyInteractor = new IdentifyInteractor(song);
+
         identifyButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            //TODO: handle errors and failure case
+            identifyInteractor.identify((int)fileDAO.getAudioRecording().getDurationSeconds());
+            System.out.println(song.getMetadata());
         });
         return this;
     }
