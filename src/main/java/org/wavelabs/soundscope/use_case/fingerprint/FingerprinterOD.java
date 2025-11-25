@@ -1,7 +1,5 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
-import org.wavelabs.soundscope.entity.Song;
-
 public class FingerprinterOD {
     private final String fingerprint;
 
