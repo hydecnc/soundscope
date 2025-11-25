@@ -6,17 +6,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.io.File;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
@@ -214,28 +204,32 @@ public class AppBuilder {
         saveAsButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(saveAsButton);
         saveAsButton.addActionListener(e -> {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setCurrentDirectory(new java.io.File("."));
-            chooser.setDialogTitle("Save Audio File");
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            File outputFolder = null;
-            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                outputFolder = chooser.getSelectedFile();
-                SaveRecording saveRecording = new SaveRecording(fileDAO, new DummyPresenter());
-
-                // Saves audio file as "output.wav"
-                // TODO: (Time permitting) allow user to change name of output file?
-                saveRecording.execute(new SaveRecordingID(outputFolder.getAbsolutePath() + "/output.wav"));
-                System.out.println("Recording saved");
-            }
-            else {
-                System.out.println("No Selection");
-                // TODO: create an error code or something; alternate flow
-                return;
-            }
+            saveFileToDirectory();
         });
 
         return this;
+    }
+
+    private void saveFileToDirectory() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File("."));
+        chooser.setDialogTitle("Save Audio File");
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        File outputFolder = null;
+        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            outputFolder = chooser.getSelectedFile();
+            SaveRecording saveRecording = new SaveRecording(fileDAO, new DummyPresenter());
+
+            // Saves audio file as "output.wav"
+            // TODO: (Time permitting) allow user to change name of output file?
+            saveRecording.execute(new SaveRecordingID(outputFolder.getAbsolutePath() + "/output.wav"));
+            System.out.println("Recording saved");
+        }
+        else {
+            System.out.println("No Selection");
+            // TODO: create an error code or something; alternate flow
+            return;
+        }
     }
 
     public AppBuilder addPlayUseCase() {
@@ -278,7 +272,6 @@ public class AppBuilder {
         JButton recordButton = new JButton("Start Recording");
         recordButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(recordButton);
-        JButton recordButton = new JButton("Start Recording");
         recordButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(recordButton);
 
@@ -298,7 +291,7 @@ public class AppBuilder {
         displayRecordingWaveformUseCase = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
 
         // Timer to update waveform during recording
-        recordingWaveformTimer = new javax.swing.Timer(50, e -> {
+        recordingWaveformTimer = new Timer(50, e -> {
             if (fileDAO.getRecorder() != null && fileDAO.getRecorder().isRecording()) {
                 DisplayRecordingWaveformID inputData = new DisplayRecordingWaveformID();
                 displayRecordingWaveformUseCase.execute(inputData);
@@ -318,11 +311,12 @@ public class AppBuilder {
         });
         recordingWaveformTimer.start();
 
-        fingerprintButton.addActionListener(e -> {
+        recordButton.addActionListener(e -> {
             // TODO: properly implement recording, stopping, saving
             if(fileDAO.getRecorder().isRecording()){
                 stopRecording.execute();
-                String outputPath = "./output.wav";
+                // file renamed to cache to reflect the temporary nature
+                String outputPath = "./cache.wav";
                 saveRecording.execute(new SaveRecordingID(outputPath));
                 System.out.println("Recording Ended");
 
@@ -355,9 +349,9 @@ public class AppBuilder {
             }
 
             if(fileDAO.getRecorder().isRecording()){
-                fingerprintButton.setText("Stop Recording");
+                recordButton.setText("Stop Recording");
             }else{
-                fingerprintButton.setText("Start Recording");
+                recordButton.setText("Start Recording");
             }
         });
 
