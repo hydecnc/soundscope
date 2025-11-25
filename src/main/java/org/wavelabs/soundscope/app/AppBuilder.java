@@ -21,6 +21,8 @@ import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 public class AppBuilder {
@@ -105,36 +107,55 @@ public class AppBuilder {
         saveAsButton.setPreferredSize(new Dimension(400, 200));
         mainButtonPanel.add(saveAsButton);
         saveAsButton.addActionListener(e -> {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setCurrentDirectory(new java.io.File("."));
-            chooser.setDialogTitle("Save Audio File");
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            File outputFolder = null;
-            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                outputFolder = chooser.getSelectedFile();
-                SaveFileState state = new SaveFileState();
-                SaveFilePresenter presenter = new SaveFilePresenter(state);
-                SaveRecording saveRecording = new SaveRecording(fileDAO, presenter);
-
-                // Saves audio file as "output.wav"
-                // TODO: (Time permitting) allow user to change name of output file?
-                saveRecording.execute(new SaveRecordingID(outputFolder.getAbsolutePath() + "/output.wav"));
-
-                if(state.isSuccess()) {
-                    System.out.println("Recording saved");
-                } else {
-                    JOptionPane.showMessageDialog(mainPanel, state.getErrorMessage(),
-                            "Error during save", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-            } else {
-                System.out.println("No Selection");
-                // TODO: create an error code or something; alternate flow
-                return;
-            }
+            saveFileToDirectory();
         });
 
         return this;
+    }
+
+    private void saveFileToDirectory() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File("."));
+        chooser.setDialogTitle("Save Audio File");
+
+        // Filters to only WAV files. For simplicity
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "WAV Audio files (*.wav)", "wav"
+        ));
+
+        LocalDateTime myDateObj = LocalDateTime.now();
+        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+
+        String formattedDate = myDateObj.format(myFormatObj);
+
+        chooser.setSelectedFile(new File(formattedDate + ".wav"));
+
+        if (chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+            File outputFile = chooser.getSelectedFile();
+
+            // Optional: ensure extension .txt exists
+            if (!outputFile.getName().contains(".")) {
+                outputFile = new File(outputFile.getAbsolutePath() + ".wav");
+            }
+
+            SaveFileState state = new SaveFileState();
+            SaveFilePresenter presenter = new SaveFilePresenter(state);
+            SaveRecording saveRecording = new SaveRecording(fileDAO, presenter);
+
+            saveRecording.execute(new SaveRecordingID(outputFile.getAbsolutePath()));
+
+            if(state.isSuccess()) {
+                System.out.println("Recording saved");
+            } else {
+                JOptionPane.showMessageDialog(mainPanel, state.getErrorMessage(),
+                        "Error during save", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        } else {
+            System.out.println("No Selection");
+            // TODO: create an error code or something; alternate flow
+            return;
+        };
     }
 
     public AppBuilder addPlayUseCase() {
