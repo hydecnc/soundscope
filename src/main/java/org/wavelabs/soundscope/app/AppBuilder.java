@@ -7,21 +7,12 @@ import java.awt.Font;
 import javax.swing.*;
 import java.awt.Point;
 import java.io.File;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
+import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
@@ -33,6 +24,7 @@ import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterInteractor;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
+import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingID;
@@ -91,11 +83,15 @@ public class AppBuilder {
         waveformPanel = new WaveformPanel();
         timelinePanel = new TimelinePanel();
         waveformViewModel = new WaveformViewModel();
-        
+
         WaveformPresenter presenter = new WaveformPresenter(waveformViewModel);
         JavaSoundAudioFileGateway gateway = new JavaSoundAudioFileGateway();
         processAudioFileUseCase = new ProcessAudioFile(gateway, presenter);
-        
+
+        mainPanel.add(waveformPanel);
+        mainPanel.add(mainButtonPanel); //TODO: why is this inside addWaveformView?
+
+
         // Create synchronized scroll panes for timeline and waveform
         JScrollPane timelineScrollPane = new JScrollPane(timelinePanel);
         timelineScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -140,7 +136,7 @@ public class AppBuilder {
 
         mainPanel.add(waveformContainer);
         mainPanel.add(mainButtonPanel);
-        
+
         javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
             if (waveformViewModel.getAudioData() != null) {
                 // Get playback position from playback use case (works for both playing and paused)
@@ -177,7 +173,7 @@ public class AppBuilder {
             }
         });
         timer.start();
-        
+
         return this;
     }
 
@@ -189,14 +185,14 @@ public class AppBuilder {
         openButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Select Audio File");
-            
+
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "WAV Audio Files", "wav");
             fileChooser.setFileFilter(filter);
             fileChooser.setAcceptAllFileFilterUsed(false);
-            
+
             int result = fileChooser.showOpenDialog(mainPanel);
-            
+
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (processAudioFileUseCase != null) {
@@ -434,8 +430,10 @@ public class AppBuilder {
         fingerprintButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(fingerprintButton);
         fingerprintButton.addActionListener(e -> {
-            // TODO: Use this and identify recording
-            System.out.println(fingerprinterInteractor.execute());
+
+            song.setFingerprint(fingerprinterInteractor.execute().getFingerprint());
+
+            System.out.println(song.getFingerprint()); //TODO: remove this once done with debugging
         });
         return this;
     }
@@ -444,8 +442,22 @@ public class AppBuilder {
         JButton identifyButton = new JButton("Identify");
         identifyButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(identifyButton);
+
+        // TODO: add UI elements to display the Identify information
+//        JTextArea songTitle = new JTextArea("Song: ");
+//        songTitle.setPreferredSize(new Dimension(200, 200));
+//        infoPanel.add(songTitle);
+//
+//        JTextArea songArtist = new JTextArea("Artist: ");
+//        songArtist.setPreferredSize(new Dimension(200, 200));
+//        infoPanel.add(songArtist);
+
+        final IdentifyInteractor identifyInteractor = new IdentifyInteractor(song);
+
         identifyButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            //TODO: handle errors and failure case
+            identifyInteractor.identify((int)fileDAO.getAudioRecording().getDurationSeconds());
+            System.out.println(song.getMetadata());
         });
         return this;
     }
