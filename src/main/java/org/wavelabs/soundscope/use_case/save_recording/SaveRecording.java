@@ -18,6 +18,7 @@ public class SaveRecording implements SaveRecordingIB {
     public void execute(SaveRecordingID inputData) {
         final String filePath = inputData.getFilePath();
         final AudioRecording audioRecording = saveRecordingDAO.getAudioRecording();
+
         final FileSaver fileSaver = saveRecordingDAO.getFileSaver();
 
         // check if audio recording is null for preventing NPE

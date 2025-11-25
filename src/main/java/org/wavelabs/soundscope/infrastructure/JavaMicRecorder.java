@@ -9,6 +9,8 @@ public class JavaMicRecorder implements Recorder {
     private TargetDataLine line;
     private ByteArrayOutputStream recordingByteData;
     private final AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
+    private volatile byte[] currentBuffer;
+    private final Object bufferLock = new Object();
 
     /**
      * Creates a new JavaMicRecorder, with default audio format.
@@ -87,12 +89,37 @@ public class JavaMicRecorder implements Recorder {
                 // read the next chunk of data from line
                 numBytesRead = line.read(data, 0, data.length);
                 recordingByteData.write(data, 0, numBytesRead);
+                
+                // Update current buffer for real-time waveform display
+                synchronized (bufferLock) {
+                    currentBuffer = new byte[numBytesRead];
+                    System.arraycopy(data, 0, currentBuffer, 0, numBytesRead);
+                }
             }
 
             line.stop();
+            synchronized (bufferLock) {
+                currentBuffer = null;
+            }
         });
         recordingThread.start();
 
         System.out.println("Starting to record...");
+    }
+    
+    /**
+     * Gets the current audio buffer for real-time waveform display.
+     * 
+     * @return The current audio buffer, or null if not recording
+     */
+    public byte[] getCurrentBuffer() {
+        synchronized (bufferLock) {
+            if (currentBuffer == null) {
+                return null;
+            }
+            byte[] copy = new byte[currentBuffer.length];
+            System.arraycopy(currentBuffer, 0, copy, 0, currentBuffer.length);
+            return copy;
+        }
     }
 }
