@@ -26,6 +26,7 @@ import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterIB;
@@ -62,6 +63,12 @@ public class AppBuilder {
     private ProcessAudioFile processAudioFileUseCase;
     private final FileDAO fileDAO;
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
+
+    private DisplayRecordingWaveform displayRecordingWaveformUseCase;
+    private javax.swing.Timer recordingWaveformTimer;
+    private PlayRecordingIB playRecordingUseCase;
+    private JButton playPauseButton;
+    private String currentAudioSourcePath;
 
     public AppBuilder() {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
@@ -305,10 +312,10 @@ public class AppBuilder {
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
-        DummyPresenter dummyPresenter = new DummyPresenter();
-        StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
-        StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
-        SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+        SaveFilePresenter saveFilePresenter = new SaveFilePresenter(new SaveFileState());
+        StartRecording startRecording = new StartRecording(fileDAO);
+        StopRecording stopRecording = new StopRecording(fileDAO);
+        SaveRecording saveRecording = new SaveRecording(fileDAO, saveFilePresenter);
 
         // Set up DisplayRecordingWaveform use case
         DisplayRecordingWaveformPresenter recordingPresenter =
@@ -316,7 +323,7 @@ public class AppBuilder {
         displayRecordingWaveformUseCase = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
 
         // Timer to update waveform during recording
-        recordingWaveformTimer = new javax.swing.Timer(50, e -> {
+        recordingWaveformTimer = new Timer(50, e -> {
             if (fileDAO.getRecorder() != null && fileDAO.getRecorder().isRecording()) {
                 DisplayRecordingWaveformID inputData = new DisplayRecordingWaveformID();
                 displayRecordingWaveformUseCase.execute(inputData);
@@ -340,7 +347,8 @@ public class AppBuilder {
             // TODO: properly implement recording, stopping, saving
             if (fileDAO.getRecorder().isRecording()) {
                 stopRecording.execute();
-                String outputPath = "./output.wav";
+                // named cache due to the temporary nature of the file
+                String outputPath = "cache.wav";
                 saveRecording.execute(new SaveRecordingID(outputPath));
                 System.out.println("Recording Ended");
 
