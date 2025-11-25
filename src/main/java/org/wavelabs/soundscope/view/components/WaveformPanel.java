@@ -26,6 +26,10 @@ public class WaveformPanel extends JPanel {
     private int cachedSamplesIn30Seconds;
     private boolean dataChanged = true; // Flag to indicate if data needs recalculation
     
+    // Threshold for clipping display (normalized amplitude)
+    // Parts exceeding this threshold will not be displayed
+    private static final double CLIPPING_THRESHOLD = 0.7; // 70% of max normalized value
+    
     // Cached complete waveform path (only recalculated when audio data or panel height changes)
     private java.awt.geom.GeneralPath cachedCompletePath;
     private int cachedPathHeight = -1; // Track height when path was cached
@@ -217,9 +221,13 @@ public class WaveformPanel extends JPanel {
             return;
         }
         
-        double targetMagnitude = maxMagnitude * 0.90;
-        cachedNormalizationFactor = (targetMagnitude > 0.0) ? (0.90 / targetMagnitude) : 1.0;
+        // Use a fixed reference level for normalization instead of scaling to max
+        // This prevents loud sounds from compressing quieter sounds
+        // Reference level of 0.3 means sounds at 30% will fill 90% of display
+        double referenceLevel = 0.1; // Fixed reference, doesn't change with max magnitude
+        cachedNormalizationFactor = 0.90 / referenceLevel; // Always normalize to this fixed level
         
+        // Cap the normalization to prevent excessive amplification of very quiet sounds
         if (cachedNormalizationFactor > 10.0) {
             cachedNormalizationFactor = 10.0;
         }
@@ -236,13 +244,13 @@ public class WaveformPanel extends JPanel {
     
     /**
      * Builds the complete waveform path for the given height.
-     * This path includes all samples and is used for both played and unplayed portions.
+     * Uses fixed normalization so loud sounds don't compress quieter sounds.
+     * Parts exceeding the threshold are clamped and not displayed beyond the threshold.
      */
     private void buildCompletePath(int height, int startSample, int samplesToDisplay) {
         double verticalPadding = 10.0;
         double usableHeight = height - (verticalPadding * 2);
         double centerY = height / 2.0;
-        double maxNormalizedValue = 0.90;
         
         cachedCompletePath = new java.awt.geom.GeneralPath();
         boolean firstPoint = true;
@@ -253,9 +261,11 @@ public class WaveformPanel extends JPanel {
             
             double amplitude = Math.max(-1.0, Math.min(1.0, waveformData[sampleIndex]));
             double normalizedAmplitude = amplitude * cachedNormalizationFactor;
-            normalizedAmplitude = Math.max(-maxNormalizedValue, Math.min(maxNormalizedValue, normalizedAmplitude));
             
-            double y = centerY - (normalizedAmplitude * usableHeight / 2.0);
+            // Clamp to clipping threshold - don't display parts that exceed it
+            // This prevents loud sounds from compressing quieter sounds
+            double clampedAmplitude = Math.max(-CLIPPING_THRESHOLD, Math.min(CLIPPING_THRESHOLD, normalizedAmplitude));
+            double y = centerY - (clampedAmplitude * usableHeight / 2.0);
             
             if (firstPoint) {
                 cachedCompletePath.moveTo(x, y);
