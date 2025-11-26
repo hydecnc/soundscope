@@ -40,6 +40,8 @@ public class chromaprint_h extends chromaprint_h$shared {
             }
             String extension = libName.substring(libName.indexOf("."));
             Path tempLib = Files.createTempFile("chromaprint", extension);
+            tempLib.toFile().deleteOnExit(); // Auto-cleanup
+
             Files.copy(input, tempLib, StandardCopyOption.REPLACE_EXISTING);
             input.close();
 
