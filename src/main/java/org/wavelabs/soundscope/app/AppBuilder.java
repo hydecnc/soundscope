@@ -15,7 +15,6 @@ import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
-import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintPresenter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintViewModel;
@@ -59,7 +58,6 @@ public class AppBuilder {
     private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
-    private final FileDAO fileDAO;
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     private Song song = new Song(); // TODO: refactor this to use clean architecture; entities
@@ -78,8 +76,6 @@ public class AppBuilder {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(titlePanel);
-
-        fileDAO = new FileDAO();
     }
 
     public AppBuilder addTitle() {
