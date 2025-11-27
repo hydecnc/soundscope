@@ -1,6 +1,6 @@
 package org.wavelabs.soundscope.app;
 
-import javax.swing.*;
+import javax.swing.JFrame;
 
 public class Main {
     public static void main(String[] args) {
@@ -12,6 +12,7 @@ public class Main {
                 .addFileSaveUseCase()
                 .addPlayUseCase()
                 .addRecordUseCase()
+                .addFingerprintView()
                 .addFingerprintUseCase()
                 .addIdentifyUseCase()
                 .build();
