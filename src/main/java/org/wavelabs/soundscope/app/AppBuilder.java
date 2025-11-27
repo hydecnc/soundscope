@@ -61,6 +61,8 @@ public class AppBuilder {
     private PlayRecordingIB playRecordingUseCase;
     private JButton playPauseButton;
     private String currentAudioSourcePath;
+    private Song song = new Song(); //TODO: refactor this to use clean architecture; entities probably shouldn't be directly referenced here?
+
 
     public AppBuilder() {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
@@ -430,9 +432,7 @@ public class AppBuilder {
         fingerprintButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(fingerprintButton);
         fingerprintButton.addActionListener(e -> {
-
             song.setFingerprint(fingerprinterInteractor.execute().getFingerprint());
-
             System.out.println(song.getFingerprint()); //TODO: remove this once done with debugging
         });
         return this;
