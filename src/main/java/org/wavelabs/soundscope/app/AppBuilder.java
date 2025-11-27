@@ -15,6 +15,7 @@ import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
+import org.wavelabs.soundscope.interface_adapter.MainViewModel;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
@@ -35,6 +36,7 @@ import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
+import org.wavelabs.soundscope.view.MainView;
 import org.wavelabs.soundscope.view.UIStyle;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
 
@@ -45,6 +47,10 @@ import java.time.format.DateTimeFormatter;
 import org.wavelabs.soundscope.view.components.TimelinePanel;
 
 public class AppBuilder {
+    private MainView mainView;
+    private MainViewModel mainViewModel;
+
+
     private final JPanel mainPanel = new JPanel();
     private final JPanel mainButtonPanel = new JPanel();
     private final JPanel titlePanel = new JPanel();
@@ -54,7 +60,6 @@ public class AppBuilder {
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
     private final FileDAO fileDAO;
-    private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     private DisplayRecordingWaveform displayRecordingWaveformUseCase;
     private javax.swing.Timer recordingWaveformTimer;
@@ -70,6 +75,11 @@ public class AppBuilder {
         mainPanel.add(titlePanel);
 
         fileDAO = new FileDAO();
+    }
+
+    public AppBuilder addMainView(){
+        mainViewModel = new MainViewModel();
+        mainView = new MainView(mainViewModel);
     }
 
     public AppBuilder addTitle() {
@@ -466,8 +476,10 @@ public class AppBuilder {
         final JFrame application = new JFrame("Soundscope");
         application.setMinimumSize(new Dimension(600, 600));
         application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+
         application.setContentPane(mainPanel);
-        // NOTE: Consider adding view manager model
+
         return application;
     }
 }
