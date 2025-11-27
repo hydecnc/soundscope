@@ -1,9 +1,9 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
-public class FingerprinterOD {
+public class FingerprintOD {
     private final String fingerprint;
 
-    public FingerprinterOD(String fingerprint) {
+    public FingerprintOD(String fingerprint) {
         this.fingerprint = fingerprint;
     }
 
