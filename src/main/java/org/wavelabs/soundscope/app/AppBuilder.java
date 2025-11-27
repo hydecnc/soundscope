@@ -24,7 +24,7 @@ import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
-import org.wavelabs.soundscope.use_case.fingerprint.FingerprintInputBoundary;
+import org.wavelabs.soundscope.use_case.fingerprint.FingerprintIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintInteractor;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
@@ -445,8 +445,9 @@ public class AppBuilder {
 
     public AppBuilder addFingerprintUseCase() {
         final FingerprintOB fingerprintOutputBoundary = new FingerprintPresenter(fingerprintViewModel);
-        final FingerprintInputBoundary fingerprintInteractor = new FingerprintInteractor(fileDAO, fingerprintOutputBoundary);
-        FingerprintController fingerprintController = new FingerprintController(fingerprintInteractor);
+        final FingerprintIB
+            fingerprintInteractor = new FingerprintInteractor(fileDAO, fingerprintOutputBoundary);
+        final FingerprintController fingerprintController = new FingerprintController(fingerprintInteractor);
         fingerprintView.setFingerprintController(fingerprintController);
         return this;
     }

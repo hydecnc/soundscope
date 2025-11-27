@@ -1,11 +1,11 @@
 package org.wavelabs.soundscope.interface_adapter.fingerprint;
 
-import org.wavelabs.soundscope.use_case.fingerprint.FingerprintInputBoundary;
+import org.wavelabs.soundscope.use_case.fingerprint.FingerprintIB;
 
 public class FingerprintController {
-    private final FingerprintInputBoundary fingerprinterUseCaseInteractor;
+    private final FingerprintIB fingerprinterUseCaseInteractor;
 
-    public FingerprintController(FingerprintInputBoundary fingerprinterUseCaseInteractor) {
+    public FingerprintController(FingerprintIB fingerprinterUseCaseInteractor) {
         this.fingerprinterUseCaseInteractor = fingerprinterUseCaseInteractor;
     }
 

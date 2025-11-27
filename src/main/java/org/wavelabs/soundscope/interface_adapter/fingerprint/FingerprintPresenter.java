@@ -4,7 +4,7 @@ import org.wavelabs.soundscope.use_case.fingerprint.FingerprintOB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintOD;
 
 public class FingerprintPresenter implements FingerprintOB {
-    private FingerprintViewModel fingerprintViewModel;
+    private final FingerprintViewModel fingerprintViewModel;
 
     public FingerprintPresenter(FingerprintViewModel fingerprintViewModel) {
         this.fingerprintViewModel = fingerprintViewModel;

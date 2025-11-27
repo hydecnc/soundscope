@@ -7,16 +7,15 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintState;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintViewModel;
 
 public class FingerprintView extends JButton implements ActionListener, PropertyChangeListener {
-    // private FingerprintViewModel fingerprintViewModel;
     private FingerprintController fingerprintController;
 
     public FingerprintView(FingerprintViewModel fingerprintViewModel) {
-        // this.fingerprintViewModel = fingerprintViewModel;
         this.setText("Fingerprint");
         this.addActionListener(this);
         fingerprintViewModel.addPropertyChangeListener(this);
@@ -35,15 +34,14 @@ public class FingerprintView extends JButton implements ActionListener, Property
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-            final FingerprintState state = (FingerprintState)evt.getNewValue();
-            
-            // Display popup with the message from state
-                JOptionPane.showMessageDialog(
-                    this,
-                    state.getFingerprint(),
-                    "Fingerprint Result",
-                    // state.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE
-                    JOptionPane.INFORMATION_MESSAGE 
-                );
+        final FingerprintState state = (FingerprintState) evt.getNewValue();
+        // Display popup with the message from state
+        JOptionPane.showMessageDialog(
+            this,
+            state.getFingerprint(),
+            "Fingerprint Result",
+            // state.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE
+            JOptionPane.INFORMATION_MESSAGE
+        );
     }
 }
