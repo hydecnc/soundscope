@@ -105,6 +105,7 @@ public class WaveformPanel extends JPanel {
             }
             this.waveformData = null;
             this.durationSeconds = 0;
+            this.currentPlaybackPositionSeconds = 0.0;
             
             if (audioDataChanged) {
                 setPreferredSize(new Dimension(
