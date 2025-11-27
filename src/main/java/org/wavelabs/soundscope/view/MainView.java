@@ -286,6 +286,12 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                     });
                 }
             } else {
+                // Stop playback if it's running
+                if (mainViewModel.getState().isPlaying()) {
+                    playRecordingController.stop();
+                    playPauseButton.setText(MainViewModel.PLAY_TEXT);
+                }
+
                 startRecordingController.execute();
                 mainViewModel.getState().setRecording(true);
                 // Clear previous waveform when starting new recording
@@ -310,6 +316,13 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         playPauseButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(playPauseButton);
         playPauseButton.addActionListener(e -> {
+            if (mainViewModel.getState().isRecording()) {
+                JOptionPane.showMessageDialog(this,
+                        "Cannot play audio while recording is in progress.", "Recording in progress",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             final String currentAudioSourcePath = mainViewModel.getState().getCurrentAudioSourcePath();
 
             if (currentAudioSourcePath == null || currentAudioSourcePath.isBlank()) {
