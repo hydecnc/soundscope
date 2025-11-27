@@ -56,6 +56,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     //Info panel
     private final JPanel infoPanel = new JPanel();
     private final JTextField fingerprintInfo, songTitleInfo, albumInfo;
+    private final JLabel timeLabel = new JLabel("0:00 / 0:00");
 
     //TODO: migrate App Builder stuff here
     public MainView(MainViewModel mainViewModel, WaveformViewModel waveformViewModel) {
@@ -114,6 +115,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         infoPanel.add(fingerprintInfo);
         infoPanel.add(songTitleInfo);
         infoPanel.add(albumInfo);
+        infoPanel.add(timeLabel);
 
         infoPanel.setMaximumSize(MainViewModel.MAX_INFO_PANEL_DIMENSIONS);
 
@@ -170,6 +172,10 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                 if (sampleRate > 0 && framesPlayed > 0) {
                     playbackPositionSeconds = (double) framesPlayed / sampleRate;
                 }
+
+                // Update time label
+                double totalDuration = waveformViewModel.getAudioData().getDurationSeconds();
+                timeLabel.setText(WaveformViewModel.formatTime(playbackPositionSeconds) + " / " + WaveformViewModel.formatTime(totalDuration));
 
                 // Only update audio data if it changed, otherwise just update playback position
                 // This avoids recalculating waveform paths every 100ms

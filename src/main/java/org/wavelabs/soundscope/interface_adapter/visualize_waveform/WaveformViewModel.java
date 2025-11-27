@@ -43,4 +43,16 @@ public class WaveformViewModel {
     public void setOutputText(String outputText) {
         this.outputText = outputText;
     } //TODO: this is never accessed; figure out how to get rid of it
+
+    /**
+     * Formats a duration in seconds to a MM:SS string format.
+     * 
+     * @param seconds The duration in seconds
+     * @return The formatted string (e.g., "1:05")
+     */
+    public static String formatTime(double seconds) {
+        int minutes = (int) (seconds / 60);
+        int secs = (int) (seconds % 60);
+        return String.format("%d:%02d", minutes, secs);
+    }
 }
