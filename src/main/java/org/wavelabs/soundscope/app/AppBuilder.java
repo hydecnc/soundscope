@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import javax.swing.*;
 import java.awt.Point;
 import java.io.File;
 import javax.swing.*;
@@ -18,6 +19,8 @@ import org.wavelabs.soundscope.interface_adapter.DummyPresenter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintPresenter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintViewModel;
+import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
+import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
@@ -40,6 +43,11 @@ import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.view.FingerprintView;
 import org.wavelabs.soundscope.view.UIStyle;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
+
+import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.wavelabs.soundscope.view.components.TimelinePanel;
 
 public class AppBuilder {
@@ -51,6 +59,8 @@ public class AppBuilder {
     private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
+    private final FileDAO fileDAO;
+    private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     private Song song = new Song(); // TODO: refactor this to use clean architecture; entities
                                     // probably shouldn't be directly referenced here?
@@ -68,6 +78,8 @@ public class AppBuilder {
         mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(titlePanel);
+
+        fileDAO = new FileDAO();
     }
 
     public AppBuilder addTitle() {
@@ -211,9 +223,54 @@ public class AppBuilder {
         saveAsButton.setPreferredSize(new Dimension(200, 200));
         mainButtonPanel.add(saveAsButton);
         saveAsButton.addActionListener(e -> {
-            // TODO: implement this method hopefully
+            saveFileToDirectory();
         });
         return this;
+    }
+
+    private void saveFileToDirectory() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File("."));
+        chooser.setDialogTitle("Save Audio File");
+
+        // Filters to only WAV files. For simplicity
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "WAV Audio files (*.wav)", "wav"
+        ));
+
+        LocalDateTime myDateObj = LocalDateTime.now();
+        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+
+        String formattedDate = myDateObj.format(myFormatObj);
+
+        chooser.setSelectedFile(new File(formattedDate + ".wav"));
+
+        if (chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+            File outputFile = chooser.getSelectedFile();
+
+            // Optional: ensure extension .txt exists
+            if (!outputFile.getName().contains(".")) {
+                outputFile = new File(outputFile.getAbsolutePath() + ".wav");
+            }
+
+            SaveFileState state = new SaveFileState();
+            SaveFilePresenter presenter = new SaveFilePresenter(state);
+            SaveRecording saveRecording = new SaveRecording(fileDAO, presenter);
+
+            saveRecording.execute(new SaveRecordingID(outputFile.getAbsolutePath()));
+
+            if(state.isSuccess()) {
+                System.out.println("Recording saved");
+            } else {
+                JOptionPane.showMessageDialog(mainPanel, state.getErrorMessage(),
+                        "Error during save", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        } else {
+            System.out.println("No Selection");
+            // TODO: create an error code or something; alternate flow
+            return;
+        };
     }
 
     public AppBuilder addPlayUseCase() {
@@ -263,10 +320,10 @@ public class AppBuilder {
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
-        DummyPresenter dummyPresenter = new DummyPresenter();
-        StartRecording startRecording = new StartRecording(fileDAO, dummyPresenter);
-        StopRecording stopRecording = new StopRecording(fileDAO, dummyPresenter);
-        SaveRecording saveRecording = new SaveRecording(fileDAO, dummyPresenter);
+        SaveFilePresenter saveFilePresenter = new SaveFilePresenter(new SaveFileState());
+        StartRecording startRecording = new StartRecording(fileDAO);
+        StopRecording stopRecording = new StopRecording(fileDAO);
+        SaveRecording saveRecording = new SaveRecording(fileDAO, saveFilePresenter);
 
         // Set up DisplayRecordingWaveform use case
         DisplayRecordingWaveformPresenter recordingPresenter =
@@ -274,7 +331,7 @@ public class AppBuilder {
         displayRecordingWaveformUseCase = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
 
         // Timer to update waveform during recording
-        recordingWaveformTimer = new javax.swing.Timer(50, e -> {
+        recordingWaveformTimer = new Timer(50, e -> {
             if (fileDAO.getRecorder() != null && fileDAO.getRecorder().isRecording()) {
                 DisplayRecordingWaveformID inputData = new DisplayRecordingWaveformID();
                 displayRecordingWaveformUseCase.execute(inputData);
@@ -297,7 +354,8 @@ public class AppBuilder {
             // TODO: properly implement recording, stopping, saving
             if (fileDAO.getRecorder().isRecording()) {
                 stopRecording.execute();
-                String outputPath = "./output.wav";
+                // named cache due to the temporary nature of the file
+                String outputPath = "cache.wav";
                 saveRecording.execute(new SaveRecordingID(outputPath));
                 System.out.println("Recording Ended");
 
