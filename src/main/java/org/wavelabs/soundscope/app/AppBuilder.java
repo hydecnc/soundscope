@@ -3,11 +3,9 @@ package org.wavelabs.soundscope.app;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Font;
 import javax.swing.*;
 import java.awt.Point;
 import java.io.File;
-import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
@@ -19,8 +17,8 @@ import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintControll
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintPresenter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintViewModel;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
-import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
-import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
+import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingController;
+import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
@@ -37,7 +35,9 @@ import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingOB;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
+import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingIB;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
+import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingOB;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.view.FingerprintView;
@@ -45,7 +45,6 @@ import org.wavelabs.soundscope.view.MainView;
 import org.wavelabs.soundscope.view.UIStyle;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -55,8 +54,9 @@ public class AppBuilder {
     private MainView mainView;
     private MainViewModel mainViewModel;
 
+    private JPanel mainPanel;
+    private FileDAO fileDAO = new FileDAO();
 
-    private final JPanel mainPanel = new JPanel();
     private final JPanel mainButtonPanel = new JPanel();
     private final JPanel titlePanel = new JPanel();
     private WaveformPanel waveformPanel;
@@ -64,11 +64,10 @@ public class AppBuilder {
     private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
-    private final FileDAO fileDAO;
 
     private Song song = new Song(); // TODO: refactor this to use clean architecture; entities
                                     // probably shouldn't be directly referenced here?
-    private FileDAO fileDAO = new FileDAO();
+
     private DisplayRecordingWaveform displayRecordingWaveformUseCase;
     private javax.swing.Timer recordingWaveformTimer;
     private PlayRecordingIB playRecordingUseCase;
@@ -87,12 +86,8 @@ public class AppBuilder {
     public AppBuilder addMainView(){
         mainViewModel = new MainViewModel();
         mainView = new MainView(mainViewModel);
-    }
 
-    public AppBuilder addTitle() {
-        JLabel titleLabel = new JLabel("Soundscope");
-        titleLabel.setFont(new Font("Sans Serif", Font.BOLD, 36));
-        titlePanel.add(titleLabel);
+        mainPanel = mainView;
         return this;
     }
 
@@ -191,93 +186,13 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addOpenFileUseCase() {
-        JButton openButton = new JButton("Open");
-        openButton.setPreferredSize(new Dimension(200, 200));
-        mainButtonPanel.add(openButton);
-
-        openButton.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Select Audio File");
-
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("WAV Audio Files", "wav");
-            fileChooser.setFileFilter(filter);
-            fileChooser.setAcceptAllFileFilterUsed(false);
-
-            int result = fileChooser.showOpenDialog(mainPanel);
-
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                if (processAudioFileUseCase != null) {
-                    ProcessAudioFileID inputData = new ProcessAudioFileID(selectedFile);
-                    processAudioFileUseCase.execute(inputData);
-                }
-                currentAudioSourcePath = selectedFile.getAbsolutePath();
-                if (playRecordingUseCase != null) {
-                    playRecordingUseCase.stop();
-                }
-                if (playPauseButton != null) {
-                    playPauseButton.setText("Play");
-                }
-            }
-        });
-
-        return this;
-    }
-
     public AppBuilder addFileSaveUseCase() {
-        JButton saveAsButton = new JButton("Save As");
-        saveAsButton.setPreferredSize(new Dimension(200, 200));
-        mainButtonPanel.add(saveAsButton);
-        saveAsButton.addActionListener(e -> {
-            saveFileToDirectory();
-        });
+        final SaveRecordingOB saveRecordingOutput = new SaveRecordingPresenter(mainViewModel);
+        final SaveRecordingIB saveRecordingInteractor = new SaveRecording(fileDAO, saveRecordingOutput);
+
+        final SaveRecordingController saveRecordingController = new SaveRecordingController(saveRecordingInteractor);
+        mainView.setSaveRecordingController(saveRecordingController);
         return this;
-    }
-
-    private void saveFileToDirectory() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory(new File("."));
-        chooser.setDialogTitle("Save Audio File");
-
-        // Filters to only WAV files. For simplicity
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "WAV Audio files (*.wav)", "wav"
-        ));
-
-        LocalDateTime myDateObj = LocalDateTime.now();
-        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
-
-        String formattedDate = myDateObj.format(myFormatObj);
-
-        chooser.setSelectedFile(new File(formattedDate + ".wav"));
-
-        if (chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-            File outputFile = chooser.getSelectedFile();
-
-            // Optional: ensure extension .txt exists
-            if (!outputFile.getName().contains(".")) {
-                outputFile = new File(outputFile.getAbsolutePath() + ".wav");
-            }
-
-            SaveFileState state = new SaveFileState();
-            SaveFilePresenter presenter = new SaveFilePresenter(state);
-            SaveRecording saveRecording = new SaveRecording(fileDAO, presenter);
-
-            saveRecording.execute(new SaveRecordingID(outputFile.getAbsolutePath()));
-
-            if(state.isSuccess()) {
-                System.out.println("Recording saved");
-            } else {
-                JOptionPane.showMessageDialog(mainPanel, state.getErrorMessage(),
-                        "Error during save", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-        } else {
-            System.out.println("No Selection");
-            // TODO: create an error code or something; alternate flow
-            return;
-        };
     }
 
     public AppBuilder addPlayUseCase() {
@@ -327,10 +242,10 @@ public class AppBuilder {
         fileDAO.setFileSaver(new ByteArrayFileSaver());
         fileDAO.setRecorder(new JavaMicRecorder());
 
-        SaveFilePresenter saveFilePresenter = new SaveFilePresenter(new SaveFileState());
+        SaveRecordingPresenter saveRecordingPresenter = new SaveRecordingPresenter(new SaveFileState());
         StartRecording startRecording = new StartRecording(fileDAO);
         StopRecording stopRecording = new StopRecording(fileDAO);
-        SaveRecording saveRecording = new SaveRecording(fileDAO, saveFilePresenter);
+        SaveRecording saveRecording = new SaveRecording(fileDAO, saveRecordingPresenter);
 
         // Set up DisplayRecordingWaveform use case
         DisplayRecordingWaveformPresenter recordingPresenter =

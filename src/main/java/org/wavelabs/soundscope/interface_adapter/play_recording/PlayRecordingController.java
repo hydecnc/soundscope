@@ -1,0 +1,15 @@
+package org.wavelabs.soundscope.interface_adapter.play_recording;
+
+import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
+
+public class PlayRecordingController {
+    private final PlayRecordingIB playRecordingInteractor;
+
+    public PlayRecordingController(PlayRecordingIB playRecordingInteractor) {
+        this.playRecordingInteractor = playRecordingInteractor;
+    }
+
+    public void stop(){
+        playRecordingInteractor.stop();
+    }
+}
