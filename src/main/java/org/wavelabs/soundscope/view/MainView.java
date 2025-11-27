@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.interface_adapter.MainState;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
+import org.wavelabs.soundscope.interface_adapter.TimeFormatter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
 import org.wavelabs.soundscope.interface_adapter.identify.IdentifyController;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingController;
@@ -175,7 +176,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
                 // Update time label
                 double totalDuration = waveformViewModel.getAudioData().getDurationSeconds();
-                timeLabel.setText(WaveformViewModel.formatTime(playbackPositionSeconds) + " / " + WaveformViewModel.formatTime(totalDuration));
+                timeLabel.setText(TimeFormatter.formatTime(playbackPositionSeconds) + " / " + TimeFormatter.formatTime(totalDuration));
 
                 // Only update audio data if it changed, otherwise just update playback position
                 // This avoids recalculating waveform paths every 100ms

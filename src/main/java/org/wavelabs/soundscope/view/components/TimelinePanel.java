@@ -1,6 +1,7 @@
 package org.wavelabs.soundscope.view.components;
 
 import org.wavelabs.soundscope.view.UIStyle;
+import org.wavelabs.soundscope.interface_adapter.TimeFormatter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -93,7 +94,7 @@ public class TimelinePanel extends JPanel {
             g2d.drawLine((int) x, 0, (int) x, getHeight());
             
             // Draw time label
-            String timeLabel = formatTime(currentTime);
+            String timeLabel = TimeFormatter.formatTime(currentTime);
             int labelWidth = fm.stringWidth(timeLabel);
             g2d.drawString(timeLabel, (int) x - labelWidth / 2, getHeight() - 5);
             
@@ -101,16 +102,6 @@ public class TimelinePanel extends JPanel {
         }
     }
     
-    /**
-     * Formats time in seconds to MM:SS format.
-     * 
-     * @param seconds Time in seconds
-     * @return Formatted time string
-     */
-    private String formatTime(int seconds) {
-        int minutes = seconds / 60;
-        int secs = seconds % 60;
-        return String.format("%d:%02d", minutes, secs);
-    }
+
 }
 
