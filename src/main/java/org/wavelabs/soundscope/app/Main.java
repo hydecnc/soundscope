@@ -12,6 +12,7 @@ public class Main {
                 .addStartRecordUseCase()
                 .addStopRecordUseCase()
                 .addDisplayRecordingWaveformUseCase()
+                .addProcessAudioFileUseCase()
                 .addFingerprintUseCase()
                 .addIdentifyUseCase()
                 .build();

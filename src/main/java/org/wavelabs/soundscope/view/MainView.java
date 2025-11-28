@@ -32,7 +32,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
     //Controllers for the various use cases
     private FingerprintController fingerprintController;
-    private DisplayRecordingWaveformController waveformController; //TODO: make this class
+    private DisplayRecordingWaveformController waveformController; //TODO: set this up; is it necessary?
     private IdentifyController identifyController; //TODO: make this class
     private PlayRecordingController playRecordingController;
     private ProcessAudioFileController processAudioFileController;
@@ -102,6 +102,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         //TODO: finish this
 
         //Sets up main panel
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         this.add(title);
         this.add(waveformContainer);
         this.add(infoPanel);
@@ -449,6 +451,15 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             );
         }
         //TODO: implement property change updates from all the other use cases
+
+        if(evt.getPropertyName().equals("process audio") && state.isErrorState()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    state.getErrorMessage(),
+                    "Processing Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
 
         //TODO: read property updates from identify
         if(evt.getPropertyName().equals("identify")){

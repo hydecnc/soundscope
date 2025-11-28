@@ -27,7 +27,7 @@ public interface IdentifyDAI {
      */
     class FingerprintMatchNotFoundException extends RuntimeException{
         public FingerprintMatchNotFoundException(String fingerprint) {
-            super("Fingerprint match could not be found" + fingerprint);
+            super("Fingerprint match could not be found:\n" + fingerprint);
         }
     }
 }

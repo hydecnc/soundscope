@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import javax.swing.*;
 
 import org.wavelabs.soundscope.data_access.FileDAO;
+import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
@@ -15,12 +16,14 @@ import org.wavelabs.soundscope.interface_adapter.identify.IdentifyController;
 import org.wavelabs.soundscope.interface_adapter.identify.IdentifyPresenter;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingController;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingPresenter;
+import org.wavelabs.soundscope.interface_adapter.process_audio_file.ProcessAudioFileController;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingController;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingPresenter;
 import org.wavelabs.soundscope.interface_adapter.start_recording.StartRecordingController;
 import org.wavelabs.soundscope.interface_adapter.stop_recording.StopRecordingController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformIB;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformOB;
@@ -34,6 +37,9 @@ import org.wavelabs.soundscope.use_case.identify.IdentifyOB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingOB;
+import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
+import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileIB;
+import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileOB;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingIB;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingOB;
@@ -121,6 +127,16 @@ public class AppBuilder {
         return this;
     }
 
+    public AppBuilder addProcessAudioFileUseCase() {
+        final ProcessAudioFileOB processAudioFileOB = new WaveformPresenter(waveformViewModel);
+            //TODO: should this be renamed to a ProcessAudioFilePresenter?
+        final ProcessAudioFileIB processAudioFileInteractor = new ProcessAudioFile(new JavaSoundAudioFileGateway(), processAudioFileOB);
+
+        final ProcessAudioFileController processAudioFileController = new ProcessAudioFileController(processAudioFileInteractor);
+        mainView.setProcessAudioFileController(processAudioFileController);
+        return this;
+    }
+
     public AppBuilder addIdentifyUseCase() {
         final IdentifyOB identifyOutputBoundary = new IdentifyPresenter(mainViewModel);
         final IdentifyIB identifyInteractor = new IdentifyInteractor(song, identifyOutputBoundary);
@@ -134,7 +150,6 @@ public class AppBuilder {
         final JFrame application = new JFrame("Soundscope");
         application.setMinimumSize(new Dimension(600, 600));
         application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
 
         application.setContentPane(mainPanel);
         // NOTE: Consider adding view manager model

@@ -1,6 +1,7 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
 import org.wavelabs.soundscope.entity.Song;
+import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.ChromaprintException;
 
 /**
  * Fingerprint interactor. This takes in the entire audio data and
@@ -19,16 +20,24 @@ public class FingerprintInteractor implements FingerprintIB {
 
     @Override
     public void execute() {
-        final byte[] bytes = userDataAccessObject.getAudioData();
+        try {
+            final byte[] bytes = userDataAccessObject.getAudioData();
 
-        final Fingerprinter fingerprinter = new Fingerprinter();
-        fingerprinter.start();
-        fingerprinter.processChunk(bytes, bytes.length);
-        fingerprinter.stop();
+            final Fingerprinter fingerprinter = new Fingerprinter();
+            fingerprinter.start();
+            fingerprinter.processChunk(bytes, bytes.length);
+            fingerprinter.stop();
 
-        final FingerprintOD output = new FingerprintOD(fingerprinter.getFingerprint());
-        fingerprinter.close();
+            final FingerprintOD output = new FingerprintOD(fingerprinter.getFingerprint());
+            fingerprinter.close();
 
-        fingerprintPresenter.prepareSuccessView(output);
+            song.setFingerprint(output.getFingerprint()); //TODO: is this the right place to put song metadata updating?
+            song.setDuration((int) userDataAccessObject.getCurrentRecordingBuffer().getDurationSeconds());
+            fingerprintPresenter.prepareSuccessView(output);
+        } catch (NullPointerException e){
+            fingerprintPresenter.prepareFailView("Audio data could not be found");
+        } catch (ChromaprintException e){
+            fingerprintPresenter.prepareFailView("Chromaprint error:\n" + e.getMessage());
+        }
     }
 }
