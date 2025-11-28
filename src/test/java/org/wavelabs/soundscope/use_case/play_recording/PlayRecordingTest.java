@@ -45,7 +45,7 @@ public class PlayRecordingTest {
     @Test
     public void PlayFirstTimeLoadsAndStarts() {
         PlayRecordingID inputData = new PlayRecordingID("path/to/audio.wav", false);
-        
+
         interactor.play(inputData);
 
         Assert.assertTrue("stopPlayback should be called before loading", mockDAI.stopPlaybackCalled);
@@ -58,7 +58,7 @@ public class PlayRecordingTest {
     public void PlaySameFileStartsOnly() {
         PlayRecordingID inputData1 = new PlayRecordingID("path/to/audio.wav", false);
         interactor.play(inputData1);
-        
+
         // reset mock state
         mockDAI.reset();
         mockOB.reset();
@@ -75,7 +75,7 @@ public class PlayRecordingTest {
     public void PlaySameFileRestartReloadsAndStarts() {
         PlayRecordingID inputData1 = new PlayRecordingID("path/to/audio.wav", false);
         interactor.play(inputData1);
-        
+
         // reset mock state
         mockDAI.reset();
         mockOB.reset();
@@ -92,7 +92,7 @@ public class PlayRecordingTest {
     public void PlayDifferentFileReloadsAndStarts() {
         PlayRecordingID inputData1 = new PlayRecordingID("path/to/audio1.wav", false);
         interactor.play(inputData1);
-        
+
         // Reset mock state
         mockDAI.reset();
         mockOB.reset();
@@ -109,7 +109,7 @@ public class PlayRecordingTest {
     public void PlayLoadFailsReportsErrorAndThrowsException() {
         mockDAI.shouldThrowOnLoad = true;
         PlayRecordingID inputData = new PlayRecordingID("path/to/audio.wav", false);
-        
+
         try {
             interactor.play(inputData);
         } catch (IllegalStateException e) {
@@ -137,7 +137,7 @@ public class PlayRecordingTest {
     public void IsPlayingDelegatesToDAI() {
         mockDAI.isPlayingResult = true;
         Assert.assertTrue(interactor.isPlaying());
-        
+
         mockDAI.isPlayingResult = false;
         Assert.assertFalse(interactor.isPlaying());
     }
