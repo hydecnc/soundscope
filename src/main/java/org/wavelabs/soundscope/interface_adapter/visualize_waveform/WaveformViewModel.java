@@ -15,13 +15,7 @@ import org.wavelabs.soundscope.entity.AudioData;
 public class WaveformViewModel {
     private AudioData audioData;
     private String outputText;
-    
-    /**
-     * Constructs a new WaveformViewModel with default placeholder text.
-     */
-    public WaveformViewModel() {
-        this.outputText = "Most similar to \"Viva La Vida\"<br>Fingerprint: abE671deF";
-    } //TODO: why is this the default text... this is from the identify use case, no?
+
     
     /**
      * Gets the audio data to be visualized.
@@ -40,16 +34,7 @@ public class WaveformViewModel {
     public void setAudioData(AudioData audioData) {
         this.audioData = audioData;
     }
-    
-    /**
-     * Gets the output text to be displayed in the view.
-     * 
-     * @return The output text (may contain HTML formatting)
-     */
-    public String getOutputText() {
-        return outputText;
-    }
-    
+
     /**
      * Sets the output text to be displayed in the view.
      * 
@@ -57,5 +42,5 @@ public class WaveformViewModel {
      */
     public void setOutputText(String outputText) {
         this.outputText = outputText;
-    }
+    } //TODO: this is never accessed; figure out how to get rid of it
 }

@@ -9,7 +9,7 @@ import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingOB;
  * Stores the result in state after use case execution.
  */
 public class SaveRecordingPresenter implements SaveRecordingOB {
-    private MainViewModel mainViewModel;
+    private final MainViewModel mainViewModel;
 
     public SaveRecordingPresenter(MainViewModel mainViewModel) {
         this.mainViewModel = mainViewModel;

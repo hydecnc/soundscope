@@ -5,8 +5,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import javax.swing.*;
 import java.awt.Point;
-import java.io.File;
-import javax.swing.filechooser.FileNameExtensionFilter;
+
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
@@ -17,36 +16,38 @@ import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintControll
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintPresenter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintViewModel;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
+import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingController;
+import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingPresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingController;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingPresenter;
+import org.wavelabs.soundscope.interface_adapter.start_recording.StartRecordingController;
+import org.wavelabs.soundscope.interface_adapter.stop_recording.StopRecordingController;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformIB;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformOB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintInteractor;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
-import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintOB;
 import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
-import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingID;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingOB;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
-import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingIB;
-import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingOB;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
+import org.wavelabs.soundscope.use_case.start_recording.StartRecordingIB;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
+import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingIB;
 import org.wavelabs.soundscope.view.FingerprintView;
 import org.wavelabs.soundscope.view.MainView;
 import org.wavelabs.soundscope.view.UIStyle;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import org.wavelabs.soundscope.view.components.TimelinePanel;
 
@@ -63,16 +64,10 @@ public class AppBuilder {
     private TimelinePanel timelinePanel;
     private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
-    private ProcessAudioFile processAudioFileUseCase;
 
     private Song song = new Song(); // TODO: refactor this to use clean architecture; entities
                                     // probably shouldn't be directly referenced here?
 
-    private DisplayRecordingWaveform displayRecordingWaveformUseCase;
-    private javax.swing.Timer recordingWaveformTimer;
-    private PlayRecordingIB playRecordingUseCase;
-    private JButton playPauseButton;
-    private String currentAudioSourcePath;
     private FingerprintViewModel fingerprintViewModel;
     private FingerprintView fingerprintView;
 
@@ -187,6 +182,8 @@ public class AppBuilder {
     }
 
     public AppBuilder addFileSaveUseCase() {
+        fileDAO.setFileSaver(new ByteArrayFileSaver());
+
         final SaveRecordingOB saveRecordingOutput = new SaveRecordingPresenter(mainViewModel);
         final SaveRecordingIB saveRecordingInteractor = new SaveRecording(fileDAO, saveRecordingOutput);
 
@@ -196,168 +193,42 @@ public class AppBuilder {
     }
 
     public AppBuilder addPlayUseCase() {
-        if (playRecordingUseCase == null) {
-            playRecordingUseCase =
-                    new PlayRecording(new JavaSoundPlaybackGateway(), new PlayRecordingOB() {});
-        }
+        final PlayRecordingOB playRecordingOutput = new PlayRecordingPresenter(mainViewModel);
+        final PlayRecordingIB playRecordingInteractor = new PlayRecording(new JavaSoundPlaybackGateway(), playRecordingOutput);
 
-        playPauseButton = new JButton("Play");
-        playPauseButton.setPreferredSize(new Dimension(200, 200));
-        mainButtonPanel.add(playPauseButton);
-        playPauseButton.addActionListener(e -> {
-            if (currentAudioSourcePath == null || currentAudioSourcePath.isBlank()) {
-                JOptionPane.showMessageDialog(mainPanel,
-                        "Please open or record audio before playing.", "No audio selected",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            try {
-                if (playRecordingUseCase.isPlaying()) {
-                    playRecordingUseCase.pause();
-                    playPauseButton.setText("Play");
-                } else {
-                    if (playRecordingUseCase.getTotalFrames() == playRecordingUseCase
-                            .getFramesPlayed()) {
-                        playRecordingUseCase
-                                .play(new PlayRecordingID(currentAudioSourcePath, true));
-                    } else {
-                        playRecordingUseCase
-                                .play(new PlayRecordingID(currentAudioSourcePath, false));
-                        playPauseButton.setText("Pause");
-                    }
-                }
-            } catch (IllegalStateException ex) {
-                JOptionPane.showMessageDialog(mainPanel, ex.getMessage(), "Playback error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        });
+        final PlayRecordingController playRecordingController = new PlayRecordingController(playRecordingInteractor);
+        mainView.setPlayRecordingController(playRecordingController);
         return this;
     }
 
-    public AppBuilder addRecordUseCase() {
-        JButton recordButton = new JButton("Start Recording");
-        recordButton.setPreferredSize(new Dimension(200, 200));
-        mainButtonPanel.add(recordButton);
-
-        fileDAO.setFileSaver(new ByteArrayFileSaver());
+    public AppBuilder addStartRecordUseCase() {
         fileDAO.setRecorder(new JavaMicRecorder());
 
-        SaveRecordingPresenter saveRecordingPresenter = new SaveRecordingPresenter(new SaveFileState());
-        StartRecording startRecording = new StartRecording(fileDAO);
-        StopRecording stopRecording = new StopRecording(fileDAO);
-        SaveRecording saveRecording = new SaveRecording(fileDAO, saveRecordingPresenter);
+        final StartRecordingIB startRecordingInteractor = new StartRecording(fileDAO);
+        final StartRecordingController startRecordingController = new StartRecordingController(startRecordingInteractor);
 
-        // Set up DisplayRecordingWaveform use case
-        DisplayRecordingWaveformPresenter recordingPresenter =
-                new DisplayRecordingWaveformPresenter(waveformViewModel);
-        displayRecordingWaveformUseCase = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
+        mainView.setStartRecordingController(startRecordingController);
+        return this;
+    }
 
-        // Timer to update waveform during recording
-        recordingWaveformTimer = new Timer(50, e -> {
-            if (fileDAO.getRecorder() != null && fileDAO.getRecorder().isRecording()) {
-                DisplayRecordingWaveformID inputData = new DisplayRecordingWaveformID();
-                displayRecordingWaveformUseCase.execute(inputData);
-                // Force immediate update and auto-scroll to show latest
-                if (waveformViewModel.getAudioData() != null && waveformPanel != null) {
-                    waveformPanel.updateWaveform(waveformViewModel.getAudioData());
-                    if (timelinePanel != null) {
-                        timelinePanel.updateTimeline(
-                                waveformViewModel.getAudioData().getDurationSeconds(),
-                                waveformViewModel.getAudioData().getSampleRate());
-                    }
-                    // Auto-scroll to show the latest part
-                    scrollToLatest(waveformPanel);
-                }
-            }
-        });
-        recordingWaveformTimer.start();
+    public AppBuilder addStopRecordUseCase(){
+        final StopRecordingIB stopRecordingInteractor = new StopRecording(fileDAO);
 
-        recordButton.addActionListener(e -> {
-            // TODO: properly implement recording, stopping, saving
-            if (fileDAO.getRecorder().isRecording()) {
-                stopRecording.execute();
-                // named cache due to the temporary nature of the file
-                String outputPath = "cache.wav";
-                saveRecording.execute(new SaveRecordingID(outputPath));
-                System.out.println("Recording Ended");
+        final StopRecordingController stopRecordingController = new StopRecordingController(stopRecordingInteractor);
+        mainView.setStopRecordingController(stopRecordingController);
+        return this;
+    }
 
-                // Automatically load and display the saved recording
-                File savedFile = new File(outputPath);
-                if (savedFile.exists() && processAudioFileUseCase != null) {
-                    ProcessAudioFileID inputData = new ProcessAudioFileID(savedFile);
-                    processAudioFileUseCase.execute(inputData);
-                    // Set current audio source path for playback
-                    currentAudioSourcePath = savedFile.getAbsolutePath();
-                    // Ensure scroll pane is updated after loading - force revalidation
-                    SwingUtilities.invokeLater(() -> {
-                        if (waveformScrollPane != null && waveformPanel != null) {
-                            // Force the panel to update its size
-                            waveformPanel.revalidate();
-                            // Force the scroll pane to recognize the new size
-                            waveformScrollPane.revalidate();
-                            waveformScrollPane.repaint();
-                            // Force update the scrollbar
-                            JViewport viewport = waveformScrollPane.getViewport();
-                            if (viewport != null
-                                    && waveformPanel.getPreferredSize().width > viewport
-                                            .getWidth()) {
-                                waveformScrollPane.getHorizontalScrollBar().setEnabled(true);
-                                waveformScrollPane.getHorizontalScrollBar().setVisible(true);
-                            }
-                        }
-                    });
-                }
-            } else {
-                startRecording.execute();
-                // Clear previous waveform when starting new recording
-                if (waveformPanel != null) {
-                    waveformPanel.updateWaveform(null);
-                }
-            }
+    public AppBuilder addDisplayRecordingWaveformUseCase(){
+        final DisplayRecordingWaveformOB recordingPresenter = new DisplayRecordingWaveformPresenter(waveformViewModel);
+        final DisplayRecordingWaveformIB displayRecordingWaveformInteractor = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
 
-            if (fileDAO.getRecorder().isRecording()) {
-                recordButton.setText("Stop Recording");
-            } else {
-                recordButton.setText("Start Recording");
-            }
-        });
+        final DisplayRecordingWaveformController displayRecordingWaveformController = new DisplayRecordingWaveformController(displayRecordingWaveformInteractor);
+        mainView.setDisplayRecordingWaveformController(displayRecordingWaveformController);
 
         return this;
     }
 
-    // TODO: should this be moved into the WaveformPanel class?
-    /**
-     * Scrolls the scroll pane to show the latest part of the waveform during recording. Only
-     * scrolls after 30 seconds of recording.
-     */
-    private void scrollToLatest(WaveformPanel panel) {
-        Container parent = panel.getParent();
-        if (parent instanceof JViewport && waveformViewModel.getAudioData() != null) {
-            JViewport viewport = (JViewport) parent;
-            int sampleRate = waveformViewModel.getAudioData().getSampleRate();
-            // Account for 256x downsampling
-            int samplesIn30Seconds = (sampleRate * 30) / 256;
-            int widthFor30Seconds = samplesIn30Seconds / 8;
-
-            int totalSamples = waveformViewModel.getAudioData().getAmplitudeSamples().length;
-
-            // During recording: scroll to show the latest part continuously
-            // Calculate the x position of the latest sample
-            int latestSampleX = (int) (totalSamples * ((double) widthFor30Seconds / samplesIn30Seconds));
-            int viewportWidth = viewport.getWidth();
-
-            // Scroll so the latest part is visible, but keep it smooth
-            if (totalSamples > samplesIn30Seconds) {
-                // After 30 seconds: scroll to show the latest part
-                // Position viewport so latest sample is near the right edge
-                int targetX = Math.max(0, latestSampleX - viewportWidth + 50); // 50px padding from right edge
-                viewport.setViewPosition(new Point(targetX, 0));
-            } else {
-                // Before 30 seconds: stay at the beginning
-                viewport.setViewPosition(new Point(0, 0));
-            }
-        }
-    }
     public AppBuilder addFingerprintView() {
         fingerprintViewModel = new FingerprintViewModel();
         fingerprintView = new FingerprintView(fingerprintViewModel);

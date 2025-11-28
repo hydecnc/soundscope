@@ -41,6 +41,7 @@ public class ViewModel<T> {
         this.support.firePropertyChange("state", null, this.state);
     }
 
+    //TODO: update this javadoc
     /**
      * Fires a property changed event for the state of this ViewModel, which allows the user to
      * specify a different propertyName. This can be useful when a class is listening for multiple

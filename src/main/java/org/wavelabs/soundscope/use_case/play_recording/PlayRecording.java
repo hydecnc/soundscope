@@ -12,7 +12,7 @@ public class PlayRecording implements PlayRecordingIB {
 
     public PlayRecording(PlayRecordingDAI playbackGateway, PlayRecordingOB outputBoundary) {
         this.playbackGateway = Objects.requireNonNull(playbackGateway, "playbackGateway must not be null");
-        this.outputBoundary = outputBoundary == null ? new PlayRecordingOB() {} : outputBoundary;
+        this.outputBoundary = outputBoundary;
     }
 
     @Override
@@ -31,25 +31,24 @@ public class PlayRecording implements PlayRecordingIB {
                 playbackGateway.loadAudio(audioSource.getSourcePath());
                 loadedSourcePath = audioSource.getSourcePath();
             } catch (IOException | UnsupportedAudioFileException e) {
-                outputBoundary.presentPlaybackError("Failed to load audio file", e);
-                throw new IllegalStateException("Failed to load audio file", e);
+                outputBoundary.playbackError("Failed to load audio file");
             }
         }
 
         playbackGateway.startPlayback();
-        outputBoundary.presentPlaybackStarted();
+        outputBoundary.playbackStarted();
     }
 
     @Override
     public void pause() {
         playbackGateway.pausePlayback();
-        outputBoundary.presentPlaybackPaused();
+        outputBoundary.playbackPaused();
     }
 
     @Override
     public void stop() {
         playbackGateway.stopPlayback();
-        outputBoundary.presentPlaybackStopped();
+        outputBoundary.playbackStopped();
     }
 
     @Override

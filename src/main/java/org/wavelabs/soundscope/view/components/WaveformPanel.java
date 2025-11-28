@@ -1,6 +1,7 @@
 package org.wavelabs.soundscope.view.components;
 
 import org.wavelabs.soundscope.entity.AudioData;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.view.UIStyle;
 
 import javax.swing.*;
@@ -352,6 +353,39 @@ public class WaveformPanel extends JPanel {
                 g2d.setColor(UIStyle.Colors.PLAYBACK_INDICATOR);
                 g2d.setStroke(new BasicStroke(2.0f));
                 g2d.drawLine((int) playbackX, 0, (int) playbackX, getHeight());
+            }
+        }
+    }
+
+    /**
+     * Scrolls the scroll pane to show the latest part of the waveform during recording. Only
+     * scrolls after 30 seconds of recording.
+     */
+    public void scrollToLatest(AudioData audioData) {
+        Container parent = this.getParent();
+        if (parent instanceof JViewport && audioData != null) {
+            JViewport viewport = (JViewport) parent;
+            int sampleRate = audioData.getSampleRate();
+            // Account for 256x downsampling
+            int samplesIn30Seconds = (sampleRate * 30) / 256;
+            int widthFor30Seconds = samplesIn30Seconds / 8;
+
+            int totalSamples = audioData.getAmplitudeSamples().length;
+
+            // During recording: scroll to show the latest part continuously
+            // Calculate the x position of the latest sample
+            int latestSampleX = (int) (totalSamples * ((double) widthFor30Seconds / samplesIn30Seconds));
+            int viewportWidth = viewport.getWidth();
+
+            // Scroll so the latest part is visible, but keep it smooth
+            if (totalSamples > samplesIn30Seconds) {
+                // After 30 seconds: scroll to show the latest part
+                // Position viewport so latest sample is near the right edge
+                int targetX = Math.max(0, latestSampleX - viewportWidth + 50); // 50px padding from right edge
+                viewport.setViewPosition(new Point(targetX, 0));
+            } else {
+                // Before 30 seconds: stay at the beginning
+                viewport.setViewPosition(new Point(0, 0));
             }
         }
     }

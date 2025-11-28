@@ -1,15 +1,23 @@
 package org.wavelabs.soundscope.view;
 
 import org.jetbrains.annotations.NotNull;
+import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.interface_adapter.MainState;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingController;
 import org.wavelabs.soundscope.interface_adapter.process_audio_file.ProcessAudioFileController;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingController;
-import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingPresenter;
-import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
+import org.wavelabs.soundscope.interface_adapter.start_recording.StartRecordingController;
+import org.wavelabs.soundscope.interface_adapter.stop_recording.StopRecordingController;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformController;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
+import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
+import org.wavelabs.soundscope.view.components.TimelinePanel;
+import org.wavelabs.soundscope.view.components.WaveformPanel;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -32,13 +40,21 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     private PlayRecordingController playRecordingController;
     private ProcessAudioFileController processAudioFileController;
     private SaveRecordingController saveRecordingController;
-    private StartRecordingController startRecordingController; //TODO: make this class
-    private StopRecordingController stopRecordingController; //TODO: make this class
+    private StartRecordingController startRecordingController;
+    private StopRecordingController stopRecordingController;
+    private DisplayRecordingWaveformController displayRecordingWaveformController;
 
     //Button code
     private final JPanel buttonPanel = new JPanel();
     private final JButton openButton, saveAsButton, playPauseButton,
             recordButton, fingerprintButton, identifyButton;
+
+    //Waveform panel code
+    private WaveformPanel waveformPanel;
+    private TimelinePanel timelinePanel;
+    private JScrollPane waveformScrollPane;
+
+
 
 
     //TODO: migrate App Builder stuff here
@@ -56,6 +72,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         //TODO: finish setting up buttons
         openButton = getOpenButton();
         saveAsButton = getSaveAsButton();
+        playPauseButton = getPlayPauseButton();
+        recordButton = getRecordButton();
 
         buttonPanel.add(openButton);
         buttonPanel.add(saveAsButton);
@@ -68,6 +86,121 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
 
         this.add(title);
+    }
+
+    @NotNull
+    private JButton getRecordButton(){
+        JButton recordButton = new JButton(MainViewModel.RECORD_TEXT);
+        recordButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
+        buttonPanel.add(recordButton);
+
+        // Timer to update waveform during recording
+        Timer recordingWaveformTimer = new Timer(50, e -> {
+            if (mainViewModel.getState().isRecording()) {
+                displayRecordingWaveformController.execute();
+                AudioData audioData = waveformViewModel.getAudioData(); //TODO: attach a waveformViewModel here
+                // Force immediate update and auto-scroll to show latest
+                if (audioData != null && waveformPanel != null) {
+                    waveformPanel.updateWaveform(audioData);
+                    if (timelinePanel != null) {
+                        timelinePanel.updateTimeline(
+                                audioData.getDurationSeconds(),
+                                audioData.getSampleRate());
+                    }
+                    // Auto-scroll to show the latest part
+                    waveformPanel.scrollToLatest(audioData);
+                }
+            }
+        });
+        recordingWaveformTimer.start();
+
+        recordButton.addActionListener(e -> {
+            if (mainViewModel.getState().isRecording()) {
+                stopRecordingController.execute();
+                // named cache due to the temporary nature of the file
+                String outputPath = "cache.wav"; //TODO: put a better file path here
+                saveRecordingController.execute(outputPath);
+                System.out.println("Recording Ended");
+
+                // Automatically load and display the saved recording
+                File savedFile = new File(outputPath);
+                if (savedFile.exists()) {
+                    processAudioFileController.execute(savedFile);
+
+                    // Set current audio source path for playback
+                    mainViewModel.getState().setCurrentAudioSourcePath(savedFile.getAbsolutePath());
+
+                    // Ensure scroll pane is updated after loading - force revalidation
+                    SwingUtilities.invokeLater(() -> {
+                        if (waveformScrollPane != null && waveformPanel != null) {
+                            // Force the panel to update its size
+                            waveformPanel.revalidate();
+                            // Force the scroll pane to recognize the new size
+                            waveformScrollPane.revalidate();
+                            waveformScrollPane.repaint();
+                            // Force update the scrollbar
+                            JViewport viewport = waveformScrollPane.getViewport();
+                            if (viewport != null
+                                    && waveformPanel.getPreferredSize().width > viewport
+                                    .getWidth()) {
+                                waveformScrollPane.getHorizontalScrollBar().setEnabled(true);
+                                waveformScrollPane.getHorizontalScrollBar().setVisible(true);
+                            }
+                        }
+                    });
+                }
+            } else {
+                startRecordingController.execute();
+                // Clear previous waveform when starting new recording
+                if (waveformPanel != null) {
+                    waveformPanel.updateWaveform(null);
+                }
+            }
+
+            if (mainViewModel.getState().isRecording()) {
+                recordButton.setText(MainViewModel.STOP_RECORDING_TEXT);
+            } else {
+                recordButton.setText(MainViewModel.RECORD_TEXT);
+            }
+        });
+
+        return recordButton;
+    }
+
+    @NotNull
+    private JButton getPlayPauseButton(){
+        JButton playPauseButton = new JButton(MainViewModel.PLAY_TEXT);
+        playPauseButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
+        buttonPanel.add(playPauseButton);
+        playPauseButton.addActionListener(e -> {
+            final String currentAudioSourcePath = mainViewModel.getState().getCurrentAudioSourcePath();
+
+            if (currentAudioSourcePath == null || currentAudioSourcePath.isBlank()) {
+                JOptionPane.showMessageDialog(this,
+                        "Please open or record audio before playing.", "No audio selected",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            try {
+                //TODO: need to be able to listen to the view model's state instead of to the play use case
+                if (playRecordingUseCase.isPlaying()) {
+                    playRecordingController.pause();
+                    playPauseButton.setText(MainViewModel.PLAY_TEXT);
+                } else {
+                    if (playRecordingUseCase.getTotalFrames() == playRecordingUseCase
+                            .getFramesPlayed()) {
+                        playRecordingController.play(currentAudioSourcePath, true);
+                    } else {
+                        playRecordingController.play(currentAudioSourcePath, false);
+                        playPauseButton.setText(MainViewModel.PAUSE_TEXT);
+                    }
+                }
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Playback error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        return playPauseButton;
     }
 
     @NotNull
@@ -177,6 +310,10 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
     public void setStopRecordingController(StopRecordingController stopRecordingController) {
         this.stopRecordingController = stopRecordingController;
+    }
+
+    public void setDisplayRecordingWaveformController(DisplayRecordingWaveformController displayRecordingWaveformController) {
+        this.displayRecordingWaveformController = displayRecordingWaveformController;
     }
 
     @Override
