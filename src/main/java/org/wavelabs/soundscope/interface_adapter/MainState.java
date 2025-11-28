@@ -1,36 +1,36 @@
 package org.wavelabs.soundscope.interface_adapter;
 
 public class MainState {
-    private String currentAudioSourcePath;
+    private boolean errorState;
     private String errorMessage;
 
-    private boolean successfulSave;
-
+    private String currentAudioSourcePath;
     private String songTitle;
     private String album;
+    private String fingerprint;
 
     private boolean isRecording = false; //TODO: figure out how to push updates to this
     private boolean isPlaying = false; //TODO: figure out how to push updates to this
     private boolean playingFinished = false; //TODO: figure out how to push updates to this
     private int framesPlayed = 0; //TODO: figure out how to push updates to this
-    public boolean isSuccessfulSave() {
-        return successfulSave;
+
+    public boolean isErrorState() {
+        return errorState;
+    }
+    public void setErrorState(boolean errorState) {
+        this.errorState = errorState;
     }
 
-    public void setSuccessfulSave(boolean successfulSave) {
-        this.successfulSave = successfulSave;
-    }
     public String getCurrentAudioSourcePath() {
         return currentAudioSourcePath;
     }
-
     public void setCurrentAudioSourcePath(String currentAudioSourcePath) {
         this.currentAudioSourcePath = currentAudioSourcePath;
     }
+
     public String getErrorMessage() {
         return errorMessage;
     }
-
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
@@ -81,5 +81,13 @@ public class MainState {
 
     public void setAlbum(String album) {
         this.album = album;
+    }
+
+    public String getFingerprint() {
+        return fingerprint;
+    }
+
+    public void setFingerprint(String fingerprint) {
+        this.fingerprint = fingerprint;
     }
 }

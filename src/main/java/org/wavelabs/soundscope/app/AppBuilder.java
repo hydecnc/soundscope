@@ -10,7 +10,6 @@ import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintPresenter;
-import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintViewModel;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
 import org.wavelabs.soundscope.interface_adapter.identify.IdentifyController;
 import org.wavelabs.soundscope.interface_adapter.identify.IdentifyPresenter;
@@ -42,38 +41,19 @@ import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecordingIB;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingIB;
-import org.wavelabs.soundscope.view.FingerprintView;
 import org.wavelabs.soundscope.view.MainView;
-import org.wavelabs.soundscope.view.components.WaveformPanel;
-
-import org.wavelabs.soundscope.view.components.TimelinePanel;
 
 public class AppBuilder {
     private MainView mainView;
     private MainViewModel mainViewModel;
+    private WaveformViewModel waveformViewModel; //TODO: remove this in some refactor eventually
 
     private JPanel mainPanel;
     private FileDAO fileDAO = new FileDAO();
-
-    private final JPanel mainButtonPanel = new JPanel();
-    private final JPanel titlePanel = new JPanel();
-    private WaveformPanel waveformPanel;
-    private TimelinePanel timelinePanel;
-    private JScrollPane waveformScrollPane;
-    private WaveformViewModel waveformViewModel;
-
-    private Song song = new Song(); // TODO: refactor this to use clean architecture; entities
-                                    // probably shouldn't be directly referenced here?
-
-    private FingerprintViewModel fingerprintViewModel;
-    private FingerprintView fingerprintView;
+    private Song song = new Song();
 
 
-    public AppBuilder() {
-        mainButtonPanel.setLayout(new BoxLayout(mainButtonPanel, BoxLayout.X_AXIS));
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.add(titlePanel);
-    }
+    public AppBuilder() {}
 
     public AppBuilder addMainView(){
         mainViewModel = new MainViewModel();
@@ -132,19 +112,12 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addFingerprintView() { //TODO: move this into the right view model
-        fingerprintViewModel = new FingerprintViewModel();
-        fingerprintView = new FingerprintView(fingerprintViewModel);
-        mainButtonPanel.add(fingerprintView);
-        return this;
-    }
-
     public AppBuilder addFingerprintUseCase() {
-        final FingerprintOB fingerprintOutputBoundary = new FingerprintPresenter(fingerprintViewModel);
+        final FingerprintOB fingerprintOutputBoundary = new FingerprintPresenter(mainViewModel);
         final FingerprintIB
-            fingerprintInteractor = new FingerprintInteractor(fileDAO, fingerprintOutputBoundary);
+            fingerprintInteractor = new FingerprintInteractor(fileDAO, song, fingerprintOutputBoundary);
         final FingerprintController fingerprintController = new FingerprintController(fingerprintInteractor);
-        fingerprintView.setFingerprintController(fingerprintController);
+        mainView.setFingerprintController(fingerprintController);
         return this;
     }
 

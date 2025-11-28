@@ -45,6 +45,10 @@ public class AcousticIDIdentify implements IdentifyDAI {
      */
     @Override
     public Song.SongMetadata getClosestMatchMetadata(String fingerprint, int duration) {
+        if(fingerprint == null){
+            throw new FingerprintMatchNotFoundException("Null parameters passed into query");
+        }
+
         CompletableFuture<Response> future = addAPIRequest(fingerprint, duration);
 
         try {

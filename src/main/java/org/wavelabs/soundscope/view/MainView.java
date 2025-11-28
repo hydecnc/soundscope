@@ -12,13 +12,7 @@ import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingControll
 import org.wavelabs.soundscope.interface_adapter.start_recording.StartRecordingController;
 import org.wavelabs.soundscope.interface_adapter.stop_recording.StopRecordingController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformController;
-import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
-import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
-import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
-import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
-import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
-import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
 import org.wavelabs.soundscope.view.components.TimelinePanel;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
 
@@ -95,6 +89,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         playPauseButton = getPlayPauseButton();
         recordButton = getRecordButton();
         identifyButton = getIdentifyButton();
+        fingerprintButton = getFingerprintButton();
 
         buttonPanel.add(openButton);
         buttonPanel.add(saveAsButton);
@@ -181,6 +176,19 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             }
         });
         timer.start();
+    }
+
+    @NotNull
+    private JButton getFingerprintButton(){
+        JButton fingerprintButton = new JButton(MainViewModel.FINGERPRINT_TEXT);
+        fingerprintButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
+
+        fingerprintButton.addActionListener(e -> {
+            fingerprintController.execute();
+
+        });
+
+        return fingerprintButton;
     }
 
     @NotNull
@@ -429,18 +437,48 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if(evt.getPropertyName().equals("file save")) {
-            final MainState state = (MainState) evt.getNewValue();
-            if(state.isSuccessfulSave()){
-                System.out.println("Recording saved");
-            }else{
-                JOptionPane.showMessageDialog(this, state.getErrorMessage(),
-                        "Error during save", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+        final MainState state = (MainState) evt.getNewValue(); //TODO: figure out if this is the correct thing to be reading
+
+        //File saving use case
+        if(evt.getPropertyName().equals("file save") && state.isErrorState()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    state.getErrorMessage(),
+                    "Save Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
         //TODO: implement property change updates from all the other use cases
 
         //TODO: read property updates from identify
+        if(evt.getPropertyName().equals("identify")){
+            if(state.isErrorState()) {
+                JOptionPane.showMessageDialog(this,
+                        state.getErrorMessage(),
+                        "Identify Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }else{
+
+            }
+        }
+
+        //TODO: read property updates from fingerprint; update the code shown below.
+        if(evt.getPropertyName().equals("fingerprint")) {
+            if(state.isErrorState()){
+                JOptionPane.showMessageDialog(
+                    this,
+                    state.getErrorMessage(),
+                    "Fingerprint Error",
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }else{
+                //TODO: update info panel with fingerprint data
+
+            }
+        }
+
+        //Clears an error state
+        mainViewModel.getState().setErrorState(false);
     }
 }

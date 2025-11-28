@@ -1,5 +1,7 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
+import org.wavelabs.soundscope.entity.Song;
+
 /**
  * Fingerprint interactor. This takes in the entire audio data and
  * processes to generate a string of fingerprint of that audio.
@@ -7,10 +9,12 @@ package org.wavelabs.soundscope.use_case.fingerprint;
 public class FingerprintInteractor implements FingerprintIB {
     private final FingerprintDAI userDataAccessObject;
     private final FingerprintOB fingerprintPresenter;
+    private final Song song;
 
-    public FingerprintInteractor(FingerprintDAI userDataAccessObject, FingerprintOB fingerprintOutputBoundary) {
+    public FingerprintInteractor(FingerprintDAI userDataAccessObject, Song song,  FingerprintOB fingerprintOutputBoundary) {
         this.userDataAccessObject = userDataAccessObject;
         this.fingerprintPresenter = fingerprintOutputBoundary;
+        this.song = song;
     }
 
     @Override

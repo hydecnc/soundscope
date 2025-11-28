@@ -12,7 +12,6 @@ public class Main {
                 .addStartRecordUseCase()
                 .addStopRecordUseCase()
                 .addDisplayRecordingWaveformUseCase()
-                .addFingerprintView()
                 .addFingerprintUseCase()
                 .addIdentifyUseCase()
                 .build();

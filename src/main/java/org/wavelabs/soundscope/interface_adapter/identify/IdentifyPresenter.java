@@ -21,7 +21,7 @@ public class IdentifyPresenter implements IdentifyOB {
 
     @Override
     public void presentError(String errorMessage) {
-        //TODO: also set some boolean so MainView knows an error occured
+        mainViewModel.getState().setErrorState(true);
         mainViewModel.getState().setErrorMessage(errorMessage);
         mainViewModel.firePropertyChange("identify");
     }

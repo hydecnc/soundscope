@@ -16,14 +16,11 @@ public class SaveRecordingPresenter implements SaveRecordingOB {
     }
 
     @Override
-    public void presentSaveSuccessView() {
-        mainViewModel.getState().setSuccessfulSave(true);
-        mainViewModel.firePropertyChange("file save");
-    }
+    public void presentSaveSuccessView() {}
 
     @Override
     public void presentError(String message) {
-        mainViewModel.getState().setSuccessfulSave(false);
+        mainViewModel.getState().setErrorState(true);
         mainViewModel.getState().setErrorMessage(message);
         mainViewModel.firePropertyChange("file save");
     }
