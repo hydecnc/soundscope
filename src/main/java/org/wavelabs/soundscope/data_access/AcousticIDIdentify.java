@@ -96,7 +96,6 @@ public class AcousticIDIdentify implements IdentifyDAI {
 
             return new Song.SongMetadata(
                 title,
-                duration,
                 musicBrainzID,
                 acoustIDTrackID,
                 album,

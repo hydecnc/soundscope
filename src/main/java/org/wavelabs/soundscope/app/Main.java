@@ -7,7 +7,6 @@ public class Main {
         AppBuilder appBuilder = new AppBuilder();
         JFrame application = appBuilder
                 .addMainView()
-                .addWaveFormView()
                 .addFileSaveUseCase()
                 .addPlayUseCase()
                 .addStartRecordUseCase()

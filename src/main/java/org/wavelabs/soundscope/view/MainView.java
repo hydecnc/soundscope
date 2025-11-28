@@ -5,6 +5,7 @@ import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.interface_adapter.MainState;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
+import org.wavelabs.soundscope.interface_adapter.identify.IdentifyController;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingController;
 import org.wavelabs.soundscope.interface_adapter.process_audio_file.ProcessAudioFileController;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingController;
@@ -12,8 +13,10 @@ import org.wavelabs.soundscope.interface_adapter.start_recording.StartRecordingC
 import org.wavelabs.soundscope.interface_adapter.stop_recording.StopRecordingController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
+import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
+import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
 import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileID;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingID;
 import org.wavelabs.soundscope.view.components.TimelinePanel;
@@ -50,16 +53,20 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             recordButton, fingerprintButton, identifyButton;
 
     //Waveform panel code
-    private WaveformPanel waveformPanel;
-    private TimelinePanel timelinePanel;
-    private JScrollPane waveformScrollPane;
+    private final WaveformPanel waveformPanel;
+    private final TimelinePanel timelinePanel;
+    private final JScrollPane waveformScrollPane;
+    private final JScrollPane timelineScrollPane;
+    private final WaveformViewModel waveformViewModel;
 
-
-
+    //Info panel
+    private final JPanel infoPanel = new JPanel();
 
     //TODO: migrate App Builder stuff here
-    public MainView(MainViewModel mainViewModel) {
+    public MainView(MainViewModel mainViewModel, WaveformViewModel waveformViewModel) {
         this.mainViewModel = mainViewModel;
+        this.waveformViewModel = waveformViewModel; //TODO: rename waveform view model to something else since
+                                                // it doesn't extend ViewModel and therefore isn't a View Model
         mainViewModel.addPropertyChangeListener(this);
 
         //Sets the title
@@ -67,6 +74,19 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         title.setFont(new Font("Sans Serif", Font.BOLD, 36));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // Sets up waveform information
+        waveformPanel = new WaveformPanel();
+        timelinePanel = new TimelinePanel();
+        waveformScrollPane = new JScrollPane(waveformPanel);
+        timelineScrollPane = new JScrollPane(timelinePanel);
+        setupScrollPanes();
+
+        // Create container for timeline and waveform
+        JPanel waveformContainer = new JPanel(new BorderLayout());
+        waveformContainer.add(timelineScrollPane, BorderLayout.NORTH);
+        waveformContainer.add(waveformScrollPane, BorderLayout.CENTER);
+
+        this.add(waveformContainer);
 
         // Sets up all of the buttons
         //TODO: finish setting up buttons
@@ -74,6 +94,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         saveAsButton = getSaveAsButton();
         playPauseButton = getPlayPauseButton();
         recordButton = getRecordButton();
+        identifyButton = getIdentifyButton();
 
         buttonPanel.add(openButton);
         buttonPanel.add(saveAsButton);
@@ -82,10 +103,96 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         buttonPanel.add(fingerprintButton);
         buttonPanel.add(identifyButton);
 
-        //TODO: add waveform specific stuff
+        // Sets up info panel
+        //TODO: finish this
 
-
+        //Sets up main panel
         this.add(title);
+        this.add(waveformContainer);
+        this.add(infoPanel);
+        this.add(buttonPanel);
+    }
+
+    @NotNull
+    private void setupScrollPanes() {
+        // Sets up and synchronizes scroll panes for timeline and waveform
+        timelineScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        timelineScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        timelineScrollPane.setBorder(null);
+
+        waveformScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        waveformScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        waveformScrollPane.setBorder(null);
+        // Ensure scrollbar is always visible when content is larger than viewport
+        waveformScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
+
+        // Synchronize scrolling between timeline and waveform
+        timelineScrollPane.getViewport().addChangeListener(e -> {
+            JViewport timelineViewport = timelineScrollPane.getViewport();
+            JViewport waveformViewport = waveformScrollPane.getViewport();
+            waveformViewport.setViewPosition(timelineViewport.getViewPosition());
+        });
+
+        waveformScrollPane.getViewport().addChangeListener(e -> {
+            JViewport timelineViewport = timelineScrollPane.getViewport();
+            JViewport waveformViewport = waveformScrollPane.getViewport();
+            timelineViewport.setViewPosition(waveformViewport.getViewPosition());
+        });
+
+        // Calculate width for 30 seconds: account for 256x downsampling
+        int widthFor30Seconds = ((44100 * 30) / 256) / 8;
+        timelineScrollPane.setPreferredSize(new Dimension(widthFor30Seconds, 30));
+        waveformScrollPane.setPreferredSize(
+                new Dimension(widthFor30Seconds, UIStyle.Dimensions.WAVEFORM_HEIGHT));
+
+
+        javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
+            if (waveformViewModel.getAudioData() != null) {
+                // Get playback position from playback use case (works for both playing and paused)
+                double playbackPositionSeconds = 0.0;
+
+                int framesPlayed = mainViewModel.getState().getFramesPlayed();
+                int sampleRate = waveformViewModel.getAudioData().getSampleRate();
+                if (sampleRate > 0 && framesPlayed > 0) {
+                    playbackPositionSeconds = (double) framesPlayed / sampleRate;
+                }
+
+                // Only update audio data if it changed, otherwise just update playback position
+                // This avoids recalculating waveform paths every 100ms
+                waveformPanel.updateWaveform(waveformViewModel.getAudioData(),
+                        playbackPositionSeconds);
+
+                // Update timeline with same data (only if audio data changed)
+                if (timelinePanel != null) {
+                    timelinePanel.updateTimeline(
+                            waveformViewModel.getAudioData().getDurationSeconds(),
+                            waveformViewModel.getAudioData().getSampleRate());
+                }
+                // Ensure scroll pane is updated after waveform changes
+                waveformScrollPane.revalidate();
+                waveformScrollPane.repaint();
+            }
+
+            // Add play button update logic from main
+            String desired = mainViewModel.getState().isPlaying() ? MainViewModel.PAUSE_TEXT : MainViewModel.PLAY_TEXT;
+            if (!desired.equals(playPauseButton.getText())) {
+                playPauseButton.setText(desired);
+
+            }
+        });
+        timer.start();
+    }
+
+    @NotNull
+    private JButton getIdentifyButton(){
+        JButton identifyButton = new JButton(MainViewModel.IDENTIFY_TEXT);
+        identifyButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
+
+        identifyButton.addActionListener(e -> {
+            identifyController.identify();
+        });
+
+        return identifyButton;
     }
 
     @NotNull
@@ -98,7 +205,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         Timer recordingWaveformTimer = new Timer(50, e -> {
             if (mainViewModel.getState().isRecording()) {
                 displayRecordingWaveformController.execute();
-                AudioData audioData = waveformViewModel.getAudioData(); //TODO: attach a waveformViewModel here
+                AudioData audioData = waveformViewModel.getAudioData();
                 // Force immediate update and auto-scroll to show latest
                 if (audioData != null && waveformPanel != null) {
                     waveformPanel.updateWaveform(audioData);
@@ -183,12 +290,11 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             }
             try {
                 //TODO: need to be able to listen to the view model's state instead of to the play use case
-                if (playRecordingUseCase.isPlaying()) {
+                if (mainViewModel.getState().isPlaying()) {
                     playRecordingController.pause();
                     playPauseButton.setText(MainViewModel.PLAY_TEXT);
                 } else {
-                    if (playRecordingUseCase.getTotalFrames() == playRecordingUseCase
-                            .getFramesPlayed()) {
+                    if (mainViewModel.getState().isPlayingFinished()) {
                         playRecordingController.play(currentAudioSourcePath, true);
                     } else {
                         playRecordingController.play(currentAudioSourcePath, false);
@@ -333,5 +439,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                 return;
             }
         }
+        //TODO: implement property change updates from all the other use cases
+
+        //TODO: read property updates from identify
     }
 }

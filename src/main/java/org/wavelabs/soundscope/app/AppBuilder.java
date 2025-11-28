@@ -1,13 +1,9 @@
 package org.wavelabs.soundscope.app;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.Dimension;
 import javax.swing.*;
-import java.awt.Point;
 
 import org.wavelabs.soundscope.data_access.FileDAO;
-import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
@@ -16,6 +12,8 @@ import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintControll
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintPresenter;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintViewModel;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
+import org.wavelabs.soundscope.interface_adapter.identify.IdentifyController;
+import org.wavelabs.soundscope.interface_adapter.identify.IdentifyPresenter;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingController;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingPresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingController;
@@ -24,7 +22,6 @@ import org.wavelabs.soundscope.interface_adapter.start_recording.StartRecordingC
 import org.wavelabs.soundscope.interface_adapter.stop_recording.StopRecordingController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
-import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformIB;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformOB;
@@ -32,11 +29,12 @@ import org.wavelabs.soundscope.use_case.fingerprint.FingerprintIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintInteractor;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintOB;
+import org.wavelabs.soundscope.use_case.identify.IdentifyIB;
 import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
+import org.wavelabs.soundscope.use_case.identify.IdentifyOB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingOB;
-import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFile;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingIB;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingOB;
@@ -46,7 +44,6 @@ import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingIB;
 import org.wavelabs.soundscope.view.FingerprintView;
 import org.wavelabs.soundscope.view.MainView;
-import org.wavelabs.soundscope.view.UIStyle;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
 
 import org.wavelabs.soundscope.view.components.TimelinePanel;
@@ -80,104 +77,10 @@ public class AppBuilder {
 
     public AppBuilder addMainView(){
         mainViewModel = new MainViewModel();
-        mainView = new MainView(mainViewModel);
-
-        mainPanel = mainView;
-        return this;
-    }
-
-    // Use case view views & view models
-    // NOTE: Currently, this is missing controllers, presenters, view models, etc.
-    public AppBuilder addWaveFormView() {
-        waveformPanel = new WaveformPanel();
-        timelinePanel = new TimelinePanel();
         waveformViewModel = new WaveformViewModel();
 
-        WaveformPresenter presenter = new WaveformPresenter(waveformViewModel);
-        JavaSoundAudioFileGateway gateway = new JavaSoundAudioFileGateway();
-        processAudioFileUseCase = new ProcessAudioFile(gateway, presenter);
-
-        mainPanel.add(waveformPanel);
-        mainPanel.add(mainButtonPanel); // TODO: why is this inside addWaveformView?
-
-
-        // Create synchronized scroll panes for timeline and waveform
-        JScrollPane timelineScrollPane = new JScrollPane(timelinePanel);
-        timelineScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        timelineScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        timelineScrollPane.setBorder(null);
-
-        waveformScrollPane = new JScrollPane(waveformPanel);
-        waveformScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        waveformScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        waveformScrollPane.setBorder(null);
-        // Ensure scrollbar is always visible when content is larger than viewport
-        waveformScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
-
-        // Synchronize scrolling between timeline and waveform
-        timelineScrollPane.getViewport().addChangeListener(e -> {
-            JViewport timelineViewport = timelineScrollPane.getViewport();
-            JViewport waveformViewport = waveformScrollPane.getViewport();
-            waveformViewport.setViewPosition(timelineViewport.getViewPosition());
-        });
-
-        waveformScrollPane.getViewport().addChangeListener(e -> {
-            JViewport timelineViewport = timelineScrollPane.getViewport();
-            JViewport waveformViewport = waveformScrollPane.getViewport();
-            timelineViewport.setViewPosition(waveformViewport.getViewPosition());
-        });
-
-        // Calculate width for 30 seconds: account for 256x downsampling
-        int widthFor30Seconds = ((44100 * 30) / 256) / 8;
-        timelineScrollPane.setPreferredSize(new Dimension(widthFor30Seconds, 30));
-        waveformScrollPane.setPreferredSize(
-                new Dimension(widthFor30Seconds, UIStyle.Dimensions.WAVEFORM_HEIGHT));
-
-        // Create container for timeline and waveform
-        JPanel waveformContainer = new JPanel(new BorderLayout());
-        waveformContainer.add(timelineScrollPane, BorderLayout.NORTH);
-        waveformContainer.add(waveformScrollPane, BorderLayout.CENTER);
-
-        mainPanel.add(waveformContainer);
-        mainPanel.add(mainButtonPanel);
-
-        javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
-            if (waveformViewModel.getAudioData() != null) {
-                // Get playback position from playback use case (works for both playing and paused)
-                double playbackPositionSeconds = 0.0;
-                if (playRecordingUseCase != null) {
-                    int framesPlayed = playRecordingUseCase.getFramesPlayed();
-                    int sampleRate = waveformViewModel.getAudioData().getSampleRate();
-                    if (sampleRate > 0 && framesPlayed > 0) {
-                        playbackPositionSeconds = (double) framesPlayed / sampleRate;
-                    }
-                }
-
-                // Only update audio data if it changed, otherwise just update playback position
-                // This avoids recalculating waveform paths every 100ms
-                waveformPanel.updateWaveform(waveformViewModel.getAudioData(),
-                        playbackPositionSeconds);
-
-                // Update timeline with same data (only if audio data changed)
-                if (timelinePanel != null) {
-                    timelinePanel.updateTimeline(
-                            waveformViewModel.getAudioData().getDurationSeconds(),
-                            waveformViewModel.getAudioData().getSampleRate());
-                }
-                // Ensure scroll pane is updated after waveform changes
-                waveformScrollPane.revalidate();
-                waveformScrollPane.repaint();
-            }
-            // Add play button update logic from main
-            if (playRecordingUseCase != null && playPauseButton != null) {
-                String desired = playRecordingUseCase.isPlaying() ? "Pause" : "Play";
-                if (!desired.equals(playPauseButton.getText())) {
-                    playPauseButton.setText(desired);
-                }
-            }
-        });
-        timer.start();
-
+        mainView = new MainView(mainViewModel, waveformViewModel);
+        mainPanel = mainView;
         return this;
     }
 
@@ -229,7 +132,7 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addFingerprintView() {
+    public AppBuilder addFingerprintView() { //TODO: move this into the right view model
         fingerprintViewModel = new FingerprintViewModel();
         fingerprintView = new FingerprintView(fingerprintViewModel);
         mainButtonPanel.add(fingerprintView);
@@ -246,26 +149,11 @@ public class AppBuilder {
     }
 
     public AppBuilder addIdentifyUseCase() {
-        JButton identifyButton = new JButton("Identify");
-        identifyButton.setPreferredSize(new Dimension(200, 200));
-        mainButtonPanel.add(identifyButton);
+        final IdentifyOB identifyOutputBoundary = new IdentifyPresenter(mainViewModel);
+        final IdentifyIB identifyInteractor = new IdentifyInteractor(song, identifyOutputBoundary);
 
-        // TODO: add UI elements to display the Identify information
-        // JTextArea songTitle = new JTextArea("Song: ");
-        // songTitle.setPreferredSize(new Dimension(200, 200));
-        // infoPanel.add(songTitle);
-        //
-        // JTextArea songArtist = new JTextArea("Artist: ");
-        // songArtist.setPreferredSize(new Dimension(200, 200));
-        // infoPanel.add(songArtist);
-
-        final IdentifyInteractor identifyInteractor = new IdentifyInteractor(song);
-
-        identifyButton.addActionListener(e -> {
-            // TODO: handle errors and failure case
-            identifyInteractor.identify((int) fileDAO.getAudioRecording().getDurationSeconds());
-            System.out.println(song.getMetadata());
-        });
+        final IdentifyController identifyController = new IdentifyController(identifyInteractor);
+        mainView.setIdentifyController(identifyController);
         return this;
     }
 

@@ -1,0 +1,28 @@
+package org.wavelabs.soundscope.interface_adapter.identify;
+
+import org.wavelabs.soundscope.interface_adapter.MainViewModel;
+import org.wavelabs.soundscope.use_case.identify.IdentifyOB;
+import org.wavelabs.soundscope.use_case.identify.IdentifyOD;
+
+public class IdentifyPresenter implements IdentifyOB {
+    private final MainViewModel mainViewModel;
+
+    public  IdentifyPresenter(MainViewModel mainViewModel) {
+        this.mainViewModel = mainViewModel;
+    }
+
+
+    @Override
+    public void updateSongAttributes(IdentifyOD outputData) {
+        mainViewModel.getState().setSongTitle(outputData.songTitle());
+        mainViewModel.getState().setAlbum(outputData.album());
+        mainViewModel.firePropertyChange("identify");
+    }
+
+    @Override
+    public void presentError(String errorMessage) {
+        //TODO: also set some boolean so MainView knows an error occured
+        mainViewModel.getState().setErrorMessage(errorMessage);
+        mainViewModel.firePropertyChange("identify");
+    }
+}
