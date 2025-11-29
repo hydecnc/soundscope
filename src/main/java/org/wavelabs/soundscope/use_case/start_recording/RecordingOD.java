@@ -1,4 +1,3 @@
 package org.wavelabs.soundscope.use_case.start_recording;
 
-public class RecordingOD {
-}
+public record RecordingOD (boolean isPlaying) {}

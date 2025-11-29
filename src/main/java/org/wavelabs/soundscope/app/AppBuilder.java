@@ -19,6 +19,7 @@ import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingPre
 import org.wavelabs.soundscope.interface_adapter.process_audio_file.ProcessAudioFileController;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingController;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveRecordingPresenter;
+import org.wavelabs.soundscope.interface_adapter.start_recording.RecordingPresenter;
 import org.wavelabs.soundscope.interface_adapter.start_recording.StartRecordingController;
 import org.wavelabs.soundscope.interface_adapter.stop_recording.StopRecordingController;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformController;
@@ -43,6 +44,7 @@ import org.wavelabs.soundscope.use_case.process_audio_file.ProcessAudioFileOB;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecording;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingIB;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingOB;
+import org.wavelabs.soundscope.use_case.start_recording.RecordingOB;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecording;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecordingIB;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
@@ -92,7 +94,9 @@ public class AppBuilder {
     public AppBuilder addStartRecordUseCase() {
         fileDAO.setRecorder(new JavaMicRecorder());
 
-        final StartRecordingIB startRecordingInteractor = new StartRecording(fileDAO);
+        final RecordingOB recordingOutput = new RecordingPresenter(mainViewModel);
+
+        final StartRecordingIB startRecordingInteractor = new StartRecording(fileDAO, recordingOutput);
         final StartRecordingController startRecordingController = new StartRecordingController(startRecordingInteractor);
 
         mainView.setStartRecordingController(startRecordingController);

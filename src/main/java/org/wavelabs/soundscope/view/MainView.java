@@ -233,6 +233,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         recordButton.addActionListener(e -> {
             if (mainViewModel.getState().isRecording()) {
                 stopRecordingController.execute();
+                mainViewModel.getState().setRecording(false);
+
                 // named cache due to the temporary nature of the file
                 String outputPath = "cache.wav"; //TODO: put a better file path here
                 saveRecordingController.execute(outputPath);
@@ -267,6 +269,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                 }
             } else {
                 startRecordingController.execute();
+                mainViewModel.getState().setRecording(true);
                 // Clear previous waveform when starting new recording
                 if (waveformPanel != null) {
                     waveformPanel.updateWaveform(null);
@@ -431,13 +434,13 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     }
 
     @Override
-    public void actionPerformed(ActionEvent evt) { //TODO: finish this
+    public void actionPerformed(ActionEvent evt) { //TODO: Does anything need to be added here?
 
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        final MainState state = (MainState) evt.getNewValue(); //TODO: figure out if this is the correct thing to be reading
+        final MainState state = (MainState) evt.getNewValue();
 
         // If in an error state, we display an error message
         if(state.isErrorState()){
@@ -456,7 +459,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         }
 
         //TODO: implement property change updates from all the other use cases
-        if(evt.getPropertyName().equals("playing")){ //Update play button visual state
+
+        if(evt.getPropertyName().equals("playing")){ //Updates play button visual state if song finishes
             if(state.isPlaying()){
                 playPauseButton.setText(MainViewModel.PAUSE_TEXT);
             }else{
@@ -464,13 +468,15 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             }
         }
 
-        //TODO: read property updates from identify
+        if(evt.getPropertyName().equals("recording")){ //Updates recording button visual state if it changes
+
+        }
+
         if(evt.getPropertyName().equals("identify")){
             //TODO: update info panel with fingerprint data
             return;
         }
 
-        //TODO: read property updates from fingerprint; update the code shown below.
         if(evt.getPropertyName().equals("fingerprint")) {
             //TODO: update info panel with fingerprint data
             return;
