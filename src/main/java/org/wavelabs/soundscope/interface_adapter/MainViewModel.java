@@ -1,6 +1,7 @@
 package org.wavelabs.soundscope.interface_adapter;
 
 import java.awt.*;
+import java.util.Map;
 
 public class MainViewModel extends ViewModel<MainState>{
     public final static String TITLE = "Soundscope";
@@ -14,10 +15,16 @@ public class MainViewModel extends ViewModel<MainState>{
     public final static String STOP_RECORDING_TEXT = "Stop Recording";
     public final static String FINGERPRINT_TEXT = "Fingerprint";
     public final static String IDENTIFY_TEXT = "Identify";
+    public final static Map<String, String> USE_CASE_ERROR_TITLE_MAP = Map.of(
+            "file save", "Save Error",
+            "process audio", "Processing Error",
+            "identify", "Identify Error",
+            "fingerprint", "Fingerprint Error",
+            "playing", "Playback Error"
+    );
 
     public final static Dimension DEFAULT_BUTTON_DIMENSIONS = new Dimension(200, 200);
-
-//    public final static String
+    
 
     public MainViewModel() {
         super("main view");

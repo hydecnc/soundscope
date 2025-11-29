@@ -148,7 +148,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                 // Get playback position from playback use case (works for both playing and paused)
                 double playbackPositionSeconds = 0.0;
 
-                int framesPlayed = mainViewModel.getState().getFramesPlayed();
+                long framesPlayed = mainViewModel.getState().getFramesPlayed();
                 int sampleRate = waveformViewModel.getAudioData().getSampleRate();
                 if (sampleRate > 0 && framesPlayed > 0) {
                     playbackPositionSeconds = (double) framesPlayed / sampleRate;
@@ -441,55 +441,41 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     public void propertyChange(PropertyChangeEvent evt) {
         final MainState state = (MainState) evt.getNewValue(); //TODO: figure out if this is the correct thing to be reading
 
-        //File saving use case
-        if(evt.getPropertyName().equals("file save") && state.isErrorState()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    state.getErrorMessage(),
-                    "Save Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
-        }
-        //TODO: implement property change updates from all the other use cases
+        // If in an error state, we display an error message
+        if(state.isErrorState()){
+            String errorTitle = MainViewModel.USE_CASE_ERROR_TITLE_MAP.get(evt.getPropertyName());
+            if (errorTitle == null) errorTitle = "Unknown Error Type";
 
-        if(evt.getPropertyName().equals("process audio") && state.isErrorState()) {
             JOptionPane.showMessageDialog(
                     this,
                     state.getErrorMessage(),
-                    "Processing Error",
+                    errorTitle,
                     JOptionPane.ERROR_MESSAGE
             );
+            //Clears an error state
+            mainViewModel.getState().setErrorState(false);
+            return;
+        }
+
+        //TODO: implement property change updates from all the other use cases
+        if(evt.getPropertyName().equals("playing")){ //Update play button visual state
+            if(state.isPlaying()){
+                playPauseButton.setText(MainViewModel.PAUSE_TEXT);
+            }else{
+                playPauseButton.setText(MainViewModel.PLAY_TEXT);
+            }
         }
 
         //TODO: read property updates from identify
         if(evt.getPropertyName().equals("identify")){
-            if(state.isErrorState()) {
-                JOptionPane.showMessageDialog(this,
-                        state.getErrorMessage(),
-                        "Identify Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }else{
-
-            }
+            //TODO: update info panel with fingerprint data
+            return;
         }
 
         //TODO: read property updates from fingerprint; update the code shown below.
         if(evt.getPropertyName().equals("fingerprint")) {
-            if(state.isErrorState()){
-                JOptionPane.showMessageDialog(
-                    this,
-                    state.getErrorMessage(),
-                    "Fingerprint Error",
-                    JOptionPane.ERROR_MESSAGE
-                );
-            }else{
-                //TODO: update info panel with fingerprint data
-
-            }
+            //TODO: update info panel with fingerprint data
+            return;
         }
-
-        //Clears an error state
-        mainViewModel.getState().setErrorState(false);
     }
 }

@@ -4,7 +4,4 @@ public interface PlayRecordingIB {
     void play(PlayRecordingID audioSource);
     void pause();
     void stop();
-    boolean isPlaying();
-    int getFramesPlayed();
-    long getTotalFrames();
 }

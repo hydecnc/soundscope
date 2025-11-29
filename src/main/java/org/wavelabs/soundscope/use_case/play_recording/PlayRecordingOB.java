@@ -8,4 +8,6 @@ public interface PlayRecordingOB {
 	void playbackStopped();
 
 	void playbackError(String message);
+
+    void updateMainState(PlayRecordingOD updateData);
 }

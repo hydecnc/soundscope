@@ -10,9 +10,9 @@ public class MainState {
     private String fingerprint;
 
     private boolean isRecording = false; //TODO: figure out how to push updates to this
-    private boolean isPlaying = false; //TODO: figure out how to push updates to this
-    private boolean playingFinished = false; //TODO: figure out how to push updates to this
-    private int framesPlayed = 0; //TODO: figure out how to push updates to this
+    private boolean isPlaying = false;
+    private boolean playingFinished = false;
+    private long framesPlayed = 0;
 
     public boolean isErrorState() {
         return errorState;
@@ -59,11 +59,11 @@ public class MainState {
         this.playingFinished = playingFinished;
     }
 
-    public int getFramesPlayed() {
+    public long getFramesPlayed() {
         return framesPlayed;
     }
 
-    public void setFramesPlayed(int framesPlayed) {
+    public void setFramesPlayed(long framesPlayed) {
         this.framesPlayed = framesPlayed;
     }
 
