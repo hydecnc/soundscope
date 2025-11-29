@@ -469,7 +469,11 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         }
 
         if(evt.getPropertyName().equals("recording")){ //Updates recording button visual state if it changes
-
+            if(state.isRecording()){
+                recordButton.setText(MainViewModel.STOP_RECORDING_TEXT);
+            }else{
+                recordButton.setText(MainViewModel.RECORD_TEXT);
+            }
         }
 
         if(evt.getPropertyName().equals("identify")){

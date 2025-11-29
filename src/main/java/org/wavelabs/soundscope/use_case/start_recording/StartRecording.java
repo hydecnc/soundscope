@@ -12,8 +12,6 @@ public class StartRecording implements StartRecordingIB {
     private final long UPDATE_SPACING_MILLIS = 100;
     private final static ScheduledExecutorService updateScheduler = Executors.newSingleThreadScheduledExecutor();
 
-
-
     public StartRecording(StartRecordingDAI startRecordingDAI, RecordingOB recordingOB) {
         this.startRecordingDataObject = startRecordingDAI;
         this.recordingOB = recordingOB;
