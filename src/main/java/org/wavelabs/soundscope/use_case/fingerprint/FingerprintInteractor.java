@@ -22,6 +22,11 @@ public class FingerprintInteractor implements FingerprintIB {
     public void execute() {
         try {
             final byte[] bytes = userDataAccessObject.getAudioData();
+            
+            if (bytes == null || bytes.length == 0) {
+                fingerprintPresenter.prepareFailView("Audio data could not be found. Please record or load an audio file first.");
+                return;
+            }
 
             final Fingerprinter fingerprinter = new Fingerprinter();
             fingerprinter.start();
@@ -31,11 +36,22 @@ public class FingerprintInteractor implements FingerprintIB {
             final FingerprintOD output = new FingerprintOD(fingerprinter.getFingerprint());
             fingerprinter.close();
 
-            song.setFingerprint(output.getFingerprint()); //TODO: is this the right place to put song metadata updating?
-            song.setDuration((int) userDataAccessObject.getCurrentRecordingBuffer().getDurationSeconds());
+            song.setFingerprint(output.getFingerprint());
+            
+            org.wavelabs.soundscope.entity.AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
+            if (buffer != null) {
+                song.setDuration((int) buffer.getDurationSeconds());
+            } else if (bytes != null && bytes.length > 0) {
+                int sampleRate = 44100;
+                int channels = 2;
+                int bytesPerSample = 2;
+                double durationSeconds = (double) bytes.length / (sampleRate * channels * bytesPerSample);
+                song.setDuration((int) durationSeconds);
+            }
+            
             fingerprintPresenter.prepareSuccessView(output);
         } catch (NullPointerException e){
-            fingerprintPresenter.prepareFailView("Audio data could not be found");
+            fingerprintPresenter.prepareFailView("Audio data could not be found. Please record or load an audio file first.");
         } catch (ChromaprintException e){
             fingerprintPresenter.prepareFailView("Chromaprint error:\n" + e.getMessage());
         }

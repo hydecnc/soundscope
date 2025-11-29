@@ -135,7 +135,7 @@ public class AppBuilder {
             //TODO: should this be renamed to a ProcessAudioFilePresenter?
         final ProcessAudioFileIB processAudioFileInteractor = new ProcessAudioFile(new JavaSoundAudioFileGateway(), processAudioFileOB);
 
-        final ProcessAudioFileController processAudioFileController = new ProcessAudioFileController(processAudioFileInteractor);
+        final ProcessAudioFileController processAudioFileController = new ProcessAudioFileController(processAudioFileInteractor, fileDAO);
         mainView.setProcessAudioFileController(processAudioFileController);
         return this;
     }

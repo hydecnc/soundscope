@@ -9,6 +9,14 @@ import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingDAI;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecordingDAI;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingDAI;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+
 public class FileDAO implements StartRecordingDAI,
                                 StopRecordingDAI,
                                 SaveRecordingDAI,
@@ -34,7 +42,12 @@ public class FileDAO implements StartRecordingDAI,
     public void setAudioRecording(AudioRecording audioRecording) { this.audioRecording = audioRecording; }
 
     @Override
-    public byte[] getAudioData() { return audioRecording.getData(); }
+    public byte[] getAudioData() {
+        if (audioRecording == null) {
+            return null;
+        }
+        return audioRecording.getData();
+    }
 
     @Override
     public AudioRecording getAudioRecording() { return audioRecording; }
@@ -49,5 +62,26 @@ public class FileDAO implements StartRecordingDAI,
         org.wavelabs.soundscope.data_access.JavaSoundRecordingGateway gateway = 
             new org.wavelabs.soundscope.data_access.JavaSoundRecordingGateway(recorder);
         return gateway.getCurrentRecordingBuffer();
+    }
+    
+    /**
+     * Loads audio from a file and creates an AudioRecording.
+     * This should be called when a file is loaded to enable fingerprinting.
+     * 
+     * @param file The audio file to load
+     * @throws IOException if the file cannot be read
+     * @throws UnsupportedAudioFileException if the audio format is not supported
+     */
+    public void loadAudioFromFile(File file) throws IOException, UnsupportedAudioFileException {
+        try (AudioInputStream input = AudioSystem.getAudioInputStream(file);
+             ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            byte[] chunk = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = input.read(chunk)) != -1) {
+                buffer.write(chunk, 0, bytesRead);
+            }
+            AudioFormat audioFormat = input.getFormat();
+            this.audioRecording = new AudioRecording(buffer.toByteArray(), audioFormat);
+        }
     }
 }
