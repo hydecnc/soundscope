@@ -55,6 +55,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
     //Info panel
     private final JPanel infoPanel = new JPanel();
+    private final JTextField fingerprintInfo, songTitleInfo, albumInfo;
 
     //TODO: migrate App Builder stuff here
     public MainView(MainViewModel mainViewModel, WaveformViewModel waveformViewModel) {
@@ -82,7 +83,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
         this.add(waveformContainer);
 
-        // Sets up all of the buttons
+        // Sets up all the buttons
         openButton = getOpenButton();
         saveAsButton = getSaveAsButton();
         playPauseButton = getPlayPauseButton();
@@ -98,11 +99,28 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         buttonPanel.add(identifyButton);
 
         // Sets up info panel
-        //TODO: finish this
+        fingerprintInfo = new JTextField(MainViewModel.FINGERPRINT_INFO_START);
+        songTitleInfo = new JTextField(MainViewModel.SONG_TITLE_INFO_START);
+        albumInfo = new JTextField(MainViewModel.ALBUM_INFO_START);
+
+        fingerprintInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
+        songTitleInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
+        albumInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
+
+        fingerprintInfo.setEditable(false);
+        songTitleInfo.setEditable(false);
+        albumInfo.setEditable(false);
+
+        infoPanel.add(fingerprintInfo);
+        infoPanel.add(songTitleInfo);
+        infoPanel.add(albumInfo);
+
+        infoPanel.setMaximumSize(MainViewModel.MAX_INFO_PANEL_DIMENSIONS);
 
         //Sets up main panel
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.X_AXIS));
         this.add(title);
         this.add(waveformContainer);
         this.add(infoPanel);
@@ -466,6 +484,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             }else{
                 playPauseButton.setText(MainViewModel.PLAY_TEXT);
             }
+            return;
         }
 
         if(evt.getPropertyName().equals("recording")){ //Updates recording button visual state if it changes
@@ -474,15 +493,25 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             }else{
                 recordButton.setText(MainViewModel.RECORD_TEXT);
             }
+            return;
         }
 
         if(evt.getPropertyName().equals("identify")){
-            //TODO: update info panel with fingerprint data
+            songTitleInfo.setText(MainViewModel.SONG_TITLE_INFO_START + state.getSongTitle());
+            albumInfo.setText(MainViewModel.ALBUM_INFO_START + state.getAlbum());
             return;
         }
 
         if(evt.getPropertyName().equals("fingerprint")) {
-            //TODO: update info panel with fingerprint data
+            String fingerprint = state.getFingerprint();
+            final int newLength = Math.min(MainViewModel.FINGERPRINT_DISPLAY_LENGTH, fingerprint.length());
+
+            String displayFingerprint = fingerprint.substring(0, newLength);
+            if(newLength < fingerprint.length()){
+                displayFingerprint += " ...";
+            }
+
+            fingerprintInfo.setText(MainViewModel.FINGERPRINT_INFO_START + displayFingerprint);
             return;
         }
     }

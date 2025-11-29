@@ -22,9 +22,15 @@ public class MainViewModel extends ViewModel<MainState>{
             "fingerprint", "Fingerprint Error",
             "playing", "Playback Error"
     );
+    public final static String FINGERPRINT_INFO_START = "Fingerprint: ";
+    public final static int FINGERPRINT_DISPLAY_LENGTH = 20;
+    public final static String SONG_TITLE_INFO_START = "Song Title: ";
+    public final static String ALBUM_INFO_START = "Album Title: ";
+
 
     public final static Dimension DEFAULT_BUTTON_DIMENSIONS = new Dimension(200, 200);
-    
+    public final static Dimension MIN_INFO_DIMENSIONS = new Dimension(150, 50);
+    public final static Dimension MAX_INFO_PANEL_DIMENSIONS = new Dimension(1000, 100);
 
     public MainViewModel() {
         super("main view");
