@@ -462,6 +462,9 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
         // If in an error state, we display an error message
         if(state.isErrorState()){
+            //Clears an error state
+            mainViewModel.getState().setErrorState(false);
+
             String errorTitle = MainViewModel.USE_CASE_ERROR_TITLE_MAP.get(evt.getPropertyName());
             if (errorTitle == null) errorTitle = "Unknown Error Type";
 
@@ -471,8 +474,6 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                     errorTitle,
                     JOptionPane.ERROR_MESSAGE
             );
-            //Clears an error state
-            mainViewModel.getState().setErrorState(false);
             return;
         }
 
