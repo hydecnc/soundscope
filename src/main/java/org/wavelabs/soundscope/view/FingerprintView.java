@@ -28,7 +28,7 @@ public class FingerprintView extends JButton implements ActionListener, Property
     @Override
     public void actionPerformed(ActionEvent e) {
         if (fingerprintController != null) {
-            fingerprintController.execute();
+            fingerprintController.  execute();
         }
     }
 

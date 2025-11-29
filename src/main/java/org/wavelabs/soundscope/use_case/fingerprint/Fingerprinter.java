@@ -32,12 +32,18 @@ public class Fingerprinter implements AudioProcessor, AutoCloseable {
      * 
      * @param sampleRate same rate of the audio stream
      * @param numChannels numbers of channels in the audio stream (1 or 2)
+     * @throws ChromaprintException if the native library fails to load
      */
     public Fingerprinter(final int sampleRate, final int numChannels) {
-        arena = Arena.ofConfined();
-        ctx = chromaprint_h.chromaprint_new(chromaprint_h.CHROMAPRINT_ALGORITHM_DEFAULT());
-        this.sampleRate = sampleRate;
-        this.numChannels = numChannels;
+        try {
+            arena = Arena.ofConfined();
+            ctx = chromaprint_h.chromaprint_new(chromaprint_h.CHROMAPRINT_ALGORITHM_DEFAULT());
+            this.sampleRate = sampleRate;
+            this.numChannels = numChannels;
+        } catch (ChromaprintException e) {
+            System.err.println("WARNING: Fingerprinting disabled — native library failed to load: " + e.getMessage());
+            throw e;
+        }
     }
 
     /**
