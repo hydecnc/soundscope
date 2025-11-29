@@ -33,7 +33,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     //Controllers for the various use cases
     private FingerprintController fingerprintController;
     private DisplayRecordingWaveformController waveformController; //TODO: set this up; is it necessary?
-    private IdentifyController identifyController; //TODO: make this class
+    private IdentifyController identifyController;
     private PlayRecordingController playRecordingController;
     private ProcessAudioFileController processAudioFileController;
     private SaveRecordingController saveRecordingController;
@@ -83,7 +83,6 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         this.add(waveformContainer);
 
         // Sets up all of the buttons
-        //TODO: finish setting up buttons
         openButton = getOpenButton();
         saveAsButton = getSaveAsButton();
         playPauseButton = getPlayPauseButton();
@@ -299,7 +298,6 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                 return;
             }
             try {
-                //TODO: need to be able to listen to the view model's state instead of to the play use case
                 if (mainViewModel.getState().isPlaying()) {
                     playRecordingController.pause();
                     playPauseButton.setText(MainViewModel.PLAY_TEXT);

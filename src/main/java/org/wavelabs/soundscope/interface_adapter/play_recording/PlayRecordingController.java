@@ -19,6 +19,6 @@ public class PlayRecordingController {
     }
 
     public void play(String currentAudioSourcePath, boolean restartFromBeginning){
-        playRecordingInteractor.play(new PlayRecordingID(currentAudioSourcePath, true));
+        playRecordingInteractor.play(new PlayRecordingID(currentAudioSourcePath, restartFromBeginning));
     }
 }

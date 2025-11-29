@@ -58,7 +58,6 @@ public class AppBuilder {
     private FileDAO fileDAO = new FileDAO();
     private Song song = new Song();
 
-
     public AppBuilder() {}
 
     public AppBuilder addMainView(){

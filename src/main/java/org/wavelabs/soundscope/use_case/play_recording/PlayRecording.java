@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import static org.wavelabs.soundscope.data_access.AcousticIDAPIConstants.REQUEST_SPACING_MILLIS;
 
 public class PlayRecording implements PlayRecordingIB {
-    private final long UPDATE_SPACING_MILLIS = 100;
+    private final long UPDATE_SPACING_MILLIS = 50;
     private final static ScheduledExecutorService updateScheduler = Executors.newSingleThreadScheduledExecutor();
     private final PlayRecordingDAI playbackGateway;
     private final PlayRecordingOB outputBoundary;
@@ -65,8 +65,9 @@ public class PlayRecording implements PlayRecordingIB {
         PlayRecordingOD updateData = new PlayRecordingOD(
                 playbackGateway.isPlaying(),
                 playbackGateway.getFramesPlayed() >= playbackGateway.getTotalFrames(),
-                playbackGateway.getTotalFrames()
+                playbackGateway.getFramesPlayed()
         );
+        outputBoundary.updateMainState(updateData);
         updateScheduler.schedule(this::updateState, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
     }
 }
