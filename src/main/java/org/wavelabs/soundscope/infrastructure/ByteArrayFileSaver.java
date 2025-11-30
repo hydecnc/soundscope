@@ -10,6 +10,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 
+
+/**
+ * Actual Implementation of FileSaver in ByteArray data.
+ */
 public class ByteArrayFileSaver implements FileSaver {
     /**
      *
@@ -17,6 +21,7 @@ public class ByteArrayFileSaver implements FileSaver {
      * @param audioRecording the data to be saved at {@code filePath}
      * @return true iff save was success
      */
+    @Override
     public boolean save(String filePath, AudioRecording audioRecording) throws IOException {
         byte[] audioData = audioRecording.getData();
         AudioFormat format = audioRecording.getFormat();

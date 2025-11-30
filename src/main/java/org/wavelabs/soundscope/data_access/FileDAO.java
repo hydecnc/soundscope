@@ -2,7 +2,9 @@ package org.wavelabs.soundscope.data_access;
 
 import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.entity.AudioRecording;
+import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.FileSaver;
+import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
 import org.wavelabs.soundscope.infrastructure.Recorder;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformDAI;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintDAI;
@@ -23,24 +25,32 @@ public class FileDAO implements StartRecordingDAI,
                                 SaveRecordingDAI,
                                 DisplayRecordingWaveformDAI,
                                 FingerprintDAI{
-    private FileSaver fileSaver;
-    private Recorder recorder;
+    private final FileSaver fileSaver = new ByteArrayFileSaver();
+    private final Recorder recorder = new JavaMicRecorder();
     private AudioRecording audioRecording;
 
     @Override
-    public void setFileSaver(FileSaver fileSaver) { this.fileSaver = fileSaver; }
+    public boolean hasAudioRecording() { return audioRecording != null; }
 
     @Override
-    public FileSaver getFileSaver() { return fileSaver; }
+    public void startRecording() { recorder.start(); }
 
     @Override
-    public void setRecorder(Recorder recorder) { this.recorder = recorder; }
+    public void stopRecording() {
+        final AudioFormat format = recorder.getAudioFormat();
+        recorder.stop();
+
+        // extract and save the resulting byte[] to audioRecording object
+        this.audioRecording = new AudioRecording(recorder.getRecordingBytes(), format);
+    }
 
     @Override
-    public Recorder getRecorder() { return recorder; }
+    public boolean isRecording() { return recorder.isRecording(); }
 
     @Override
-    public void setAudioRecording(AudioRecording audioRecording) { this.audioRecording = audioRecording; }
+    public boolean saveToFile(String filePath) throws IOException {
+        return fileSaver.save(filePath, audioRecording);
+    }
 
     @Override
     public byte[] getAudioData() {
@@ -54,11 +64,8 @@ public class FileDAO implements StartRecordingDAI,
     public AudioFormat getAudioFormat() { return audioRecording.getFormat(); }
 
     @Override
-    public AudioRecording getAudioRecording() { return audioRecording; }
-    
-    @Override
     public AudioData getCurrentRecordingBuffer() {
-        if (recorder == null || !recorder.isRecording()) {
+        if (!recorder.isRecording()) {
             return null;
         }
         

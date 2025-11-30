@@ -36,8 +36,10 @@ public class JavaMicRecorder implements Recorder {
     }
 
     /**
-     * Starts recording by starting the line,
-     * and open a thread that will end as the recording ends.
+     * Implementation of Recorder.save();
+     *
+     * <p>Starts recording by starting the line,
+     * and open a thread that will end as the recording ends.</p>
      */
     @Override
     public void start() {

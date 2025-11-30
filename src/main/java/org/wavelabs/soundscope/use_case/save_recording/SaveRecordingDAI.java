@@ -1,12 +1,8 @@
 package org.wavelabs.soundscope.use_case.save_recording;
 
-import org.wavelabs.soundscope.entity.AudioRecording;
-import org.wavelabs.soundscope.infrastructure.FileSaver;
+import java.io.IOException;
 
 public interface SaveRecordingDAI {
-    void setAudioRecording(AudioRecording audioRecording);
-    AudioRecording getAudioRecording();
-
-    void setFileSaver(FileSaver fileSaver);
-    FileSaver getFileSaver();
+    boolean saveToFile(String filePath) throws IOException;
+    boolean hasAudioRecording();
 }

@@ -57,7 +57,7 @@ public class AppBuilder {
     private WaveformViewModel waveformViewModel; //TODO: remove this in some refactor eventually
 
     private JPanel mainPanel;
-    private FileDAO fileDAO = new FileDAO();
+    private final FileDAO fileDAO = new FileDAO();
     private Song song = new Song();
 
     public AppBuilder() {}
@@ -72,8 +72,6 @@ public class AppBuilder {
     }
 
     public AppBuilder addFileSaveUseCase() {
-        fileDAO.setFileSaver(new ByteArrayFileSaver());
-
         final SaveRecordingOB saveRecordingOutput = new SaveRecordingPresenter(mainViewModel);
         final SaveRecordingIB saveRecordingInteractor = new SaveRecording(fileDAO, saveRecordingOutput);
 
@@ -92,8 +90,6 @@ public class AppBuilder {
     }
 
     public AppBuilder addStartRecordUseCase() {
-        fileDAO.setRecorder(new JavaMicRecorder());
-
         final RecordingOB recordingOutput = new RecordingPresenter(mainViewModel);
 
         final StartRecordingIB startRecordingInteractor = new StartRecording(fileDAO, recordingOutput);
