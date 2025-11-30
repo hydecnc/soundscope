@@ -1,6 +1,7 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
 import org.wavelabs.soundscope.entity.Song;
+import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.ChromaprintException;
 
 /**
@@ -38,7 +39,7 @@ public class FingerprintInteractor implements FingerprintIB {
 
             song.setFingerprint(output.getFingerprint());
             
-            org.wavelabs.soundscope.entity.AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
+            AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
             if (buffer != null) {
                 song.setDuration((int) buffer.getDurationSeconds());
             } else if (bytes != null && bytes.length > 0) {
