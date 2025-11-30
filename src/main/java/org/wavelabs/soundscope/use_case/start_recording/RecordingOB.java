@@ -1,0 +1,5 @@
+package org.wavelabs.soundscope.use_case.start_recording;
+
+public interface RecordingOB {
+    void updateRecordingState(RecordingOD outputData);
+}

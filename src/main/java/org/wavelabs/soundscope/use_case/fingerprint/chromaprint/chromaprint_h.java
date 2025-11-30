@@ -33,14 +33,17 @@ public class chromaprint_h extends chromaprint_h$shared {
         try {
             String libName = System.mapLibraryName("chromaprint");
             String resourcePath = "/lib/" + libName;
-
             InputStream input = chromaprint_h.class.getResourceAsStream(resourcePath);
+            
             if (input == null) {
-                throw new ChromaprintException("Chromaprint library not found.");
+                String os = System.getProperty("os.name").toLowerCase();
+                throw new ChromaprintException("Chromaprint library not found for " + os + 
+                    ". Expected: " + resourcePath);
             }
+            
             String extension = libName.substring(libName.indexOf("."));
             Path tempLib = Files.createTempFile("chromaprint", extension);
-            tempLib.toFile().deleteOnExit(); // Auto-cleanup
+            tempLib.toFile().deleteOnExit();
 
             Files.copy(input, tempLib, StandardCopyOption.REPLACE_EXISTING);
             input.close();
@@ -48,7 +51,7 @@ public class chromaprint_h extends chromaprint_h$shared {
             return SymbolLookup.libraryLookup(tempLib, LIBRARY_ARENA)
                     .or(SymbolLookup.loaderLookup()).or(Linker.nativeLinker().defaultLookup());
         } catch (IOException ex) {
-            throw new ChromaprintException("Failed to load chromaprint.");
+            throw new ChromaprintException("Failed to load chromaprint: " + ex.getMessage());
         }
     }
 

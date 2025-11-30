@@ -1,11 +1,13 @@
 package org.wavelabs.soundscope.use_case.play_recording;
 
 public interface PlayRecordingOB {
-	default void presentPlaybackStarted() {}
+	void playbackStarted();
 
-	default void presentPlaybackPaused() {}
+	void playbackPaused();
 
-	default void presentPlaybackStopped() {}
+	void playbackStopped();
 
-	default void presentPlaybackError(String message, Exception exception) {}
+	void playbackError(String message);
+
+    void updateMainState(PlayRecordingOD updateData);
 }

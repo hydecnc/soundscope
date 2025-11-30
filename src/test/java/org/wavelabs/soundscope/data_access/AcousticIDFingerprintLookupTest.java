@@ -50,7 +50,6 @@ public class AcousticIDFingerprintLookupTest {
         String[] expectedArtists = {"M83"};
         Song.SongMetadata expectedMetadata = new Song.SongMetadata(
                 "Lower Your Eyelids to Die With the Sun",
-                637,
                 "cd2e7c47-16f5-46c6-a37c-a1eb7bf599ff",
                 "9ff43b6a-4f16-427c-93c2-92307ca505e0",
                 "Before the Dawn Heals Us",
@@ -59,7 +58,6 @@ public class AcousticIDFingerprintLookupTest {
 
         // NOTE: We do not just use ".equals" as this would compare the artist arrays by reference, not value
         assert(resultMetadata.title().equals(expectedMetadata.title()));
-        assert(resultMetadata.duration()==expectedMetadata.duration());
         assert(resultMetadata.album().equals(expectedMetadata.album()));
         assert(resultMetadata.musicBrainzID().equals(expectedMetadata.musicBrainzID()));
         assert(resultMetadata.acoustIDTrackID().equals(expectedMetadata.acoustIDTrackID()));

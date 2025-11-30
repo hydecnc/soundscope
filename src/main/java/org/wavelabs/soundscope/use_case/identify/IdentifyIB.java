@@ -8,5 +8,5 @@ public interface IdentifyIB {
      * Performs the Identify use case
      * @return IdentifyOutputData
      */
-    void identify(int duration);
+    void identify();
 }
