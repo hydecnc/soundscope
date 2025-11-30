@@ -8,10 +8,12 @@ import java.awt.*;
 
 /**
  * High-performance waveform panel that displays audio waveform.
- * * <p>This class is part of the Frameworks & Drivers layer and provides
+ * 
+ * <p>This class is part of the Frameworks & Drivers layer and provides
  * a custom JPanel for displaying audio waveforms with optimized rendering.
  * Uses cached envelope arrays and background computation for smooth performance.
- * * <p><strong>Rendering Strategy:</strong> Uses a modified Linear/Power scale 
+ * 
+ * <p><strong>Rendering Strategy:</strong> Uses a modified Linear/Power scale 
  * rather than Logarithmic (dB). This preserves visual silence for low-volume 
  * sections while maintaining dynamic range for high-volume sections.
  */
@@ -73,7 +75,8 @@ public class WaveformPanel extends JPanel {
     
     /**
      * Updates the waveform display with new audio data.
-     * * @param audioData The AudioData object containing amplitude samples and metadata
+     * 
+     * @param audioData The AudioData object containing amplitude samples and metadata
      */
     public void updateWaveform(AudioData audioData) {
         boolean audioDataChanged = false;
