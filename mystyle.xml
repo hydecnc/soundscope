@@ -742,7 +742,7 @@
         <!-- Naming Conventions -->
         <module name="AbbreviationAsWordInName">
             <property name="ignoreFinal" value="false"/>
-            <property name="allowedAbbreviationLength" value="0"/>
+            <property name="allowedAbbreviationLength" value="3"/>
             <property name="allowedAbbreviations" value="AST,HTML,ID,JSON"/>
         </module>
         <module name="AbstractClassName"/>
