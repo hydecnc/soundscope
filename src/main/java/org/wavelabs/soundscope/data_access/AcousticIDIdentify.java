@@ -1,24 +1,5 @@
 package org.wavelabs.soundscope.data_access;
 
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.ACOUSTICID_API_URL;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.ACOUSTICID_TRACK_ID_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.ALBUM_TITLE_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.ARTISTS_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.ARTIST_NAME_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.DURATION_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.MATCH_QUALITY_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.METADATA_REQUEST;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.MUSICBRAINZ_ID_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.RECORDINGS_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.RELEASES_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.REQUEST_SPACING_MILLIS;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.REQUEST_TIMEOUT_MILLIS;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.RESULTS_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.SONG_TITLE_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.STATUS_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.SUCCESS_CODE;
-import static org.wavelabs.soundscope.data_access.AcousticIdApiConstants.UNSUCCESSFUL_STATUS_MSG;
-
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -43,53 +24,60 @@ import okhttp3.Response;
  * Looks up fingerprints using the AcousticID API, and retrieves corresponding song IDs and metadata.
  */
 public class AcousticIDIdentify implements IdentifyDAI {
-    private final static String ACOUSTICID_API_KEY = getAPIKey();
+    private static final String ACOUSTICID_API_KEY = getAPIKey();
 
-    private final static OkHttpClient client = new OkHttpClient();
-    private final static BlockingQueue<QueuedRequest> requestQueue = new LinkedBlockingQueue<>();
-    private final static ScheduledExecutorService requestScheduler = Executors.newSingleThreadScheduledExecutor();
-    private static boolean running = false;
+    private static OkHttpClient client = new OkHttpClient();
+    private static BlockingQueue<QueuedRequest> requestQueue = new LinkedBlockingQueue<>();
+    private static ScheduledExecutorService requestScheduler = Executors.newSingleThreadScheduledExecutor();
+    private static boolean running;
 
     /**
-     * Parses the JSON results of an API response
+     * Parses the JSON results of an API response.
      *
-     * @param apiResponse
-     * @return songMetadata
+     * @param apiResponse response from API
+     * @return songMetadata a Song.SongMetadata object
+     * @throws FingerprintMatchNotFoundException when a fingerprint isn't found
      */
-    private static Song.SongMetadata parseJSONAPIResults(Response apiResponse) {
+    private static Song.SongMetadata parseJSONApiResults(Response apiResponse) {
         try {
-            JSONObject responseBody = new JSONObject(apiResponse.body().string());
+            final JSONObject responseBody = new JSONObject(apiResponse.body().string());
 
-            //Checks response has okay status and non-empty results
-            if (!responseBody.getString(STATUS_CODE).equals(SUCCESS_CODE)) {
-                throw new FingerprintMatchNotFoundException(UNSUCCESSFUL_STATUS_MSG);
+            // Checks response has okay status and non-empty results
+            if (!responseBody.getString(AcousticIdApiConstants.STATUS_CODE)
+                    .equals(AcousticIdApiConstants.SUCCESS_CODE)) {
+                throw new FingerprintMatchNotFoundException(
+                        AcousticIdApiConstants.UNSUCCESSFUL_STATUS_MSG);
             }
 
-            //Finds the result with the highest score
-            JSONArray results = responseBody.getJSONArray(RESULTS_CODE);
+            // Finds the result with the highest score
+            final JSONArray results = responseBody.getJSONArray(AcousticIdApiConstants.RESULTS_CODE);
             JSONObject closestResult = results.getJSONObject(0);
             for (int i = 1; i < results.length(); i++) {
-                JSONObject currentResult = results.getJSONObject(i);
-                if (currentResult.getFloat(MATCH_QUALITY_CODE) > closestResult.getFloat(MATCH_QUALITY_CODE)) {
+                final JSONObject currentResult = results.getJSONObject(i);
+                if (currentResult.getFloat(AcousticIdApiConstants.MATCH_QUALITY_CODE)
+                        > closestResult.getFloat(AcousticIdApiConstants.MATCH_QUALITY_CODE)) {
                     closestResult = currentResult;
                 }
             }
 
-            //Retrieves all relevant Song Metadata attributes from the JSON response
-            //Non-critical attributes that cannot be found are set to null
-            String acoustIDTrackID = closestResult.getString(ACOUSTICID_TRACK_ID_CODE);
+            // Retrieves all relevant Song Metadata attributes from the JSON response
+            // Non-critical attributes that cannot be found are set to null
+            final String acoustIDTrackID = closestResult.getString(
+                    AcousticIdApiConstants.ACOUSTICID_TRACK_ID_CODE);
 
-            JSONObject recording = closestResult.getJSONArray(RECORDINGS_CODE).getJSONObject(0);
-            int duration = recording.getInt(DURATION_CODE);
-            String musicBrainzID = recording.getString(MUSICBRAINZ_ID_CODE);
-            String title = recording.getString(SONG_TITLE_CODE);
+            final JSONObject recording = closestResult.getJSONArray(
+                    AcousticIdApiConstants.RECORDINGS_CODE).getJSONObject(0);
+            final String musicBrainzID = recording.getString(
+                    AcousticIdApiConstants.MUSICBRAINZ_ID_CODE);
+            final String title = recording.getString(AcousticIdApiConstants.SONG_TITLE_CODE);
 
-            String album = recording.getJSONArray(RELEASES_CODE).getJSONObject(0).getString(ALBUM_TITLE_CODE);
+            final String album = recording.getJSONArray(AcousticIdApiConstants.RELEASES_CODE)
+                    .getJSONObject(0).getString(AcousticIdApiConstants.ALBUM_TITLE_CODE);
 
-            JSONArray artistObjects = recording.getJSONArray(ARTISTS_CODE);
-            String[] artists = new String[artistObjects.length()];
+            final JSONArray artistObjects = recording.getJSONArray(AcousticIdApiConstants.ARTISTS_CODE);
+            final String[] artists = new String[artistObjects.length()];
             for (int i = 0; i < artistObjects.length(); i++) {
-                artists[i] = artistObjects.getJSONObject(i).getString(ARTIST_NAME_CODE);
+                artists[i] = artistObjects.getJSONObject(i).getString(AcousticIdApiConstants.ARTIST_NAME_CODE);
             }
 
             return new Song.SongMetadata(
@@ -99,35 +87,39 @@ public class AcousticIDIdentify implements IdentifyDAI {
                 album,
                 artists
             );
-        } catch (IOException | JSONException e) {
-            throw new FingerprintMatchNotFoundException(e.toString());
+        }
+        catch (IOException | JSONException exception) {
+            throw new FingerprintMatchNotFoundException(exception.toString());
         }
     }
 
     /**
      * Processes the next API request in the queue, and completes its corresponding future.
+     *
+     * @throws FingerprintMatchNotFoundException when no fingerprint found
      */
     private static void processNextAPIRequest() {
-        QueuedRequest task = requestQueue.poll();
+        final QueuedRequest task = requestQueue.poll();
 
         if (task == null) {
             running = false;
             return;
         }
 
-        CompletableFuture<Response> future = task.future;
-        Request request = task.request;
+        final CompletableFuture<Response> future = task.future;
+        final Request request = task.request;
 
         try {
             final Response response = client.newCall(request).execute();
             future.complete(response);
-        } catch (IOException event) {
+        }
+        catch (IOException event) {
             throw new FingerprintMatchNotFoundException(event.toString());
         }
 
-        //Schedules the next API request to be processed after the appropriate spacing
-        requestScheduler.schedule(AcousticIDIdentify::processNextAPIRequest, REQUEST_SPACING_MILLIS,
-            TimeUnit.MILLISECONDS);
+        // Schedules the next API request to be processed after the appropriate spacing
+        requestScheduler.schedule(AcousticIDIdentify::processNextAPIRequest,
+                AcousticIdApiConstants.REQUEST_SPACING_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -135,33 +127,35 @@ public class AcousticIDIdentify implements IdentifyDAI {
      * NOTE: If working with IntelliJ, this must be set in IntelliJ, not through the terminal.
      *
      * @return api_key
+     *
+     * @throws IllegalStateException for when there is no ENV key set
      */
     private static String getAPIKey() {
-        String api_key = System.getenv("ACOUSTICID_API_KEY");
-        if (api_key == null) {
+        final String apiKey = System.getenv("ACOUSTICID_API_KEY");
+        if (apiKey == null) {
             throw new IllegalStateException("Environment variable ACOUSTICID_API_KEY has not been set");
         }
-        return api_key;
+        return apiKey;
     }
 
     /**
      * Returns the closest track id to the provided fingerprint.
      *
-     * @param fingerprint
-     * @param duration
+     * @param fingerprint fingerprint string
+     * @param duration duration in seconds
      * @return acoustIDtrackID
      */
     @Override
     public String getClosestMatchID(String fingerprint, int duration) {
-        Song.SongMetadata metadata = getClosestMatchMetadata(fingerprint, duration);
+        final Song.SongMetadata metadata = getClosestMatchMetadata(fingerprint, duration);
         return metadata.acoustIDTrackID();
     }
 
     /**
-     * Returns the metadata of the closest match
+     * Returns the metadata of the closest match.
      *
-     * @param fingerprint
-     * @param duration
+     * @param fingerprint fingerprint string
+     * @param duration duration in seconds
      * @return songMetadata
      */
     @Override
@@ -170,35 +164,37 @@ public class AcousticIDIdentify implements IdentifyDAI {
             throw new FingerprintMatchNotFoundException("Null parameters passed into query");
         }
 
-        CompletableFuture<Response> future = addAPIRequest(fingerprint, duration);
+        final CompletableFuture<Response> future = addAPIRequest(fingerprint, duration);
 
         try {
-            Response apiResult = future.get(REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-            return parseJSONAPIResults(apiResult);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new FingerprintMatchNotFoundException(e.toString());
+            final Response apiResult = future.get(
+                    AcousticIdApiConstants.REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            return parseJSONApiResults(apiResult);
+        }
+        catch (InterruptedException | ExecutionException | TimeoutException exception) {
+            throw new FingerprintMatchNotFoundException(exception.toString());
         }
     }
 
     /**
-     * Adds an API request corresponding to the fingerprint and duration to the queue
+     * Adds an API request corresponding to the fingerprint and duration to the queue.
      *
-     * @param fingerprint
-     * @param duration
+     * @param fingerprint string
+     * @param duration in seconds
      * @return future
      */
     private synchronized CompletableFuture<Response> addAPIRequest(String fingerprint, int duration) {
-        String url = ACOUSTICID_API_URL +
-            "?client=" + ACOUSTICID_API_KEY +
-            "&meta=" + METADATA_REQUEST +
-            "&duration=" + duration +
-            "&fingerprint=" + fingerprint;
+        final String url = AcousticIdApiConstants.ACOUSTICID_API_URL
+            + "?client=" + ACOUSTICID_API_KEY
+            + "&meta=" + AcousticIdApiConstants.METADATA_REQUEST
+            + "&duration=" + duration
+            + "&fingerprint=" + fingerprint;
 
-        Request request = new Request.Builder()
+        final Request request = new Request.Builder()
             .url(url)
             .build();
 
-        CompletableFuture<Response> future = new CompletableFuture<>();
+        final CompletableFuture<Response> future = new CompletableFuture<>();
         requestQueue.add(new QueuedRequest(request, future));
 
         if (!running) {
@@ -210,10 +206,10 @@ public class AcousticIDIdentify implements IdentifyDAI {
     }
 
     /**
-     * Stores a request and the corresponding future that needs to be completed
+     * Stores a request and the corresponding future that needs to be completed.
      *
-     * @param request
-     * @param future
+     * @param request an HTTP request
+     * @param future a promise
      */
     private record QueuedRequest(Request request, CompletableFuture<Response> future) {
     }
