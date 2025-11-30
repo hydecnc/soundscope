@@ -1,8 +1,8 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
-import org.wavelabs.soundscope.entity.Song;
 import javax.sound.sampled.AudioFormat;
 import org.wavelabs.soundscope.entity.AudioData;
+import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.ChromaprintException;
 
 /**
