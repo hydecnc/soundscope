@@ -51,8 +51,6 @@ public class Fingerprinter implements AudioProcessor, AutoCloseable {
             throw new ChromaprintException(
                     "Failed to (re)start the computation of fingerprint with a new audio steam.");
         }
-
-
     }
 
     /**
