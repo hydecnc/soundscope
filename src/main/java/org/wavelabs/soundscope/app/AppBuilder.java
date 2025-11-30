@@ -7,14 +7,13 @@ import java.awt.Font;
 import javax.swing.*;
 import java.awt.Point;
 import java.io.File;
-import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.wavelabs.soundscope.data_access.FileDAO;
-import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
-import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
+import org.wavelabs.soundscope.data_access.JavaSoundLoaderGateway;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
+import org.wavelabs.soundscope.interface_adapter.load_audio.LoadAudioPresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
@@ -25,6 +24,9 @@ import org.wavelabs.soundscope.use_case.fingerprint.FingerprinterInteractor;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformID;
 import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
+import org.wavelabs.soundscope.use_case.load_audio.LoadAudio;
+import org.wavelabs.soundscope.use_case.load_audio.LoadAudioID;
+import org.wavelabs.soundscope.use_case.load_audio.LoadAudioOB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingID;
@@ -38,7 +40,6 @@ import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.view.UIStyle;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -53,7 +54,9 @@ public class AppBuilder {
     private JScrollPane waveformScrollPane;
     private WaveformViewModel waveformViewModel;
     private ProcessAudioFile processAudioFileUseCase;
+    private LoadAudio loadAudioUseCase;
     private final FileDAO fileDAO;
+    private JavaSoundLoaderGateway gateway = new JavaSoundLoaderGateway();
     private static boolean playing = false; // TODO: decide if it's worth moving this into the play use case
 
     private DisplayRecordingWaveform displayRecordingWaveformUseCase;
@@ -87,8 +90,8 @@ public class AppBuilder {
         waveformViewModel = new WaveformViewModel();
 
         WaveformPresenter presenter = new WaveformPresenter(waveformViewModel);
-        JavaSoundAudioFileGateway gateway = new JavaSoundAudioFileGateway();
-        processAudioFileUseCase = new ProcessAudioFile(gateway, presenter);
+
+        processAudioFileUseCase = new ProcessAudioFile(this.gateway, presenter);
 
         mainPanel.add(waveformPanel);
         mainPanel.add(mainButtonPanel); //TODO: why is this inside addWaveformView?
@@ -186,6 +189,7 @@ public class AppBuilder {
 
         openButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setCurrentDirectory(new File("."));
             fileChooser.setDialogTitle("Select Audio File");
 
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -198,8 +202,11 @@ public class AppBuilder {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (processAudioFileUseCase != null) {
-                    ProcessAudioFileID inputData = new ProcessAudioFileID(selectedFile);
-                    processAudioFileUseCase.execute(inputData);
+                    LoadAudioPresenter loadAudioPresenter = new LoadAudioPresenter();
+                    loadAudioUseCase = new LoadAudio(gateway, loadAudioPresenter);
+
+                    LoadAudioID inputData = new LoadAudioID(selectedFile);
+                    loadAudioUseCase.execute(inputData);
                 }
                 currentAudioSourcePath = selectedFile.getAbsolutePath();
                 if (playRecordingUseCase != null) {
@@ -271,7 +278,7 @@ public class AppBuilder {
 
     public AppBuilder addPlayUseCase() {
         if (playRecordingUseCase == null) {
-            playRecordingUseCase = new PlayRecording(new JavaSoundPlaybackGateway(), new PlayRecordingOB() {});
+            playRecordingUseCase = new PlayRecording(new JavaSoundLoaderGateway(), new PlayRecordingOB() {});
         }
 
         playPauseButton = new JButton("Play");
