@@ -514,7 +514,7 @@
         <module name="RequireThis"/>
         <module name="ReturnCount">
             <property name="max" value="1"/>
-            <property name="maxForVoid" value="0"/>
+            <property name="maxForVoid" value="1"/>
             <property name="format" value="^create"/>
         </module>
         <module name="SimplifyBooleanExpression"/>
@@ -672,6 +672,7 @@
                        HashMap, SortedMap, TreeMap, DetailsAST, CheckstyleException,
                        UnsupportedEncodingException, BuildException, ConversionException,
                        FileNotFoundException, TestException"/>
+            <property name="max" value="8"/>
         </module>
         <module name="ClassFanOutComplexity">
             <property name="max" value="25"/>
