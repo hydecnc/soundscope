@@ -17,6 +17,7 @@ public class MainState {
     public boolean isErrorState() {
         return errorState;
     }
+
     public void setErrorState(boolean errorState) {
         this.errorState = errorState;
     }
@@ -24,6 +25,7 @@ public class MainState {
     public String getCurrentAudioSourcePath() {
         return currentAudioSourcePath;
     }
+
     public void setCurrentAudioSourcePath(String currentAudioSourcePath) {
         this.currentAudioSourcePath = currentAudioSourcePath;
     }
@@ -31,6 +33,7 @@ public class MainState {
     public String getErrorMessage() {
         return errorMessage;
     }
+
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }

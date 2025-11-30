@@ -8,6 +8,7 @@ import org.wavelabs.soundscope.entity.Song;
 public interface IdentifyDAI {
     /**
      * Returns the closest acoustID track ID associated with a song.
+     *
      * @param fingerprint
      * @param duration
      * @return acoustID track ID
@@ -16,6 +17,7 @@ public interface IdentifyDAI {
 
     /**
      * Returns metadata associated with a song.
+     *
      * @param fingerprint
      * @param duration
      * @return songMetadata
@@ -25,7 +27,7 @@ public interface IdentifyDAI {
     /**
      * Exception type for the fingerprint not having a match
      */
-    class FingerprintMatchNotFoundException extends RuntimeException{
+    class FingerprintMatchNotFoundException extends RuntimeException {
         public FingerprintMatchNotFoundException(String fingerprint) {
             super("Fingerprint match could not be found:\n" + fingerprint);
         }

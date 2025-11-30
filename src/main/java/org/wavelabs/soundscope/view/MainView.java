@@ -1,5 +1,18 @@
 package org.wavelabs.soundscope.view;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import org.jetbrains.annotations.NotNull;
 import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.interface_adapter.MainState;
@@ -17,9 +30,10 @@ import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformView
 import org.wavelabs.soundscope.view.components.TimelinePanel;
 import org.wavelabs.soundscope.view.components.WaveformPanel;
 
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -30,7 +44,20 @@ import java.time.format.DateTimeFormatter;
 
 public class MainView extends JPanel implements ActionListener, PropertyChangeListener {
     private final MainViewModel mainViewModel;
-
+    //Button code
+    private final JPanel buttonPanel = new JPanel();
+    private final JButton openButton, saveAsButton, playPauseButton,
+        recordButton, fingerprintButton, identifyButton;
+    //Waveform panel code
+    private final WaveformPanel waveformPanel;
+    private final TimelinePanel timelinePanel;
+    private final JScrollPane waveformScrollPane;
+    private final JScrollPane timelineScrollPane;
+    private final WaveformViewModel waveformViewModel;
+    //Info panel
+    private final JPanel infoPanel = new JPanel();
+    private final JTextField fingerprintInfo, songTitleInfo, albumInfo;
+    private final JLabel timeLabel = new JLabel("0:00 / 0:00");
     //Controllers for the various use cases
     private FingerprintController fingerprintController;
     private DisplayRecordingWaveformController waveformController; //TODO: set this up; is it necessary?
@@ -42,28 +69,11 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     private StopRecordingController stopRecordingController;
     private DisplayRecordingWaveformController displayRecordingWaveformController;
 
-    //Button code
-    private final JPanel buttonPanel = new JPanel();
-    private final JButton openButton, saveAsButton, playPauseButton,
-            recordButton, fingerprintButton, identifyButton;
-
-    //Waveform panel code
-    private final WaveformPanel waveformPanel;
-    private final TimelinePanel timelinePanel;
-    private final JScrollPane waveformScrollPane;
-    private final JScrollPane timelineScrollPane;
-    private final WaveformViewModel waveformViewModel;
-
-    //Info panel
-    private final JPanel infoPanel = new JPanel();
-    private final JTextField fingerprintInfo, songTitleInfo, albumInfo;
-    private final JLabel timeLabel = new JLabel("0:00 / 0:00");
-
     //TODO: migrate App Builder stuff here
     public MainView(MainViewModel mainViewModel, WaveformViewModel waveformViewModel) {
         this.mainViewModel = mainViewModel;
         this.waveformViewModel = waveformViewModel; //TODO: rename waveform view model to something else since
-                                                // it doesn't extend ViewModel and therefore isn't a View Model
+        // it doesn't extend ViewModel and therefore isn't a View Model
         mainViewModel.addPropertyChangeListener(this);
 
         //Sets the title
@@ -160,7 +170,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         int widthFor30Seconds = ((44100 * 30) / 256) / 8;
         timelineScrollPane.setPreferredSize(new Dimension(widthFor30Seconds, 30));
         waveformScrollPane.setPreferredSize(
-                new Dimension(widthFor30Seconds, UIStyle.Dimensions.WAVEFORM_HEIGHT));
+            new Dimension(widthFor30Seconds, UIStyle.Dimensions.WAVEFORM_HEIGHT));
 
 
         javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
@@ -176,18 +186,19 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
                 // Update time label
                 double totalDuration = waveformViewModel.getAudioData().getDurationSeconds();
-                timeLabel.setText(TimeFormatter.formatTime(playbackPositionSeconds) + " / " + TimeFormatter.formatTime(totalDuration));
+                timeLabel.setText(TimeFormatter.formatTime(playbackPositionSeconds) + " / " +
+                    TimeFormatter.formatTime(totalDuration));
 
                 // Only update audio data if it changed, otherwise just update playback position
                 // This avoids recalculating waveform paths every 100ms
                 waveformPanel.updateWaveform(waveformViewModel.getAudioData(),
-                        playbackPositionSeconds);
+                    playbackPositionSeconds);
 
                 // Update timeline with same data (only if audio data changed)
                 if (timelinePanel != null) {
                     timelinePanel.updateTimeline(
-                            waveformViewModel.getAudioData().getDurationSeconds(),
-                            waveformViewModel.getAudioData().getSampleRate());
+                        waveformViewModel.getAudioData().getDurationSeconds(),
+                        waveformViewModel.getAudioData().getSampleRate());
                 }
                 // Ensure scroll pane is updated after waveform changes
                 waveformScrollPane.revalidate();
@@ -205,7 +216,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     }
 
     @NotNull
-    private JButton getFingerprintButton(){
+    private JButton getFingerprintButton() {
         JButton fingerprintButton = new JButton(MainViewModel.FINGERPRINT_TEXT);
         fingerprintButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
 
@@ -218,7 +229,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     }
 
     @NotNull
-    private JButton getIdentifyButton(){
+    private JButton getIdentifyButton() {
         JButton identifyButton = new JButton(MainViewModel.IDENTIFY_TEXT);
         identifyButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
 
@@ -230,7 +241,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     }
 
     @NotNull
-    private JButton getRecordButton(){
+    private JButton getRecordButton() {
         JButton recordButton = new JButton(MainViewModel.RECORD_TEXT);
         recordButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(recordButton);
@@ -245,8 +256,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                     waveformPanel.updateWaveform(audioData);
                     if (timelinePanel != null) {
                         timelinePanel.updateTimeline(
-                                audioData.getDurationSeconds(),
-                                audioData.getSampleRate());
+                            audioData.getDurationSeconds(),
+                            audioData.getSampleRate());
                     }
                     // Auto-scroll to show the latest part
                     waveformPanel.scrollToLatest(audioData);
@@ -284,8 +295,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                             // Force update the scrollbar
                             JViewport viewport = waveformScrollPane.getViewport();
                             if (viewport != null
-                                    && waveformPanel.getPreferredSize().width > viewport
-                                    .getWidth()) {
+                                && waveformPanel.getPreferredSize().width > viewport
+                                .getWidth()) {
                                 waveformScrollPane.getHorizontalScrollBar().setEnabled(true);
                                 waveformScrollPane.getHorizontalScrollBar().setVisible(true);
                             }
@@ -318,15 +329,15 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     }
 
     @NotNull
-    private JButton getPlayPauseButton(){
+    private JButton getPlayPauseButton() {
         JButton playPauseButton = new JButton(MainViewModel.PLAY_TEXT);
         playPauseButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(playPauseButton);
         playPauseButton.addActionListener(e -> {
             if (mainViewModel.getState().isRecording()) {
                 JOptionPane.showMessageDialog(this,
-                        "Cannot play audio while recording is in progress.", "Recording in progress",
-                        JOptionPane.WARNING_MESSAGE);
+                    "Cannot play audio while recording is in progress.", "Recording in progress",
+                    JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -334,8 +345,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
             if (currentAudioSourcePath == null || currentAudioSourcePath.isBlank()) {
                 JOptionPane.showMessageDialog(this,
-                        "Please open or record audio before playing.", "No audio selected",
-                        JOptionPane.WARNING_MESSAGE);
+                    "Please open or record audio before playing.", "No audio selected",
+                    JOptionPane.WARNING_MESSAGE);
                 return;
             }
             try {
@@ -352,14 +363,14 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
                 }
             } catch (IllegalStateException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Playback error",
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.ERROR_MESSAGE);
             }
         });
         return playPauseButton;
     }
 
     @NotNull
-    private JButton getSaveAsButton(){
+    private JButton getSaveAsButton() {
         JButton saveAsButton = new JButton(MainViewModel.SAVE_AS_TEXT);
         saveAsButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(saveAsButton);
@@ -377,7 +388,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
         // Filters to only WAV files. For simplicity
         chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                "WAV Audio files (*.wav)", "wav"
+            "WAV Audio files (*.wav)", "wav"
         ));
 
         LocalDateTime myDateObj = LocalDateTime.now();
@@ -398,9 +409,10 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             saveRecordingController.execute(outputFile.getAbsolutePath());
         } else {
             JOptionPane.showMessageDialog(this, "No file selection made",
-                    "Error", JOptionPane.WARNING_MESSAGE);
+                "Error", JOptionPane.WARNING_MESSAGE);
             System.out.println("No Selection");
-        };
+        }
+        ;
     }
 
     @NotNull
@@ -467,7 +479,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         this.stopRecordingController = stopRecordingController;
     }
 
-    public void setDisplayRecordingWaveformController(DisplayRecordingWaveformController displayRecordingWaveformController) {
+    public void setDisplayRecordingWaveformController(
+        DisplayRecordingWaveformController displayRecordingWaveformController) {
         this.displayRecordingWaveformController = displayRecordingWaveformController;
     }
 
@@ -481,7 +494,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         final MainState state = (MainState) evt.getNewValue();
 
         // If in an error state, we display an error message
-        if(state.isErrorState()){
+        if (state.isErrorState()) {
             //Clears an error state
             mainViewModel.getState().setErrorState(false);
 
@@ -489,46 +502,46 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             if (errorTitle == null) errorTitle = "Unknown Error Type";
 
             JOptionPane.showMessageDialog(
-                    this,
-                    state.getErrorMessage(),
-                    errorTitle,
-                    JOptionPane.ERROR_MESSAGE
+                this,
+                state.getErrorMessage(),
+                errorTitle,
+                JOptionPane.ERROR_MESSAGE
             );
             return;
         }
 
         //TODO: implement property change updates from all the other use cases
 
-        if(evt.getPropertyName().equals("playing")){ //Updates play button visual state if song finishes
-            if(state.isPlaying()){
+        if (evt.getPropertyName().equals("playing")) { //Updates play button visual state if song finishes
+            if (state.isPlaying()) {
                 playPauseButton.setText(MainViewModel.PAUSE_TEXT);
-            }else{
+            } else {
                 playPauseButton.setText(MainViewModel.PLAY_TEXT);
             }
             return;
         }
 
-        if(evt.getPropertyName().equals("recording")){ //Updates recording button visual state if it changes
-            if(state.isRecording()){
+        if (evt.getPropertyName().equals("recording")) { //Updates recording button visual state if it changes
+            if (state.isRecording()) {
                 recordButton.setText(MainViewModel.STOP_RECORDING_TEXT);
-            }else{
+            } else {
                 recordButton.setText(MainViewModel.RECORD_TEXT);
             }
             return;
         }
 
-        if(evt.getPropertyName().equals("identify")){
+        if (evt.getPropertyName().equals("identify")) {
             songTitleInfo.setText(MainViewModel.SONG_TITLE_INFO_START + state.getSongTitle());
             albumInfo.setText(MainViewModel.ALBUM_INFO_START + state.getAlbum());
             return;
         }
 
-        if(evt.getPropertyName().equals("fingerprint")) {
+        if (evt.getPropertyName().equals("fingerprint")) {
             String fingerprint = state.getFingerprint();
             final int newLength = Math.min(MainViewModel.FINGERPRINT_DISPLAY_LENGTH, fingerprint.length());
 
             String displayFingerprint = fingerprint.substring(0, newLength);
-            if(newLength < fingerprint.length()){
+            if (newLength < fingerprint.length()) {
                 displayFingerprint += " ...";
             }
 

@@ -1,23 +1,28 @@
 package org.wavelabs.soundscope.infrastructure;
 
-import javax.sound.sampled.*;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.TargetDataLine;
+
 import java.io.ByteArrayOutputStream;
 
 public class JavaMicRecorder implements Recorder {
+    private final AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
+    private final Object bufferLock = new Object();
     private volatile boolean isRecording = false;
     private Thread recordingThread;
     private TargetDataLine line;
     private ByteArrayOutputStream recordingByteData;
-    private final AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
     private volatile byte[] currentBuffer;
-    private final Object bufferLock = new Object();
 
     /**
      * Creates a new JavaMicRecorder, with default audio format.
      * At creation, checks for the audio format and audio line compatibility.
      *
      * @throws UnsupportedOperationException if the audio format is not supported
-     * @throws IllegalStateException if the audio line cannot be opened
+     * @throws IllegalStateException         if the audio line cannot be opened
      */
     public JavaMicRecorder() {
         this.isRecording = false;
@@ -67,14 +72,18 @@ public class JavaMicRecorder implements Recorder {
     }
 
     @Override
-    public boolean isRecording() { return this.isRecording; }
+    public boolean isRecording() {
+        return this.isRecording;
+    }
 
     @Override
     public byte[] getRecordingBytes() {
         return recordingByteData.toByteArray();
     }
 
-    public AudioFormat getAudioFormat() { return format; }
+    public AudioFormat getAudioFormat() {
+        return format;
+    }
 
     /**
      * Creates a thread that will be active as long as isRecording is true.
@@ -89,7 +98,7 @@ public class JavaMicRecorder implements Recorder {
                 // read the next chunk of data from line
                 numBytesRead = line.read(data, 0, data.length);
                 recordingByteData.write(data, 0, numBytesRead);
-                
+
                 // Update current buffer for real-time waveform display
                 synchronized (bufferLock) {
                     currentBuffer = new byte[numBytesRead];
@@ -106,10 +115,10 @@ public class JavaMicRecorder implements Recorder {
 
         System.out.println("Starting to record...");
     }
-    
+
     /**
      * Gets the current audio buffer for real-time waveform display.
-     * 
+     *
      * @return The current audio buffer, or null if not recording
      */
     public byte[] getCurrentBuffer() {

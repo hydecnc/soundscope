@@ -1,9 +1,9 @@
 package org.wavelabs.soundscope.use_case.stop_recording;
 
+import javax.sound.sampled.AudioFormat;
+
 import org.wavelabs.soundscope.entity.AudioRecording;
 import org.wavelabs.soundscope.infrastructure.Recorder;
-
-import javax.sound.sampled.AudioFormat;
 
 public class StopRecording implements StopRecordingIB {
     private final StopRecordingDAI stopRecordingDAO;

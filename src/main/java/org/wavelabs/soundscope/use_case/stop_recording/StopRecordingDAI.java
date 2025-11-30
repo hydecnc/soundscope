@@ -4,9 +4,11 @@ import org.wavelabs.soundscope.entity.AudioRecording;
 import org.wavelabs.soundscope.infrastructure.Recorder;
 
 public interface StopRecordingDAI {
-    void setRecorder(Recorder recorder);
     Recorder getRecorder();
 
-    void setAudioRecording(AudioRecording audioRecording);
+    void setRecorder(Recorder recorder);
+
     AudioRecording getAudioRecording();
+
+    void setAudioRecording(AudioRecording audioRecording);
 }

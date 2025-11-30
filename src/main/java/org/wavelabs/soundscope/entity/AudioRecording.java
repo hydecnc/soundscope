@@ -14,8 +14,19 @@ public class AudioRecording {
         this.format = format;
     }
 
-    public byte[] getData() { return data.clone(); }
-    public int getSize() { return data.length; }
-    public double getDurationSeconds() { return data.length / (44100.0 * 2 * 2); }
-    public AudioFormat getFormat() { return format; }
+    public byte[] getData() {
+        return data.clone();
+    }
+
+    public int getSize() {
+        return data.length;
+    }
+
+    public double getDurationSeconds() {
+        return data.length / (44100.0 * 2 * 2);
+    }
+
+    public AudioFormat getFormat() {
+        return format;
+    }
 }

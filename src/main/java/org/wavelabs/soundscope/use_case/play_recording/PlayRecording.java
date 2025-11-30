@@ -1,15 +1,11 @@
 package org.wavelabs.soundscope.use_case.play_recording;
 
-import org.wavelabs.soundscope.data_access.AcousticIDIdentify;
-
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static org.wavelabs.soundscope.data_access.AcousticIDAPIConstants.REQUEST_SPACING_MILLIS;
 
 public class PlayRecording implements PlayRecordingIB {
     private final long UPDATE_SPACING_MILLIS = 50;

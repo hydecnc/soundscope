@@ -1,13 +1,13 @@
 package org.wavelabs.soundscope.use_case.play_recording;
 
 public interface PlayRecordingOB {
-	void playbackStarted();
+    void playbackStarted();
 
-	void playbackPaused();
+    void playbackPaused();
 
-	void playbackStopped();
+    void playbackStopped();
 
-	void playbackError(String message);
+    void playbackError(String message);
 
     void updateMainState(PlayRecordingOD updateData);
 }

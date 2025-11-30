@@ -7,10 +7,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class StartRecording implements StartRecordingIB {
+    private final static ScheduledExecutorService updateScheduler = Executors.newSingleThreadScheduledExecutor();
     private final StartRecordingDAI startRecordingDataObject;
     private final RecordingOB recordingOB;
     private final long UPDATE_SPACING_MILLIS = 100;
-    private final static ScheduledExecutorService updateScheduler = Executors.newSingleThreadScheduledExecutor();
 
     public StartRecording(StartRecordingDAI startRecordingDAI, RecordingOB recordingOB) {
         this.startRecordingDataObject = startRecordingDAI;
@@ -22,16 +22,17 @@ public class StartRecording implements StartRecordingIB {
      * execute the actual use case
      */
     @Override
-    public void execute(){
+    public void execute() {
         final Recorder recorder = startRecordingDataObject.getRecorder();
-        if (!recorder.isRecording())
+        if (!recorder.isRecording()) {
             recorder.start();
+        }
     }
 
     // Updates recording status every so often
-    public void updateRecording(){
+    public void updateRecording() {
         RecordingOD outputData = new RecordingOD(
-                startRecordingDataObject.getRecorder().isRecording()
+            startRecordingDataObject.getRecorder().isRecording()
         );
         recordingOB.updateRecordingState(outputData);
         updateScheduler.schedule(this::updateRecording, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);

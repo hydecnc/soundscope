@@ -6,9 +6,9 @@ import java.beans.PropertyChangeSupport;
 /**
  * ViewModel directly copied from the ca-lab activity. This class delegates work to a
  * PropertyChangeSupport object for managing the property change events.
- * 
- * @see <a href="https://github.com/CSC207-2025F-UofT/ca-lab">CA Lab</a>
+ *
  * @param <T> The type of state object contained in the model.
+ * @see <a href="https://github.com/CSC207-2025F-UofT/ca-lab">CA Lab</a>
  */
 public class ViewModel<T> {
 
@@ -42,6 +42,7 @@ public class ViewModel<T> {
     }
 
     //TODO: update this javadoc
+
     /**
      * Fires a property changed event for the state of this ViewModel, which allows the user to
      * specify a different propertyName. This can be useful when a class is listening for multiple
@@ -49,7 +50,7 @@ public class ViewModel<T> {
      * <p/>
      * For example, the LoggedInView listens for two kinds of property changes; it can use the
      * property name to distinguish which property has changed.
-     * 
+     *
      * @param propertyName the label for the property that was changed
      */
     public void firePropertyChange(String propertyName) {
@@ -58,7 +59,7 @@ public class ViewModel<T> {
 
     /**
      * Adds a PropertyChangeListener to this ViewModel.
-     * 
+     *
      * @param listener The PropertyChangeListener to be added
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {

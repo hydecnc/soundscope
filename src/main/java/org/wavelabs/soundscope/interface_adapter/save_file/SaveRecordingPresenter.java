@@ -16,7 +16,8 @@ public class SaveRecordingPresenter implements SaveRecordingOB {
     }
 
     @Override
-    public void presentSaveSuccessView() {}
+    public void presentSaveSuccessView() {
+    }
 
     @Override
     public void presentError(String message) {

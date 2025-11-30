@@ -1,9 +1,9 @@
 package org.wavelabs.soundscope.interface_adapter.play_recording;
 
+import org.wavelabs.soundscope.interface_adapter.MainState;
 import org.wavelabs.soundscope.interface_adapter.MainViewModel;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingOB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingOD;
-import org.wavelabs.soundscope.interface_adapter.MainState;
 
 public class PlayRecordingPresenter implements PlayRecordingOB {
     private final MainViewModel mainViewModel;

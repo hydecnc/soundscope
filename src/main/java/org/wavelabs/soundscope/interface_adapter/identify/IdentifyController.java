@@ -9,7 +9,7 @@ public class IdentifyController {
         this.identifyInteractor = identifyInteractor;
     }
 
-    public void identify(){
+    public void identify() {
         identifyInteractor.identify();
     }
 }

@@ -11,5 +11,7 @@ public class SaveRecordingID {
         this.filePath = filePath;
     }
 
-    public String getFilePath() { return filePath; }
+    public String getFilePath() {
+        return filePath;
+    }
 }

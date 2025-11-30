@@ -1,7 +1,8 @@
 package org.wavelabs.soundscope.app;
 
-import java.awt.Dimension;
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
@@ -9,9 +10,9 @@ import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
+import org.wavelabs.soundscope.interface_adapter.MainViewModel;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintController;
 import org.wavelabs.soundscope.interface_adapter.fingerprint.FingerprintPresenter;
-import org.wavelabs.soundscope.interface_adapter.MainViewModel;
 import org.wavelabs.soundscope.interface_adapter.identify.IdentifyController;
 import org.wavelabs.soundscope.interface_adapter.identify.IdentifyPresenter;
 import org.wavelabs.soundscope.interface_adapter.play_recording.PlayRecordingController;
@@ -26,11 +27,11 @@ import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecor
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformPresenter;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.WaveformViewModel;
+import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformIB;
 import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveformOB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintInteractor;
-import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecordingWaveform;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintOB;
 import org.wavelabs.soundscope.use_case.identify.IdentifyIB;
 import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
@@ -51,6 +52,8 @@ import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingIB;
 import org.wavelabs.soundscope.view.MainView;
 
+import java.awt.Dimension;
+
 public class AppBuilder {
     private MainView mainView;
     private MainViewModel mainViewModel;
@@ -60,9 +63,10 @@ public class AppBuilder {
     private FileDAO fileDAO = new FileDAO();
     private Song song = new Song();
 
-    public AppBuilder() {}
+    public AppBuilder() {
+    }
 
-    public AppBuilder addMainView(){
+    public AppBuilder addMainView() {
         mainViewModel = new MainViewModel();
         waveformViewModel = new WaveformViewModel();
 
@@ -84,7 +88,8 @@ public class AppBuilder {
 
     public AppBuilder addPlayUseCase() {
         final PlayRecordingOB playRecordingOutput = new PlayRecordingPresenter(mainViewModel);
-        final PlayRecordingIB playRecordingInteractor = new PlayRecording(new JavaSoundPlaybackGateway(), playRecordingOutput);
+        final PlayRecordingIB playRecordingInteractor =
+            new PlayRecording(new JavaSoundPlaybackGateway(), playRecordingOutput);
 
         final PlayRecordingController playRecordingController = new PlayRecordingController(playRecordingInteractor);
         mainView.setPlayRecordingController(playRecordingController);
@@ -97,13 +102,14 @@ public class AppBuilder {
         final RecordingOB recordingOutput = new RecordingPresenter(mainViewModel);
 
         final StartRecordingIB startRecordingInteractor = new StartRecording(fileDAO, recordingOutput);
-        final StartRecordingController startRecordingController = new StartRecordingController(startRecordingInteractor);
+        final StartRecordingController startRecordingController =
+            new StartRecordingController(startRecordingInteractor);
 
         mainView.setStartRecordingController(startRecordingController);
         return this;
     }
 
-    public AppBuilder addStopRecordUseCase(){
+    public AppBuilder addStopRecordUseCase() {
         final StopRecordingIB stopRecordingInteractor = new StopRecording(fileDAO);
 
         final StopRecordingController stopRecordingController = new StopRecordingController(stopRecordingInteractor);
@@ -111,11 +117,13 @@ public class AppBuilder {
         return this;
     }
 
-    public AppBuilder addDisplayRecordingWaveformUseCase(){
+    public AppBuilder addDisplayRecordingWaveformUseCase() {
         final DisplayRecordingWaveformOB recordingPresenter = new DisplayRecordingWaveformPresenter(waveformViewModel);
-        final DisplayRecordingWaveformIB displayRecordingWaveformInteractor = new DisplayRecordingWaveform(fileDAO, recordingPresenter);
+        final DisplayRecordingWaveformIB displayRecordingWaveformInteractor =
+            new DisplayRecordingWaveform(fileDAO, recordingPresenter);
 
-        final DisplayRecordingWaveformController displayRecordingWaveformController = new DisplayRecordingWaveformController(displayRecordingWaveformInteractor);
+        final DisplayRecordingWaveformController displayRecordingWaveformController =
+            new DisplayRecordingWaveformController(displayRecordingWaveformInteractor);
         mainView.setDisplayRecordingWaveformController(displayRecordingWaveformController);
 
         return this;
@@ -132,10 +140,12 @@ public class AppBuilder {
 
     public AppBuilder addProcessAudioFileUseCase() {
         final ProcessAudioFileOB processAudioFileOB = new WaveformPresenter(waveformViewModel);
-            //TODO: should this be renamed to a ProcessAudioFilePresenter?
-        final ProcessAudioFileIB processAudioFileInteractor = new ProcessAudioFile(new JavaSoundAudioFileGateway(), processAudioFileOB);
+        //TODO: should this be renamed to a ProcessAudioFilePresenter?
+        final ProcessAudioFileIB processAudioFileInteractor =
+            new ProcessAudioFile(new JavaSoundAudioFileGateway(), processAudioFileOB);
 
-        final ProcessAudioFileController processAudioFileController = new ProcessAudioFileController(processAudioFileInteractor, fileDAO);
+        final ProcessAudioFileController processAudioFileController =
+            new ProcessAudioFileController(processAudioFileInteractor, fileDAO);
         mainView.setProcessAudioFileController(processAudioFileController);
         return this;
     }

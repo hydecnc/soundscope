@@ -9,7 +9,7 @@ public class StartRecordingController {
         this.startRecordingInteractor = startRecordingInteractor;
     }
 
-    public void execute(){
+    public void execute() {
         startRecordingInteractor.execute();
     }
 }

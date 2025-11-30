@@ -1,11 +1,12 @@
 package org.wavelabs.soundscope.infrastructure;
 
-import org.wavelabs.soundscope.entity.AudioRecording;
-
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+
+import org.wavelabs.soundscope.entity.AudioRecording;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.io.IOException;
 public class ByteArrayFileSaver implements FileSaver {
     /**
      *
-     * @param filePath path to save the data
+     * @param filePath       path to save the data
      * @param audioRecording the data to be saved at {@code filePath}
      * @return true iff save was success
      */
@@ -23,7 +24,7 @@ public class ByteArrayFileSaver implements FileSaver {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(audioData);
             AudioInputStream ais =
-                    new AudioInputStream(bais, format, audioData.length / format.getFrameSize());
+                new AudioInputStream(bais, format, audioData.length / format.getFrameSize());
             File fileOut = new File(filePath);
             AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fileOut);
             System.out.println("File saved to: " + fileOut.getAbsolutePath());

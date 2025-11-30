@@ -10,15 +10,15 @@ public class PlayRecordingController {
         this.playRecordingInteractor = playRecordingInteractor;
     }
 
-    public void stop(){
+    public void stop() {
         playRecordingInteractor.stop();
     }
 
-    public void pause(){
+    public void pause() {
         playRecordingInteractor.pause();
     }
 
-    public void play(String currentAudioSourcePath, boolean restartFromBeginning){
+    public void play(String currentAudioSourcePath, boolean restartFromBeginning) {
         playRecordingInteractor.play(new PlayRecordingID(currentAudioSourcePath, restartFromBeginning));
     }
 }

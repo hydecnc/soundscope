@@ -5,28 +5,33 @@ public class Song { //TODO: javadoc
     private int duration;
     private String fingerprint;
 
-    public int getDuration() { return duration;}
-
-    public void setDuration(int duration) { this.duration = duration; }
-
-    public void setFingerprint(String fingerprint){
-        this.fingerprint = fingerprint;
+    public int getDuration() {
+        return duration;
     }
 
-    public void setMetadata(SongMetadata metadata){
-        this.metadata = metadata;
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 
     public SongMetadata getMetadata() {
         return metadata;
     }
 
-    public  String getFingerprint() {
+    public void setMetadata(SongMetadata metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getFingerprint() {
         return fingerprint;
+    }
+
+    public void setFingerprint(String fingerprint) {
+        this.fingerprint = fingerprint;
     }
 
     /**
      * Stores all metadata needed for a song
+     *
      * @param title
      * @param musicBrainzID
      * @param acoustIDTrackID
@@ -39,5 +44,6 @@ public class Song { //TODO: javadoc
         String acoustIDTrackID,
         String album,
         String[] artists
-    ){}
+    ) {
+    }
 }

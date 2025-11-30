@@ -1,9 +1,9 @@
 package org.wavelabs.soundscope.interface_adapter;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.util.Map;
 
-public class MainViewModel extends ViewModel<MainState>{
+public class MainViewModel extends ViewModel<MainState> {
     public final static String TITLE = "Soundscope";
     public final static String OPEN_TEXT = "Open";
     public final static String OPEN_FILE_CHOOSER_TITLE = "Select Audio File";
@@ -16,11 +16,11 @@ public class MainViewModel extends ViewModel<MainState>{
     public final static String FINGERPRINT_TEXT = "Fingerprint";
     public final static String IDENTIFY_TEXT = "Identify";
     public final static Map<String, String> USE_CASE_ERROR_TITLE_MAP = Map.of(
-            "file save", "Save Error",
-            "process audio", "Processing Error",
-            "identify", "Identify Error",
-            "fingerprint", "Fingerprint Error",
-            "playing", "Playback Error"
+        "file save", "Save Error",
+        "process audio", "Processing Error",
+        "identify", "Identify Error",
+        "fingerprint", "Fingerprint Error",
+        "playing", "Playback Error"
     );
     public final static String FINGERPRINT_INFO_START = "Fingerprint: ";
     public final static int FINGERPRINT_DISPLAY_LENGTH = 20;

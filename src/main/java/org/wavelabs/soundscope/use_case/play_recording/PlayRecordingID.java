@@ -17,7 +17,7 @@ public class PlayRecordingID {
      * Constructs a PlayRecordingID with the specified source path and restart option.
      * If restartFromBeginning is true, playback will restart from the beginning of the audio file.
      *
-     * @param sourcePath a string representing the path to audio file
+     * @param sourcePath           a string representing the path to audio file
      * @param restartFromBeginning whether to restart from the start or not
      */
     public PlayRecordingID(String sourcePath, boolean restartFromBeginning) {

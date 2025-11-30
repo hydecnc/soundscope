@@ -1,8 +1,5 @@
 package org.wavelabs.soundscope.data_access;
 
-import org.wavelabs.soundscope.entity.AudioRecording;
-import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingDAI;
-
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -10,12 +7,17 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
+
+import org.wavelabs.soundscope.entity.AudioRecording;
+import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingDAI;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
 public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
+    private final Object lock = new Object();
     private volatile boolean isPlaying;
     private Thread playbackThread;
     private File audioFile;
@@ -26,10 +28,10 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
     private int bytesPerFrame;
     private byte[] audioBuffer;
     private AudioRecording currentRecording;
-    private final Object lock = new Object();
 
     @Override
-    public AudioRecording loadAudio(String sourcePath) throws IOException, UnsupportedAudioFileException, NullPointerException {
+    public AudioRecording loadAudio(String sourcePath)
+        throws IOException, UnsupportedAudioFileException, NullPointerException {
         Objects.requireNonNull(sourcePath, "sourcePath must not be null");
         File file = new File(sourcePath);
         if (!file.exists()) {
@@ -55,8 +57,9 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
             }
 
             bytesPerFrame = audioInputStream.getFormat().getFrameSize();
-            if (bytesPerFrame == AudioSystem.NOT_SPECIFIED)
+            if (bytesPerFrame == AudioSystem.NOT_SPECIFIED) {
                 bytesPerFrame = 1;
+            }
             audioBuffer = new byte[1024 * bytesPerFrame];
             totalFramesRead = 0;
             currentRecording = buildRecording(file);

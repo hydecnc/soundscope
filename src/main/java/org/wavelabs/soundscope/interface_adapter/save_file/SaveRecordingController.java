@@ -10,7 +10,7 @@ public class SaveRecordingController {
         this.saveRecordingInteractor = saveRecordingInteractor;
     }
 
-    public void execute(String absolutePath){
+    public void execute(String absolutePath) {
         saveRecordingInteractor.execute(new SaveRecordingID(absolutePath));
     }
 }

@@ -10,9 +10,9 @@ import org.wavelabs.soundscope.entity.AudioData;
 public interface DisplayRecordingWaveformDAI {
     /**
      * Gets the current audio buffer from the recording and processes it to extract amplitude samples.
-     * 
+     *
      * @return AudioData containing amplitude samples and metadata from the current recording buffer,
-     *         or null if not currently recording
+     * or null if not currently recording
      */
     AudioData getCurrentRecordingBuffer();
 }

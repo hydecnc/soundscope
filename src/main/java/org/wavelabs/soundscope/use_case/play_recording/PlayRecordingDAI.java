@@ -1,8 +1,9 @@
 package org.wavelabs.soundscope.use_case.play_recording;
 
+import javax.sound.sampled.UnsupportedAudioFileException;
+
 import org.wavelabs.soundscope.entity.AudioRecording;
 
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 
 /**
