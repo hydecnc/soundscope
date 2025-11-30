@@ -1,5 +1,6 @@
 package org.wavelabs.soundscope.data_access;
 
+import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.entity.AudioRecording;
 import org.wavelabs.soundscope.infrastructure.FileSaver;
 import org.wavelabs.soundscope.infrastructure.Recorder;
@@ -50,10 +51,13 @@ public class FileDAO implements StartRecordingDAI,
     }
 
     @Override
+    public AudioFormat getAudioFormat() { return audioRecording.getFormat(); }
+
+    @Override
     public AudioRecording getAudioRecording() { return audioRecording; }
     
     @Override
-    public org.wavelabs.soundscope.entity.AudioData getCurrentRecordingBuffer() {
+    public AudioData getCurrentRecordingBuffer() {
         if (recorder == null || !recorder.isRecording()) {
             return null;
         }
@@ -74,7 +78,7 @@ public class FileDAO implements StartRecordingDAI,
      */
     public void loadAudioFromFile(File file) throws IOException, UnsupportedAudioFileException {
         try (AudioInputStream input = AudioSystem.getAudioInputStream(file);
-             ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
             byte[] chunk = new byte[4096];
             int bytesRead;
             while ((bytesRead = input.read(chunk)) != -1) {

@@ -34,13 +34,13 @@ public class chromaprint_h extends chromaprint_h$shared {
             String libName = System.mapLibraryName("chromaprint");
             String resourcePath = "/lib/" + libName;
             InputStream input = chromaprint_h.class.getResourceAsStream(resourcePath);
-            
+
             if (input == null) {
                 String os = System.getProperty("os.name").toLowerCase();
                 throw new ChromaprintException("Chromaprint library not found for " + os + 
                     ". Expected: " + resourcePath);
             }
-            
+
             String extension = libName.substring(libName.indexOf("."));
             Path tempLib = Files.createTempFile("chromaprint", extension);
             tempLib.toFile().deleteOnExit();
