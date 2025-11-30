@@ -13,7 +13,6 @@ import org.wavelabs.soundscope.data_access.JavaSoundLoaderGateway;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.infrastructure.ByteArrayFileSaver;
 import org.wavelabs.soundscope.infrastructure.JavaMicRecorder;
-import org.wavelabs.soundscope.interface_adapter.load_audio.LoadAudioPresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFilePresenter;
 import org.wavelabs.soundscope.interface_adapter.save_file.SaveFileState;
 import org.wavelabs.soundscope.interface_adapter.visualize_waveform.DisplayRecordingWaveformPresenter;
@@ -26,7 +25,6 @@ import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecord
 import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
 import org.wavelabs.soundscope.use_case.load_audio.LoadAudio;
 import org.wavelabs.soundscope.use_case.load_audio.LoadAudioID;
-import org.wavelabs.soundscope.use_case.load_audio.LoadAudioOB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecording;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingIB;
 import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingID;
@@ -90,8 +88,8 @@ public class AppBuilder {
         waveformViewModel = new WaveformViewModel();
 
         WaveformPresenter presenter = new WaveformPresenter(waveformViewModel);
-
         processAudioFileUseCase = new ProcessAudioFile(this.gateway, presenter);
+        loadAudioUseCase = new LoadAudio(gateway, presenter);
 
         mainPanel.add(waveformPanel);
         mainPanel.add(mainButtonPanel); //TODO: why is this inside addWaveformView?
@@ -202,8 +200,6 @@ public class AppBuilder {
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 if (processAudioFileUseCase != null) {
-                    LoadAudioPresenter loadAudioPresenter = new LoadAudioPresenter();
-                    loadAudioUseCase = new LoadAudio(gateway, loadAudioPresenter);
 
                     LoadAudioID inputData = new LoadAudioID(selectedFile);
                     loadAudioUseCase.execute(inputData);

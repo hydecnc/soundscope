@@ -168,13 +168,6 @@ public class JavaSoundLoaderGateway implements PlayRecordingDAI, ProcessAudioFil
             }
         }
     }
-
-    // Overloaded method loadAudio that converts file to filepath to call method above
-    @Override
-    public AudioRecording loadAudio(File file) throws UnsupportedAudioFileException, IOException {
-        return loadAudio(file.getPath());
-    }
-
     // below are the methods needed for the PlayRecordingDAI
 
     @Override
