@@ -18,3 +18,5 @@ The project strictly follows architecture specified by [Clean Architecture](http
 - [Acoustid](https://acoustid.org/)
 
 ## Demo
+
+![Demo](images/soundscope.png)
