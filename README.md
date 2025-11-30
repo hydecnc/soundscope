@@ -19,4 +19,4 @@ The project strictly follows architecture specified by [Clean Architecture](http
 
 ## Demo
 
-![Demo](images/soundscope.png)
+![Demo](images/demo.png)
