@@ -31,10 +31,30 @@ public class PlayRecordingTest {
 
     @Test
     public void ConstructorNullOBDoesNotThrowException() {
-        PlayRecording interactorWithDefaultOB = new PlayRecording(mockDAI, null);
-        // Should not throw exception when methods are called
-        interactorWithDefaultOB.pause();
+        PlayRecording interactorWithNullOB = new PlayRecording(mockDAI, null);
+        
+        // Test pause
+        interactorWithNullOB.pause();
         Assert.assertTrue(mockDAI.pausePlaybackCalled);
+
+        // Test stop
+        interactorWithNullOB.stop();
+        Assert.assertTrue(mockDAI.stopPlaybackCalled);
+
+        // Test play (success path)
+        PlayRecordingID inputData = new PlayRecordingID("path/to/audio.wav", false);
+        interactorWithNullOB.play(inputData);
+        Assert.assertTrue(mockDAI.startPlaybackCalled);
+
+        // Test play (error path)
+        mockDAI.shouldThrowOnLoad = true;
+        PlayRecordingID inputData2 = new PlayRecordingID("path/to/audio2.wav", false);
+        interactorWithNullOB.play(inputData2);
+        // Should catch exception and safely ignore null OB
+        
+        // Test updateState
+        interactorWithNullOB.updateState();
+        // Should return safely
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -51,7 +71,7 @@ public class PlayRecordingTest {
         Assert.assertTrue("stopPlayback should be called before loading", mockDAI.stopPlaybackCalled);
         Assert.assertEquals("loadAudio should be called with correct path", "path/to/audio.wav", mockDAI.loadedPath);
         Assert.assertTrue("startPlayback should be called", mockDAI.startPlaybackCalled);
-        Assert.assertTrue("presentPlaybackStarted should be called", mockOB.presentPlaybackStartedCalled);
+        Assert.assertTrue("playbackStarted should be called", mockOB.playbackStartedCalled);
     }
 
     @Test
@@ -68,7 +88,7 @@ public class PlayRecordingTest {
 
         Assert.assertNull("loadAudio should NOT be called for same file without restart", mockDAI.loadedPath);
         Assert.assertTrue("startPlayback should be called", mockDAI.startPlaybackCalled);
-        Assert.assertTrue("presentPlaybackStarted should be called", mockOB.presentPlaybackStartedCalled);
+        Assert.assertTrue("playbackStarted should be called", mockOB.playbackStartedCalled);
     }
 
     @Test
@@ -105,53 +125,56 @@ public class PlayRecordingTest {
         Assert.assertTrue("startPlayback should be called", mockDAI.startPlaybackCalled);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void PlayLoadFailsReportsErrorAndThrowsException() {
+    @Test
+    public void PlayLoadFailsReportsError() {
         mockDAI.shouldThrowOnLoad = true;
         PlayRecordingID inputData = new PlayRecordingID("path/to/audio.wav", false);
 
-        try {
-            interactor.play(inputData);
-        } catch (IllegalStateException e) {
-            Assert.assertTrue("presentPlaybackError should be called", mockOB.presentPlaybackErrorCalled);
-            Assert.assertEquals("Error message should match", "Failed to load audio file", mockOB.errorMessage);
-            throw e;
-        }
+        interactor.play(inputData);
+
+        Assert.assertTrue("playbackError should be called", mockOB.playbackErrorCalled);
+        Assert.assertEquals("Error message should match", "Failed to load audio file", mockOB.errorMessage);
     }
 
     @Test
     public void PausePausesAndPresents() {
         interactor.pause();
         Assert.assertTrue("pausePlayback should be called", mockDAI.pausePlaybackCalled);
-        Assert.assertTrue("presentPlaybackPaused should be called", mockOB.presentPlaybackPausedCalled);
+        Assert.assertTrue("playbackPaused should be called", mockOB.playbackPausedCalled);
     }
 
     @Test
     public void StopStopsAndPresents() {
         interactor.stop();
         Assert.assertTrue("stopPlayback should be called", mockDAI.stopPlaybackCalled);
-        Assert.assertTrue("presentPlaybackStopped should be called", mockOB.presentPlaybackStoppedCalled);
+        Assert.assertTrue("playbackStopped should be called", mockOB.playbackStoppedCalled);
     }
 
     @Test
-    public void IsPlayingDelegatesToDAI() {
+    public void UpdateStateGathersDataAndPresents() {
         mockDAI.isPlayingResult = true;
-        Assert.assertTrue(interactor.isPlaying());
+        mockDAI.framesPlayedResult = 100;
+        mockDAI.totalFramesResult = 1000;
 
+        interactor.updateState();
+
+        Assert.assertTrue("updateMainState should be called", mockOB.updateMainStateCalled);
+        Assert.assertNotNull("updateData should not be null", mockOB.lastUpdateData);
+        Assert.assertTrue("isPlaying should be true", mockOB.lastUpdateData.isPlaying());
+        Assert.assertEquals("framesPlayed should be 100", 100, mockOB.lastUpdateData.framesPlayed());
+        Assert.assertFalse("playingFinished should be false", mockOB.lastUpdateData.playingFinished());
+    }
+
+    @Test
+    public void UpdateStateDetectsFinished() {
         mockDAI.isPlayingResult = false;
-        Assert.assertFalse(interactor.isPlaying());
-    }
+        mockDAI.framesPlayedResult = 1000;
+        mockDAI.totalFramesResult = 1000;
 
-    @Test
-    public void GetFramesPlayedDelegatesToDAI() {
-        mockDAI.framesPlayedResult = 123;
-        Assert.assertEquals(123, interactor.getFramesPlayed());
-    }
+        interactor.updateState();
 
-    @Test
-    public void TotalFramesDelegatesToDAI() {
-        mockDAI.totalFramesResult = 456L; // long
-        Assert.assertEquals(456L, interactor.getTotalFrames());
+        Assert.assertTrue("updateMainState should be called", mockOB.updateMainStateCalled);
+        Assert.assertTrue("playingFinished should be true", mockOB.lastUpdateData.playingFinished());
     }
 
     // Mock classes
@@ -215,39 +238,49 @@ public class PlayRecordingTest {
     }
 
     private static class MockPlayRecordingOB implements PlayRecordingOB {
-        boolean presentPlaybackStartedCalled = false;
-        boolean presentPlaybackPausedCalled = false;
-        boolean presentPlaybackStoppedCalled = false;
-        boolean presentPlaybackErrorCalled = false;
+        boolean playbackStartedCalled = false;
+        boolean playbackPausedCalled = false;
+        boolean playbackStoppedCalled = false;
+        boolean playbackErrorCalled = false;
+        boolean updateMainStateCalled = false;
         String errorMessage = null;
+        PlayRecordingOD lastUpdateData = null;
 
         void reset() {
-            presentPlaybackStartedCalled = false;
-            presentPlaybackPausedCalled = false;
-            presentPlaybackStoppedCalled = false;
-            presentPlaybackErrorCalled = false;
+            playbackStartedCalled = false;
+            playbackPausedCalled = false;
+            playbackStoppedCalled = false;
+            playbackErrorCalled = false;
+            updateMainStateCalled = false;
             errorMessage = null;
+            lastUpdateData = null;
         }
 
         @Override
-        public void presentPlaybackStarted() {
-            presentPlaybackStartedCalled = true;
+        public void playbackStarted() {
+            playbackStartedCalled = true;
         }
 
         @Override
-        public void presentPlaybackPaused() {
-            presentPlaybackPausedCalled = true;
+        public void playbackPaused() {
+            playbackPausedCalled = true;
         }
 
         @Override
-        public void presentPlaybackStopped() {
-            presentPlaybackStoppedCalled = true;
+        public void playbackStopped() {
+            playbackStoppedCalled = true;
         }
 
         @Override
-        public void presentPlaybackError(String message, Exception exception) {
-            presentPlaybackErrorCalled = true;
+        public void playbackError(String message) {
+            playbackErrorCalled = true;
             errorMessage = message;
+        }
+
+        @Override
+        public void updateMainState(PlayRecordingOD updateData) {
+            updateMainStateCalled = true;
+            lastUpdateData = updateData;
         }
     }
 }

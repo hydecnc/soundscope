@@ -21,7 +21,9 @@ public class PlayRecording implements PlayRecordingIB {
     public PlayRecording(PlayRecordingDAI playbackGateway, PlayRecordingOB outputBoundary) {
         this.playbackGateway = Objects.requireNonNull(playbackGateway, "playbackGateway must not be null");
         this.outputBoundary = outputBoundary;
-        updateScheduler.schedule(this::updateState, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
+        if (this.outputBoundary != null) {
+            updateScheduler.schedule(this::updateState, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
@@ -40,28 +42,39 @@ public class PlayRecording implements PlayRecordingIB {
                 playbackGateway.loadAudio(audioSource.getSourcePath());
                 loadedSourcePath = audioSource.getSourcePath();
             } catch (IOException | UnsupportedAudioFileException e) {
-                outputBoundary.playbackError("Failed to load audio file");
+                if (outputBoundary != null) {
+                    outputBoundary.playbackError("Failed to load audio file");
+                }
             }
         }
 
         playbackGateway.startPlayback();
-        outputBoundary.playbackStarted();
+        if (outputBoundary != null) {
+            outputBoundary.playbackStarted();
+        }
     }
 
     @Override
     public void pause() {
         playbackGateway.pausePlayback();
-        outputBoundary.playbackPaused();
+        if (outputBoundary != null) {
+            outputBoundary.playbackPaused();
+        }
     }
 
     @Override
     public void stop() {
         playbackGateway.stopPlayback();
-        outputBoundary.playbackStopped();
+        if (outputBoundary != null) {
+            outputBoundary.playbackStopped();
+        }
     }
 
     //Updates the main state
     public void updateState(){
+        if (outputBoundary == null) {
+            return;
+        }
         PlayRecordingOD updateData = new PlayRecordingOD(
                 playbackGateway.isPlaying(),
                 playbackGateway.getFramesPlayed() >= playbackGateway.getTotalFrames(),
