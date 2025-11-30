@@ -37,21 +37,8 @@ public class chromaprint_h extends chromaprint_h$shared {
             
             if (input == null) {
                 String os = System.getProperty("os.name").toLowerCase();
-                if (os.contains("mac")) {
-                    resourcePath = findVersionedDylib();
-                    if (resourcePath == null) {
-                        throw new ChromaprintException("Chromaprint library not found for macOS. " +
-                            "Expected: /lib/libchromaprint.dylib or /lib/libchromaprint.*.dylib");
-            }
-                    input = chromaprint_h.class.getResourceAsStream(resourcePath);
-                } else {
-                    throw new ChromaprintException("Chromaprint library not found for " + os + 
-                        ". Expected: " + resourcePath);
-                }
-            }
-            
-            if (input == null) {
-                throw new ChromaprintException("Failed to open library resource: " + resourcePath);
+                throw new ChromaprintException("Chromaprint library not found for " + os + 
+                    ". Expected: " + resourcePath);
             }
             
             String extension = libName.substring(libName.indexOf("."));
@@ -66,39 +53,6 @@ public class chromaprint_h extends chromaprint_h$shared {
         } catch (IOException ex) {
             throw new ChromaprintException("Failed to load chromaprint: " + ex.getMessage());
         }
-    }
-    
-    private static String findVersionedDylib() {
-        try {
-            java.net.URL resourceUrl = chromaprint_h.class.getResource("/lib");
-            if (resourceUrl == null) return null;
-            
-            java.net.URI resourceUri = resourceUrl.toURI();
-            if (resourceUri.getScheme().equals("jar")) {
-                try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(
-                    resourceUri.getSchemeSpecificPart().split("!")[0])) {
-                    java.util.Enumeration<java.util.jar.JarEntry> entries = jarFile.entries();
-                    while (entries.hasMoreElements()) {
-                        java.util.jar.JarEntry entry = entries.nextElement();
-                        String name = entry.getName();
-                        if (name.startsWith("lib/libchromaprint.") && name.endsWith(".dylib")) {
-                            return "/" + name;
-                        }
-                    }
-                }
-            } else {
-                java.io.File libDir = new java.io.File(resourceUri);
-                if (libDir.isDirectory()) {
-                    java.io.File[] files = libDir.listFiles((dir, name) -> 
-                        name.startsWith("libchromaprint.") && name.endsWith(".dylib"));
-                    if (files != null && files.length > 0) {
-                        return "/lib/" + files[0].getName();
-                    }
-                }
-            }
-        } catch (Exception e) {
-        }
-        return null;
     }
 
     private static final int _STDINT_H = (int) 1L;
