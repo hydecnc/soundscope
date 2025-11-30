@@ -1,5 +1,9 @@
 package org.wavelabs.soundscope.data_access;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -14,10 +18,6 @@ import org.wavelabs.soundscope.use_case.fingerprint.FingerprintDAI;
 import org.wavelabs.soundscope.use_case.save_recording.SaveRecordingDAI;
 import org.wavelabs.soundscope.use_case.start_recording.StartRecordingDAI;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingDAI;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 
 public class FileDAO implements StartRecordingDAI,
     StopRecordingDAI,
@@ -78,7 +78,7 @@ public class FileDAO implements StartRecordingDAI,
         }
 
         // Delegate to the gateway implementation
-        org.wavelabs.soundscope.data_access.JavaSoundRecordingGateway gateway =
+        final org.wavelabs.soundscope.data_access.JavaSoundRecordingGateway gateway =
             new org.wavelabs.soundscope.data_access.JavaSoundRecordingGateway(recorder);
         return gateway.getCurrentRecordingBuffer();
     }
@@ -94,12 +94,13 @@ public class FileDAO implements StartRecordingDAI,
     public void loadAudioFromFile(File file) throws IOException, UnsupportedAudioFileException {
         try (AudioInputStream input = AudioSystem.getAudioInputStream(file);
              ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
-            byte[] chunk = new byte[4096];
+            final int byteSize = 4096;
+            final byte[] chunk = new byte[byteSize];
             int bytesRead;
             while ((bytesRead = input.read(chunk)) != -1) {
                 buffer.write(chunk, 0, bytesRead);
             }
-            AudioFormat audioFormat = input.getFormat();
+            final AudioFormat audioFormat = input.getFormat();
             this.audioRecording = new AudioRecording(buffer.toByteArray(), audioFormat);
         }
     }

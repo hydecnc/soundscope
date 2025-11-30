@@ -1,5 +1,7 @@
 package org.wavelabs.soundscope.app;
 
+import java.awt.Dimension;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
@@ -52,20 +54,33 @@ import org.wavelabs.soundscope.use_case.stop_recording.StopRecording;
 import org.wavelabs.soundscope.use_case.stop_recording.StopRecordingIB;
 import org.wavelabs.soundscope.view.MainView;
 
-import java.awt.Dimension;
-
+/**
+ * Builder class for constructing the Soundscope application.
+ * Uses the Builder pattern to assemble all use cases, controllers, and views.
+ */
+@SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "checkstyle:ClassFanOutComplexity",
+    "checkstyle:SuppressWarnings"})
 public class AppBuilder {
     private MainView mainView;
     private MainViewModel mainViewModel;
-    private WaveformViewModel waveformViewModel; //TODO: remove this in some refactor eventually
+    // TODO: remove this in some refactor eventually
+    private WaveformViewModel waveformViewModel;
 
     private JPanel mainPanel;
     private FileDAO fileDAO = new FileDAO();
     private Song song = new Song();
 
+    /**
+     * Constructs a new AppBuilder instance.
+     */
     public AppBuilder() {
     }
 
+    /**
+     * This function adds the main view, which encapsulates all views to the app.
+     *
+     * @return returns the AppBuilder
+     */
     public AppBuilder addMainView() {
         mainViewModel = new MainViewModel();
         waveformViewModel = new WaveformViewModel();
@@ -75,6 +90,12 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the file save use case to the application.
+     * Configures the save recording functionality with ByteArrayFileSaver.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addFileSaveUseCase() {
         fileDAO.setFileSaver(new ByteArrayFileSaver());
 
@@ -86,6 +107,12 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the play recording use case to the application.
+     * Configures audio playback functionality using JavaSound.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addPlayUseCase() {
         final PlayRecordingOB playRecordingOutput = new PlayRecordingPresenter(mainViewModel);
         final PlayRecordingIB playRecordingInteractor =
@@ -96,6 +123,12 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the start recording use case to the application.
+     * Configures microphone recording functionality using JavaMicRecorder.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addStartRecordUseCase() {
         fileDAO.setRecorder(new JavaMicRecorder());
 
@@ -109,6 +142,12 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the stop recording use case to the application.
+     * Configures functionality to stop ongoing audio recordings.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addStopRecordUseCase() {
         final StopRecordingIB stopRecordingInteractor = new StopRecording(fileDAO);
 
@@ -117,6 +156,12 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the display recording waveform use case to the application.
+     * Configures waveform visualization for recorded audio.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addDisplayRecordingWaveformUseCase() {
         final DisplayRecordingWaveformOB recordingPresenter = new DisplayRecordingWaveformPresenter(waveformViewModel);
         final DisplayRecordingWaveformIB displayRecordingWaveformInteractor =
@@ -129,6 +174,12 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the audio fingerprinting use case to the application.
+     * Configures functionality to generate acoustic fingerprints from audio.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addFingerprintUseCase() {
         final FingerprintOB fingerprintOutputBoundary = new FingerprintPresenter(mainViewModel);
         final FingerprintIB
@@ -138,9 +189,15 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the process audio file use case to the application.
+     * Configures functionality to load and process audio files.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addProcessAudioFileUseCase() {
         final ProcessAudioFileOB processAudioFileOB = new WaveformPresenter(waveformViewModel);
-        //TODO: should this be renamed to a ProcessAudioFilePresenter?
+        // TODO: should this be renamed to a ProcessAudioFilePresenter?
         final ProcessAudioFileIB processAudioFileInteractor =
             new ProcessAudioFile(new JavaSoundAudioFileGateway(), processAudioFileOB);
 
@@ -150,6 +207,12 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Adds the song identification use case to the application.
+     * Configures functionality to identify songs using acoustic fingerprints.
+     *
+     * @return the AppBuilder instance for method chaining
+     */
     public AppBuilder addIdentifyUseCase() {
         final IdentifyOB identifyOutputBoundary = new IdentifyPresenter(mainViewModel);
         final IdentifyIB identifyInteractor = new IdentifyInteractor(song, identifyOutputBoundary);
@@ -159,9 +222,17 @@ public class AppBuilder {
         return this;
     }
 
+    /**
+     * Builds and returns the complete application JFrame.
+     * Sets up the frame with appropriate size, close operation, and content pane.
+     *
+     * @return the configured JFrame containing the Soundscope application
+     */
     public JFrame build() {
         final JFrame application = new JFrame("Soundscope");
-        application.setMinimumSize(new Dimension(600, 600));
+        final int applicationWidth = 600;
+        final int applicationHeight = 600;
+        application.setMinimumSize(new Dimension(applicationWidth, applicationHeight));
         application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         application.setContentPane(mainPanel);

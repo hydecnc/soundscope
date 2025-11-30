@@ -46,18 +46,20 @@ public class DisplayRecordingWaveform implements DisplayRecordingWaveformIB {
     @Override
     public void execute(DisplayRecordingWaveformID inputData) {
         try {
-            AudioData audioData = displayRecordingWaveformDAO.getCurrentRecordingBuffer();
+            final AudioData audioData = displayRecordingWaveformDAO.getCurrentRecordingBuffer();
 
             if (audioData == null) {
                 // Not currently recording, no error needed
                 return;
             }
 
-            DisplayRecordingWaveformOD outputData = new DisplayRecordingWaveformOD(audioData);
+            final DisplayRecordingWaveformOD outputData = new DisplayRecordingWaveformOD(audioData);
             outputBoundary.present(outputData);
 
-        } catch (Exception e) {
-            outputBoundary.presentError("An error occurred while displaying recording waveform: " + e.getMessage());
+        } 
+        catch (Exception exception) {
+            outputBoundary.presentError("An error occurred while displaying recording waveform: "
+                + exception.getMessage());
         }
     }
 }

@@ -10,6 +10,9 @@ public class DisplayRecordingWaveformController {
         this.displayWaveformInteractor = displayWaveformInteractor;
     }
 
+    /**
+     * Executes the waveform interactor.
+     */
     public void execute() {
         displayWaveformInteractor.execute(new DisplayRecordingWaveformID());
     }

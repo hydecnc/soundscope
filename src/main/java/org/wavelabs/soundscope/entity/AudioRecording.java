@@ -22,8 +22,13 @@ public class AudioRecording {
         return data.length;
     }
 
+    /**
+     * Gets the duration in seconds from data length.
+     * @return a double representing the seconds
+     */
     public double getDurationSeconds() {
-        return data.length / (44100.0 * 2 * 2);
+        final double bytesPerSecond = 44100.0;
+        return data.length / (bytesPerSecond * 2 * 2);
     }
 
     public AudioFormat getFormat() {

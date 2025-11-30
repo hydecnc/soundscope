@@ -92,8 +92,7 @@ public class AudioData {
      * @return The duration in seconds (as a decimal value)
      */
     public double getDurationSeconds() {
-        return durationMillis / 1000.0;
+        final double millisPerSecond = 1000.0;
+        return durationMillis / millisPerSecond;
     }
 }
-
-
