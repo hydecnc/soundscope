@@ -86,6 +86,7 @@ public class WaveformPanel extends JPanel {
 
     /**
      * Updates the waveform display with new audio data.
+     * 
      * @param audioData The AudioData object containing amplitude samples and metadata
      */
     public void updateWaveform(AudioData audioData) {

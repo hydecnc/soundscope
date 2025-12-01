@@ -74,7 +74,11 @@ public class JavaMicRecorder implements Recorder {
 
         System.out.println("Recording ended.");
         System.out.println("Byte size: " + recordingByteData.size());
-        System.out.println("Recording length: " + (recordingByteData.size() / (44100.0 * 2 * 2)) + " seconds");
+        final double sampleRate = format.getSampleRate();
+        final int bytesPerSample = format.getSampleSizeInBits() / 8;
+        final int channels = format.getChannels();
+        final double bytesPerSecond = sampleRate * bytesPerSample * channels;
+        System.out.println("Recording length: " + (recordingByteData.size() / bytesPerSecond) + " seconds");
     }
 
     @Override

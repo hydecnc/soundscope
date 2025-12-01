@@ -27,8 +27,11 @@ public class AudioRecording {
      * @return a double representing the seconds
      */
     public double getDurationSeconds() {
-        final double bytesPerSecond = 44100.0;
-        return data.length / (bytesPerSecond * 2 * 2);
+        final double sampleRate = format.getSampleRate();
+        final int bytesPerSample = format.getSampleSizeInBits() / 8;
+        final int channels = format.getChannels();
+        final double bytesPerSecond = sampleRate * bytesPerSample * channels;
+        return data.length / bytesPerSecond;
     }
 
     public AudioFormat getFormat() {
