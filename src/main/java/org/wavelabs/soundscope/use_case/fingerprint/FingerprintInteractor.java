@@ -1,8 +1,8 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
-import javax.sound.sampled.AudioFormat;<<<<<<<HEAD
+import javax.sound.sampled.AudioFormat;
 
-import org.wavelabs.soundscope.entity.AudioData;=======>>>>>>>b8f4510(feat:add tests and simplify calculation of audio length)
+import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.ChromaprintException;
 
