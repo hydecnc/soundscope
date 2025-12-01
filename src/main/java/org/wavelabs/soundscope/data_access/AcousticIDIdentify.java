@@ -32,6 +32,9 @@ public final class AcousticIDIdentify implements IdentifyDAI {
     private final ScheduledExecutorService requestScheduler;
     private boolean running;
 
+    /**
+     * Initializes Identifier.
+     */
     private AcousticIDIdentify() {
         acousticIDApiKey = getAPIKey();
         client = new OkHttpClient();
