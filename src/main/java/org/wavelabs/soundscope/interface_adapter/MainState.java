@@ -6,10 +6,10 @@ public class MainState {
 
     private String currentAudioSourcePath;
     private String songTitle;
+    private String artists;
     private String album;
     private String fingerprint;
 
-    // TODO: figure out how to push updates to this
     private boolean isRecording;
     private boolean isPlaying;
     private boolean playingFinished;
@@ -93,5 +93,13 @@ public class MainState {
 
     public void setFingerprint(String fingerprint) {
         this.fingerprint = fingerprint;
+    }
+
+    public String getArtists() {
+        return artists;
+    }
+
+    public void setArtists(String artists) {
+        this.artists = artists;
     }
 }

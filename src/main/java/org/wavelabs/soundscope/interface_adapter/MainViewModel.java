@@ -28,6 +28,7 @@ public class MainViewModel extends ViewModel<MainState> {
     public static final int FINGERPRINT_DISPLAY_LENGTH = 20;
     public static final String SONG_TITLE_INFO_START = "Song Title: ";
     public static final String ALBUM_INFO_START = "Album Title: ";
+    public static final String ARTIST_INFO_START = "Artist(s): ";
 
     public static final Dimension DEFAULT_BUTTON_DIMENSIONS = new Dimension(200, 200);
     public static final Dimension MIN_INFO_DIMENSIONS = new Dimension(150, 50);

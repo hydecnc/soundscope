@@ -15,6 +15,8 @@ public class IdentifyPresenter implements IdentifyOB {
     public void updateSongAttributes(IdentifyOD outputData) {
         mainViewModel.getState().setSongTitle(outputData.songTitle());
         mainViewModel.getState().setAlbum(outputData.album());
+        String artists = String.join(", ",  outputData.artists());
+        mainViewModel.getState().setArtists(artists);
         mainViewModel.firePropertyChange("identify");
     }
 
