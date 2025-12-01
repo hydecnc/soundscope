@@ -236,7 +236,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         final JButton fingerprintButton = new JButton(MainViewModel.FINGERPRINT_TEXT);
         fingerprintButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
 
-        fingerprintButton.addActionListener(e -> {
+        fingerprintButton.addActionListener(event -> {
             fingerprintController.execute();
         });
 
@@ -245,10 +245,10 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
     @NotNull
     private JButton getIdentifyButton() {
-        JButton identifyButton = new JButton(MainViewModel.IDENTIFY_TEXT);
+        final JButton identifyButton = new JButton(MainViewModel.IDENTIFY_TEXT);
         identifyButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
 
-        identifyButton.addActionListener(e -> {
+        identifyButton.addActionListener(event -> {
             identifyController.identify();
         });
 
@@ -257,139 +257,159 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
     @NotNull
     private JButton getRecordButton() {
-        JButton recordButton = new JButton(MainViewModel.RECORD_TEXT);
+        final JButton recordButton = new JButton(MainViewModel.RECORD_TEXT);
         recordButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(recordButton);
 
         // Timer to update waveform during recording
-        Timer recordingWaveformTimer = new Timer(50, e -> {
-            if (mainViewModel.getState().isRecording()) {
-                displayRecordingWaveformController.execute();
-                AudioData audioData = waveformViewModel.getAudioData();
-                // Force immediate update and auto-scroll to show latest
-                if (audioData != null && waveformPanel != null) {
-                    waveformPanel.updateWaveform(audioData);
-                    if (timelinePanel != null) {
-                        timelinePanel.updateTimeline(
-                            audioData.getDurationSeconds(),
-                            audioData.getSampleRate());
-                    }
-                    // Auto-scroll to show the latest part
-                    waveformPanel.scrollToLatest(audioData);
-                }
-            }
+        final Timer recordingWaveformTimer = new Timer(50, event -> {
+            waveformTimerEvent();
         });
         recordingWaveformTimer.start();
 
-        recordButton.addActionListener(e -> {
-            if (mainViewModel.getState().isRecording()) {
-                stopRecordingController.execute();
-                mainViewModel.getState().setRecording(false);
-
-                // named cache due to the temporary nature of the file
-                String outputPath = "cache.wav"; //TODO: put a better file path here
-                saveRecordingController.execute(outputPath);
-                System.out.println("Recording Ended");
-
-                // Automatically load and display the saved recording
-                File savedFile = new File(outputPath);
-                if (savedFile.exists()) {
-                    processAudioFileController.execute(savedFile);
-
-                    // Set current audio source path for playback
-                    mainViewModel.getState().setCurrentAudioSourcePath(savedFile.getAbsolutePath());
-
-                    // Ensure scroll pane is updated after loading - force revalidation
-                    SwingUtilities.invokeLater(() -> {
-                        if (waveformScrollPane != null && waveformPanel != null) {
-                            // Force the panel to update its size
-                            waveformPanel.revalidate();
-                            // Force the scroll pane to recognize the new size
-                            waveformScrollPane.revalidate();
-                            waveformScrollPane.repaint();
-                            // Force update the scrollbar
-                            JViewport viewport = waveformScrollPane.getViewport();
-                            if (viewport != null
-                                && waveformPanel.getPreferredSize().width > viewport
-                                .getWidth()) {
-                                waveformScrollPane.getHorizontalScrollBar().setEnabled(true);
-                                waveformScrollPane.getHorizontalScrollBar().setVisible(true);
-                            }
-                        }
-                    });
-                }
-            } else {
-                // Stop playback if it's running
-                if (mainViewModel.getState().isPlaying()) {
-                    playRecordingController.stop();
-                    playPauseButton.setText(MainViewModel.PLAY_TEXT);
-                }
-
-                startRecordingController.execute();
-                mainViewModel.getState().setRecording(true);
-                // Clear previous waveform when starting new recording
-                if (waveformPanel != null) {
-                    waveformPanel.updateWaveform(null);
-                }
-            }
-
-            if (mainViewModel.getState().isRecording()) {
-                recordButton.setText(MainViewModel.STOP_RECORDING_TEXT);
-            } else {
-                recordButton.setText(MainViewModel.RECORD_TEXT);
-            }
+        recordButton.addActionListener(event -> {
+            recordListenerEvent(recordButton);
         });
 
         return recordButton;
     }
 
+    private void recordListenerEvent(JButton recordButton) {
+        if (mainViewModel.getState().isRecording()) {
+            stopRecordingController.execute();
+            mainViewModel.getState().setRecording(false);
+
+            // named cache due to the temporary nature of the file
+            // TODO: put a better file path here
+            final String outputPath = "cache.wav"; 
+            saveRecordingController.execute(outputPath);
+            System.out.println("Recording Ended");
+
+            // Automatically load and display the saved recording
+            final File savedFile = new File(outputPath);
+            if (savedFile.exists()) {
+                processAudioFileController.execute(savedFile);
+
+                // Set current audio source path for playback
+                mainViewModel.getState().setCurrentAudioSourcePath(savedFile.getAbsolutePath());
+
+                // Ensure scroll pane is updated after loading - force revalidation
+                SwingUtilities.invokeLater(this::updateScrollPanel);
+            }
+        } 
+        else {
+            // Stop playback if it's running
+            if (mainViewModel.getState().isPlaying()) {
+                playRecordingController.stop();
+                playPauseButton.setText(MainViewModel.PLAY_TEXT);
+            }
+
+            startRecordingController.execute();
+            mainViewModel.getState().setRecording(true);
+            // Clear previous waveform when starting new recording
+            if (waveformPanel != null) {
+                waveformPanel.updateWaveform(null);
+            }
+        }
+
+        if (mainViewModel.getState().isRecording()) {
+            recordButton.setText(MainViewModel.STOP_RECORDING_TEXT);
+        } 
+        else {
+            recordButton.setText(MainViewModel.RECORD_TEXT);
+        }
+    }
+
+    private void updateScrollPanel() {
+        if (waveformScrollPane != null && waveformPanel != null) {
+            // Force the panel to update its size
+            waveformPanel.revalidate();
+            // Force the scroll pane to recognize the new size
+            waveformScrollPane.revalidate();
+            waveformScrollPane.repaint();
+            // Force update the scrollbar
+            final JViewport viewport = waveformScrollPane.getViewport();
+            if (viewport != null
+                && waveformPanel.getPreferredSize().width > viewport
+                .getWidth()) {
+                waveformScrollPane.getHorizontalScrollBar().setEnabled(true);
+                waveformScrollPane.getHorizontalScrollBar().setVisible(true);
+            }
+        }
+    }
+
+    private void waveformTimerEvent() {
+        if (mainViewModel.getState().isRecording()) {
+            displayRecordingWaveformController.execute();
+            final AudioData audioData = waveformViewModel.getAudioData();
+            // Force immediate update and auto-scroll to show latest
+            if (audioData != null && waveformPanel != null) {
+                waveformPanel.updateWaveform(audioData);
+                if (timelinePanel != null) {
+                    timelinePanel.updateTimeline(
+                        audioData.getDurationSeconds(),
+                        audioData.getSampleRate());
+                }
+                // Auto-scroll to show the latest part
+                waveformPanel.scrollToLatest(audioData);
+            }
+        }
+    }
+
     @NotNull
     private JButton getPlayPauseButton() {
-        JButton playPauseButton = new JButton(MainViewModel.PLAY_TEXT);
+        final JButton playPauseButton = new JButton(MainViewModel.PLAY_TEXT);
         playPauseButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(playPauseButton);
-        playPauseButton.addActionListener(e -> {
-            if (mainViewModel.getState().isRecording()) {
-                JOptionPane.showMessageDialog(this,
-                    "Cannot play audio while recording is in progress.", "Recording in progress",
-                    JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            final String currentAudioSourcePath = mainViewModel.getState().getCurrentAudioSourcePath();
-
-            if (currentAudioSourcePath == null || currentAudioSourcePath.isBlank()) {
-                JOptionPane.showMessageDialog(this,
-                    "Please open or record audio before playing.", "No audio selected",
-                    JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            try {
-                if (mainViewModel.getState().isPlaying()) {
-                    playRecordingController.pause();
-                    playPauseButton.setText(MainViewModel.PLAY_TEXT);
-                } else {
-                    if (mainViewModel.getState().isPlayingFinished()) {
-                        playRecordingController.play(currentAudioSourcePath, true);
-                    } else {
-                        playRecordingController.play(currentAudioSourcePath, false);
-                        playPauseButton.setText(MainViewModel.PAUSE_TEXT);
-                    }
-                }
-            } catch (IllegalStateException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Playback error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
+        playPauseButton.addActionListener(event -> {
+            playPauseListenerEvent(playPauseButton);
         });
         return playPauseButton;
     }
 
+    private void playPauseListenerEvent(JButton playPauseButton) {
+        if (mainViewModel.getState().isRecording()) {
+            JOptionPane.showMessageDialog(this,
+                "Cannot play audio while recording is in progress.", "Recording in progress",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        final String currentAudioSourcePath = mainViewModel.getState().getCurrentAudioSourcePath();
+
+        if (currentAudioSourcePath == null || currentAudioSourcePath.isBlank()) {
+            JOptionPane.showMessageDialog(this,
+                "Please open or record audio before playing.", "No audio selected",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            if (mainViewModel.getState().isPlaying()) {
+                playRecordingController.pause();
+                playPauseButton.setText(MainViewModel.PLAY_TEXT);
+            }
+            else {
+                if (mainViewModel.getState().isPlayingFinished()) {
+                    playRecordingController.play(currentAudioSourcePath, true);
+                }
+                else {
+                    playRecordingController.play(currentAudioSourcePath, false);
+                    playPauseButton.setText(MainViewModel.PAUSE_TEXT);
+                }
+            }
+        }
+        catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Playback error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     @NotNull
     private JButton getSaveAsButton() {
-        JButton saveAsButton = new JButton(MainViewModel.SAVE_AS_TEXT);
+        final JButton saveAsButton = new JButton(MainViewModel.SAVE_AS_TEXT);
         saveAsButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(saveAsButton);
-        saveAsButton.addActionListener(e -> {
+        saveAsButton.addActionListener(event -> {
             saveFileToDirectory();
         });
 
@@ -397,7 +417,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     }
 
     private void saveFileToDirectory() {
-        JFileChooser chooser = new JFileChooser();
+        final JFileChooser chooser = new JFileChooser();
         chooser.setCurrentDirectory(new File("."));
         chooser.setDialogTitle(MainViewModel.SAVE_AS_FILE_CHOOSER_TITLE);
 
@@ -406,10 +426,10 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             "WAV Audio files (*.wav)", "wav"
         ));
 
-        LocalDateTime myDateObj = LocalDateTime.now();
-        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+        final LocalDateTime myDateObj = LocalDateTime.now();
+        final DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
 
-        String formattedDate = myDateObj.format(myFormatObj);
+        final String formattedDate = myDateObj.format(myFormatObj);
 
         chooser.setSelectedFile(new File(formattedDate + ".wav"));
 
@@ -422,12 +442,12 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             }
 
             saveRecordingController.execute(outputFile.getAbsolutePath());
-        } else {
+        }
+        else {
             JOptionPane.showMessageDialog(this, "No file selection made",
                 "Error", JOptionPane.WARNING_MESSAGE);
             System.out.println("No Selection");
         }
-        ;
     }
 
     @NotNull
@@ -437,29 +457,33 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         openButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
         buttonPanel.add(openButton);
 
-        openButton.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle(MainViewModel.OPEN_FILE_CHOOSER_TITLE);
-
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("WAV Audio Files", "wav");
-            fileChooser.setFileFilter(filter);
-            fileChooser.setAcceptAllFileFilterUsed(false);
-
-            int result = fileChooser.showOpenDialog(this);
-
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                processAudioFileController.execute(selectedFile);
-
-                // Update chosen file path
-                mainViewModel.getState().setCurrentAudioSourcePath(selectedFile.getAbsolutePath());
-
-                // Stop recording
-                playRecordingController.stop();
-                playPauseButton.setText(MainViewModel.PLAY_TEXT);
-            }
+        openButton.addActionListener(event -> {
+            openButtonListenerEvent();
         });
         return openButton;
+    }
+
+    private void openButtonListenerEvent() {
+        final JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle(MainViewModel.OPEN_FILE_CHOOSER_TITLE);
+
+        final FileNameExtensionFilter filter = new FileNameExtensionFilter("WAV Audio Files", "wav");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+
+        final int result = fileChooser.showOpenDialog(this);
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            final File selectedFile = fileChooser.getSelectedFile();
+            processAudioFileController.execute(selectedFile);
+
+            // Update chosen file path
+            mainViewModel.getState().setCurrentAudioSourcePath(selectedFile.getAbsolutePath());
+
+            // Stop recording
+            playRecordingController.stop();
+            playPauseButton.setText(MainViewModel.PLAY_TEXT);
+        }
     }
 
     public void setFingerprintController(FingerprintController fingerprintController) {
@@ -500,8 +524,8 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     }
 
     @Override
-    public void actionPerformed(ActionEvent evt) { //TODO: Does anything need to be added here?
-
+    public void actionPerformed(ActionEvent evt) {
+        // TODO: Does anything need to be added here?
     }
 
     @Override
@@ -510,11 +534,13 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
         // If in an error state, we display an error message
         if (state.isErrorState()) {
-            //Clears an error state
+            // Clears an error state
             mainViewModel.getState().setErrorState(false);
 
             String errorTitle = MainViewModel.USE_CASE_ERROR_TITLE_MAP.get(evt.getPropertyName());
-            if (errorTitle == null) errorTitle = "Unknown Error Type";
+            if (errorTitle == null) {
+                errorTitle = "Unknown Error Type";
+            }
 
             JOptionPane.showMessageDialog(
                 this,
@@ -525,21 +551,24 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             return;
         }
 
-        //TODO: implement property change updates from all the other use cases
-
-        if (evt.getPropertyName().equals("playing")) { //Updates play button visual state if song finishes
+        // TODO: implement property change updates from all the other use cases
+        if (evt.getPropertyName().equals("playing")) {
+            // Updates play button visual state if song finishes
             if (state.isPlaying()) {
                 playPauseButton.setText(MainViewModel.PAUSE_TEXT);
-            } else {
+            }
+            else {
                 playPauseButton.setText(MainViewModel.PLAY_TEXT);
             }
             return;
         }
 
-        if (evt.getPropertyName().equals("recording")) { //Updates recording button visual state if it changes
+        if (evt.getPropertyName().equals("recording")) {
+            // Updates recording button visual state if it changes
             if (state.isRecording()) {
                 recordButton.setText(MainViewModel.STOP_RECORDING_TEXT);
-            } else {
+            }
+            else {
                 recordButton.setText(MainViewModel.RECORD_TEXT);
             }
             return;
@@ -552,7 +581,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         }
 
         if (evt.getPropertyName().equals("fingerprint")) {
-            String fingerprint = state.getFingerprint();
+            final String fingerprint = state.getFingerprint();
             final int newLength = Math.min(MainViewModel.FINGERPRINT_DISPLAY_LENGTH, fingerprint.length());
 
             String displayFingerprint = fingerprint.substring(0, newLength);
