@@ -1,0 +1,102 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+left to right direction
+
+title Play Recording - UML
+
+package "use_case" {
+  interface PlayRecordingIB {
+    + play(PlayRecordingID)
+    + pause()
+    + stop()
+  }
+  
+  class PlayRecording {
+    - playbackGateway: PlayRecordingDAI
+    - outputBoundary: PlayRecordingOB
+    - loadedSourcePath: String
+  }
+  
+  class PlayRecordingID {
+    - sourcePath: String
+    - restartFromBeginning: boolean
+  }
+  
+  interface PlayRecordingOB {
+    + playbackStarted()
+    + playbackPaused()
+    + playbackStopped()
+  }
+  
+  class PlayRecordingOD {
+    + isPlaying: boolean
+    + playingFinished: boolean
+    + framesPlayed: long
+  }
+  
+  interface PlayRecordingDAI {
+    + loadAudio(String): AudioRecording
+    + startPlayback()
+    + pausePlayback()
+  }
+}
+
+package "interface_adapter" {
+  class PlayRecordingController {
+    - playRecordingInteractor: PlayRecordingIB
+  }
+  
+  class PlayRecordingPresenter {
+    - mainViewModel: MainViewModel
+  }
+  
+  class MainViewModel {
+    - state: MainState
+  }
+}
+
+package "data_access" {
+  class JavaSoundPlaybackGateway {
+    - audioFile: File
+    - audioInputStream: AudioInputStream
+    - format: AudioFormat
+  }
+}
+
+package "entity" {
+  class AudioRecording {
+    - data: byte[]
+    - format: AudioFormat
+  }
+}
+
+package "view" {
+  class MainView
+}
+
+PlayRecording .up.|> PlayRecordingIB
+PlayRecording -right-> PlayRecordingDAI : uses
+PlayRecording -right-> PlayRecordingOB : calls
+PlayRecording .down.> PlayRecordingID : receives
+PlayRecording .down.> PlayRecordingOD : creates
+
+PlayRecordingController -down-> PlayRecordingIB : calls
+PlayRecordingController .down.> PlayRecordingID : creates
+
+PlayRecordingPresenter .up.|> PlayRecordingOB
+PlayRecordingPresenter -down-> MainViewModel : updates
+PlayRecordingPresenter .down.> PlayRecordingOD : receives
+
+JavaSoundPlaybackGateway .up.|> PlayRecordingDAI
+JavaSoundPlaybackGateway -down-> AudioRecording : loads
+
+MainView -down-> MainViewModel : observes
+MainView -down-> PlayRecordingController : invokes
+
+@enduml
