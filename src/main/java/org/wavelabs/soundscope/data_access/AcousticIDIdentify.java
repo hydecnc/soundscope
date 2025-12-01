@@ -23,13 +23,33 @@ import okhttp3.Response;
 /**
  * Looks up fingerprints using the AcousticID API, and retrieves corresponding song IDs and metadata.
  */
-public class AcousticIDIdentify implements IdentifyDAI {
-    private static final String ACOUSTICID_API_KEY = getAPIKey();
+public final class AcousticIDIdentify implements IdentifyDAI {
+    private static AcousticIDIdentify instance;
 
-    private static OkHttpClient client = new OkHttpClient();
-    private static BlockingQueue<QueuedRequest> requestQueue = new LinkedBlockingQueue<>();
-    private static ScheduledExecutorService requestScheduler = Executors.newSingleThreadScheduledExecutor();
-    private static boolean running;
+    private final String acousticIDApiKey;
+    private final OkHttpClient client;
+    private final BlockingQueue<QueuedRequest> requestQueue;
+    private final ScheduledExecutorService requestScheduler;
+    private boolean running;
+
+    private AcousticIDIdentify() {
+        acousticIDApiKey = getAPIKey();
+        client = new OkHttpClient();
+        requestQueue = new LinkedBlockingQueue<>();
+        requestScheduler = Executors.newSingleThreadScheduledExecutor();
+        running = false;
+    }
+
+    /**
+     * Ensures there's always only one class instance.
+     * @return An instance of AcousticIDIdentify class
+     */
+    public static AcousticIDIdentify getAcousicIDIDentify() {
+        if (instance == null) {
+            instance = new AcousticIDIdentify();
+        }
+        return instance;
+    }
 
     /**
      * Parses the JSON results of an API response.
@@ -38,7 +58,7 @@ public class AcousticIDIdentify implements IdentifyDAI {
      * @return songMetadata a Song.SongMetadata object
      * @throws FingerprintMatchNotFoundException when a fingerprint isn't found
      */
-    private static Song.SongMetadata parseJSONApiResults(Response apiResponse) {
+    private Song.SongMetadata parseJSONApiResults(Response apiResponse) {
         try {
             final JSONObject responseBody = new JSONObject(apiResponse.body().string());
 
@@ -98,7 +118,7 @@ public class AcousticIDIdentify implements IdentifyDAI {
      *
      * @throws FingerprintMatchNotFoundException when no fingerprint found
      */
-    private static void processNextAPIRequest() {
+    private void processNextAPIRequest() {
         final QueuedRequest task = requestQueue.poll();
 
         if (task == null) {
@@ -118,7 +138,7 @@ public class AcousticIDIdentify implements IdentifyDAI {
         }
 
         // Schedules the next API request to be processed after the appropriate spacing
-        requestScheduler.schedule(AcousticIDIdentify::processNextAPIRequest,
+        requestScheduler.schedule(this::processNextAPIRequest,
                 AcousticIdApiConstants.REQUEST_SPACING_MILLIS, TimeUnit.MILLISECONDS);
     }
 
@@ -185,7 +205,7 @@ public class AcousticIDIdentify implements IdentifyDAI {
      */
     private synchronized CompletableFuture<Response> addAPIRequest(String fingerprint, int duration) {
         final String url = AcousticIdApiConstants.ACOUSTICID_API_URL
-            + "?client=" + ACOUSTICID_API_KEY
+            + "?client=" + acousticIDApiKey
             + "&meta=" + AcousticIdApiConstants.METADATA_REQUEST
             + "&duration=" + duration
             + "&fingerprint=" + fingerprint;
