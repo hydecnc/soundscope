@@ -62,6 +62,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     private final JPanel infoPanel = new JPanel();
     private final JTextField fingerprintInfo;
     private final JTextField songTitleInfo;
+    private final JTextField artistInfo;
     private final JTextField albumInfo;
     private final JLabel timeLabel = new JLabel("0:00 / 0:00");
     // Controllers for the various use cases
@@ -121,19 +122,22 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         // Sets up info panel
         fingerprintInfo = new JTextField(MainViewModel.FINGERPRINT_INFO_START);
         songTitleInfo = new JTextField(MainViewModel.SONG_TITLE_INFO_START);
-        artistInfo = new JTextField(MainViewModel.)
+        artistInfo = new JTextField(MainViewModel.ARTIST_INFO_START);
         albumInfo = new JTextField(MainViewModel.ALBUM_INFO_START);
 
         fingerprintInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
         songTitleInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
         albumInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
+        artistInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
 
         fingerprintInfo.setEditable(false);
         songTitleInfo.setEditable(false);
         albumInfo.setEditable(false);
+        artistInfo.setEditable(false);
 
         infoPanel.add(fingerprintInfo);
         infoPanel.add(songTitleInfo);
+        infoPanel.add(artistInfo);
         infoPanel.add(albumInfo);
         infoPanel.add(timeLabel);
 
@@ -552,7 +556,6 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
             return;
         }
 
-        // TODO: implement property change updates from all the other use cases
         if (evt.getPropertyName().equals("playing")) {
             // Updates play button visual state if song finishes
             if (state.isPlaying()) {
@@ -578,6 +581,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         if (evt.getPropertyName().equals("identify")) {
             songTitleInfo.setText(MainViewModel.SONG_TITLE_INFO_START + state.getSongTitle());
             albumInfo.setText(MainViewModel.ALBUM_INFO_START + state.getAlbum());
+            artistInfo.setText(MainViewModel.ARTIST_INFO_START + state.getArtists());
             return;
         }
 

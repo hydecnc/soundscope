@@ -15,7 +15,6 @@ public class MainState {
     private boolean playingFinished;
     private long framesPlayed;
 
-
     public boolean isErrorState() {
         return errorState;
     }
@@ -23,6 +22,7 @@ public class MainState {
     public void setErrorState(boolean errorState) {
         this.errorState = errorState;
     }
+
     public String getCurrentAudioSourcePath() {
         return currentAudioSourcePath;
     }
@@ -30,6 +30,7 @@ public class MainState {
     public void setCurrentAudioSourcePath(String currentAudioSourcePath) {
         this.currentAudioSourcePath = currentAudioSourcePath;
     }
+
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -37,6 +38,7 @@ public class MainState {
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
+
     public boolean isRecording() {
         return isRecording;
     }

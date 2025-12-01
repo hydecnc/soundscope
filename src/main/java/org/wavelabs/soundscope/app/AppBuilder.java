@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
+import org.wavelabs.soundscope.data_access.AcousticIDIdentify;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
@@ -35,6 +36,7 @@ import org.wavelabs.soundscope.use_case.display_recording_waveform.DisplayRecord
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintIB;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintInteractor;
 import org.wavelabs.soundscope.use_case.fingerprint.FingerprintOB;
+import org.wavelabs.soundscope.use_case.identify.IdentifyDAI;
 import org.wavelabs.soundscope.use_case.identify.IdentifyIB;
 import org.wavelabs.soundscope.use_case.identify.IdentifyInteractor;
 import org.wavelabs.soundscope.use_case.identify.IdentifyOB;
@@ -214,8 +216,9 @@ public class AppBuilder {
      * @return the AppBuilder instance for method chaining
      */
     public AppBuilder addIdentifyUseCase() {
+        final IdentifyDAI identifier = new AcousticIDIdentify();
         final IdentifyOB identifyOutputBoundary = new IdentifyPresenter(mainViewModel);
-        final IdentifyIB identifyInteractor = new IdentifyInteractor(song, identifyOutputBoundary);
+        final IdentifyIB identifyInteractor = new IdentifyInteractor(song, identifyOutputBoundary, identifier);
 
         final IdentifyController identifyController = new IdentifyController(identifyInteractor);
         mainView.setIdentifyController(identifyController);
