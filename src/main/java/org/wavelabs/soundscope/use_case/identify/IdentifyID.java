@@ -13,7 +13,7 @@ public class IdentifyID {
     private final String fingerprint;
 
     /**
-     * Constructs an IdentifyID with the specified string
+     * Constructs an IdentifyID with the specified string.
      *
      * @param fingerprint the provided fingerprint
      */

@@ -1,9 +1,9 @@
 package org.wavelabs.soundscope.use_case.stop_recording;
 
+import javax.sound.sampled.AudioFormat;
+
 import org.wavelabs.soundscope.entity.AudioRecording;
 import org.wavelabs.soundscope.infrastructure.Recorder;
-
-import javax.sound.sampled.AudioFormat;
 
 public class StopRecording implements StopRecordingIB {
     private final StopRecordingDAI stopRecordingDAO;
@@ -20,7 +20,7 @@ public class StopRecording implements StopRecordingIB {
         recorder.stop();
 
         // extract and save the resulting byte[] to audioRecording object
-        AudioRecording audioRecording = new AudioRecording(recorder.getRecordingBytes(), format);
+        final AudioRecording audioRecording = new AudioRecording(recorder.getRecordingBytes(), format);
         // toss the object to the DAO
         stopRecordingDAO.setAudioRecording(audioRecording);
     }

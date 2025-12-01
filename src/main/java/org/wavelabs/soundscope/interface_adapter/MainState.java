@@ -9,14 +9,16 @@ public class MainState {
     private String album;
     private String fingerprint;
 
-    private boolean isRecording = false; //TODO: figure out how to push updates to this
-    private boolean isPlaying = false;
-    private boolean playingFinished = false;
-    private long framesPlayed = 0;
+    // TODO: figure out how to push updates to this
+    private boolean isRecording;
+    private boolean isPlaying;
+    private boolean playingFinished;
+    private long framesPlayed;
 
     public boolean isErrorState() {
         return errorState;
     }
+
     public void setErrorState(boolean errorState) {
         this.errorState = errorState;
     }
@@ -24,6 +26,7 @@ public class MainState {
     public String getCurrentAudioSourcePath() {
         return currentAudioSourcePath;
     }
+
     public void setCurrentAudioSourcePath(String currentAudioSourcePath) {
         this.currentAudioSourcePath = currentAudioSourcePath;
     }
@@ -31,6 +34,7 @@ public class MainState {
     public String getErrorMessage() {
         return errorMessage;
     }
+
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }

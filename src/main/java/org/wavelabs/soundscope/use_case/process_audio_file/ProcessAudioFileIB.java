@@ -8,10 +8,7 @@ package org.wavelabs.soundscope.use_case.process_audio_file;
 public interface ProcessAudioFileIB {
     /**
      * Executes the use case to process an audio file.
-     * 
      * @param inputData The input data containing the file to process
      */
     void execute(ProcessAudioFileID inputData);
 }
-
-

@@ -1,7 +1,9 @@
 package org.wavelabs.soundscope.data_access;
 
-import org.wavelabs.soundscope.entity.AudioRecording;
-import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingDAI;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Objects;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -10,12 +12,12 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.Objects;
+
+import org.wavelabs.soundscope.entity.AudioRecording;
+import org.wavelabs.soundscope.use_case.play_recording.PlayRecordingDAI;
 
 public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
+    private final Object lock = new Object();
     private volatile boolean isPlaying;
     private Thread playbackThread;
     private File audioFile;
@@ -26,12 +28,12 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
     private int bytesPerFrame;
     private byte[] audioBuffer;
     private AudioRecording currentRecording;
-    private final Object lock = new Object();
 
     @Override
-    public AudioRecording loadAudio(String sourcePath) throws IOException, UnsupportedAudioFileException, NullPointerException {
+    public AudioRecording loadAudio(String sourcePath)
+            throws IOException, UnsupportedAudioFileException, NullPointerException {
         Objects.requireNonNull(sourcePath, "sourcePath must not be null");
-        File file = new File(sourcePath);
+        final File file = new File(sourcePath);
         if (!file.exists()) {
             throw new IOException("Audio file not found: " + sourcePath);
         }
@@ -42,7 +44,7 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
             openPlaybackStream();
             format = audioInputStream.getFormat();
 
-            DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+            final DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
             if (!AudioSystem.isLineSupported(info)) {
                 throw new UnsupportedAudioFileException("Audio format not supported for playback");
             }
@@ -50,13 +52,15 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
             try {
                 line = (SourceDataLine) AudioSystem.getLine(info);
                 line.open(format);
-            } catch (LineUnavailableException e) {
-                throw new IOException("Unable to open audio output line", e);
+            }
+            catch (LineUnavailableException ex) {
+                throw new IOException("Unable to open audio output line", ex);
             }
 
             bytesPerFrame = audioInputStream.getFormat().getFrameSize();
-            if (bytesPerFrame == AudioSystem.NOT_SPECIFIED)
+            if (bytesPerFrame == AudioSystem.NOT_SPECIFIED) {
                 bytesPerFrame = 1;
+            }
             audioBuffer = new byte[1024 * bytesPerFrame];
             totalFramesRead = 0;
             currentRecording = buildRecording(file);
@@ -101,8 +105,9 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
             if (audioFile != null) {
                 try {
                     openPlaybackStream();
-                } catch (IOException | UnsupportedAudioFileException e) {
-                    throw new IllegalStateException("Failed to reset playback stream", e);
+                }
+                catch (IOException | UnsupportedAudioFileException ex) {
+                    throw new IllegalStateException("Failed to reset playback stream", ex);
                 }
             }
         }
@@ -121,7 +126,12 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
     @Override
     public long getTotalFrames() {
         synchronized (lock) {
-            return audioInputStream != null ? audioInputStream.getFrameLength() : -1;
+            if (audioInputStream != null) {
+                return audioInputStream.getFrameLength();
+            }
+            else {
+                return -1;
+            }
         }
     }
 
@@ -143,11 +153,13 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
                 line.drain();
                 line.stop();
             }
-        } catch (IOException e) {
+        }
+        catch (IOException ex) {
             if (line != null) {
                 line.stop();
             }
-        } finally {
+        }
+        finally {
             isPlaying = false;
         }
     }
@@ -160,12 +172,13 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
     private AudioRecording buildRecording(File file) throws IOException, UnsupportedAudioFileException {
         try (AudioInputStream input = AudioSystem.getAudioInputStream(file);
              ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
-            byte[] chunk = new byte[4096];
+            final int byteCount = 4096;
+            final byte[] chunk = new byte[byteCount];
             int bytesRead;
             while ((bytesRead = input.read(chunk)) != -1) {
                 buffer.write(chunk, 0, bytesRead);
             }
-            AudioFormat audioFormat = input.getFormat();
+            final AudioFormat audioFormat = input.getFormat();
             return new AudioRecording(buffer.toByteArray(), audioFormat);
         }
     }
@@ -184,7 +197,8 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
         if (playbackThread != null) {
             try {
                 playbackThread.join();
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
             playbackThread = null;
@@ -195,7 +209,9 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
         if (audioInputStream != null) {
             try {
                 audioInputStream.close();
-            } catch (IOException ignored) {
+            }
+            catch (IOException ignored) {
+                // do nothing
             }
             audioInputStream = null;
         }
