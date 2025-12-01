@@ -70,7 +70,7 @@ public class ProcessAudioFile implements ProcessAudioFileIB {
                 inputData.getFile().getName());
         }
         catch (Exception exception) {
-            outputBoundary.presentError("An unexpected error occurred:\n" + e.getMessage(),
+            outputBoundary.presentError("An unexpected error occurred:\n" + exception.getMessage(),
                 inputData.getFile().getName());
         }
     }

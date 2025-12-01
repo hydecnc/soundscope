@@ -44,7 +44,7 @@ public class ProcessAudioFileController {
             fileDAO.loadAudioFromFile(file);
         }
         catch (IOException | UnsupportedAudioFileException event) {
-            System.err.println("Warning: Failed to load audio for fingerprinting: " + e.getMessage());
+            System.err.println("Warning: Failed to load audio for fingerprinting: " + event.getMessage());
         }
     }
 }
