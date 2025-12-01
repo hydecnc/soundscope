@@ -1,0 +1,90 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+left to right direction
+title Fingerprint - UML
+package "use_case" {
+  interface FingerprintIB {
+    + execute()
+  }
+
+  class FingerprintInteractor {
+    - userDataAccessObject: FileDAO
+    - fingerprintPresenter: FingerprintOB
+    - song: Song
+    + execute()
+
+  }
+
+  interface FingerprintOB {
+    + prepareSuccessView(FingerprintOD)
+    + prepareFailView(String)
+  }
+
+  class FingerprintOD {
+    + fingerprint: String
+  }
+
+  interface FingerprintDAI {
+    + getAudioData(): byte[]
+    + getAudioFormat(): AudioFormat
+  }
+}
+package "interface_adapter" {
+  class FingerprintController {
+    - fingerprintInteractor: FingerprintIB
+    + execute()
+  }
+
+  class FingerprintPresenter {
+    - viewModel: MainViewModel
+    + prepareSuccessView()
+    + prepareFailView()
+  }
+
+  class MainViewModel {
+    - state: MainState
+  }
+}
+package "data_access" {
+  class FileDAO {
+  }
+}
+package "entity" {
+  class Song {
+    - data: SongMetaData
+    - duration: int
+    - fingerprint: String
+  }
+}
+package "entity" {
+  class SongMetaData {
+    + title: String
+    + musicBrainzID: String
+    + acoustIDTrackID: String
+    + album: String
+    + artists: String[]
+  }
+}
+package "view" {
+  class MainView
+}
+FingerprintInteractor .up.|> FingerprintIB
+FingerprintInteractor -right-> FingerprintDAI : uses
+FingerprintInteractor -right-> FingerprintOB : calls
+FingerprintInteractor -down-> Song : uses
+FingerprintInteractor .down.> FingerprintOD : creates
+FingerprintController -down-> FingerprintIB : calls
+FingerprintPresenter .up.|> FingerprintOB
+FingerprintPresenter -down-> MainViewModel : updates
+FingerprintPresenter .down.> FingerprintOD : receives
+FileDAO .up.|> FingerprintDAI
+Song -down-> SongMetaData : contains
+MainView -down-> MainViewModel : observes
+MainView -down-> FingerprintController : invokes
+@enduml
