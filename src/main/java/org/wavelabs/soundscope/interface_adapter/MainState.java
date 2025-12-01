@@ -9,10 +9,11 @@ public class MainState {
     private String album;
     private String fingerprint;
 
-    private boolean isRecording = false; //TODO: figure out how to push updates to this
-    private boolean isPlaying = false;
-    private boolean playingFinished = false;
-    private long framesPlayed = 0;
+    // TODO: figure out how to push updates to this
+    private boolean isRecording;
+    private boolean isPlaying;
+    private boolean playingFinished;
+    private long framesPlayed;
 
     public boolean isErrorState() {
         return errorState;

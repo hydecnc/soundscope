@@ -44,24 +44,24 @@ public class JavaSoundRecordingGateway implements DisplayRecordingWaveformDAI {
         }
 
         // Get all recorded bytes accumulated so far for progressive display
-        byte[] allBytes = recorder.getRecordingBytes();
+        final byte[] allBytes = recorder.getRecordingBytes();
         if (allBytes == null || allBytes.length == 0) {
             return null;
         }
 
-        AudioFormat format = recorder.getAudioFormat();
-        int sampleRate = (int) format.getSampleRate();
-        int channels = format.getChannels();
+        final AudioFormat format = recorder.getAudioFormat();
+        final int sampleRate = (int) format.getSampleRate();
+        final int channels = format.getChannels();
 
         // Process all accumulated bytes to get amplitude samples
-        double[] amplitudeSamples = convertToAmplitudeSamples(allBytes, format, allBytes.length, channels);
+        final double[] amplitudeSamples = convertToAmplitudeSamples(allBytes, format, allBytes.length, channels);
 
         if (amplitudeSamples.length == 0) {
             return null;
         }
 
         // Calculate duration for all accumulated data (accounting for 256x downsampling)
-        long durationMillis = (long) ((amplitudeSamples.length * 256 * 1000.0) / sampleRate);
+        final long durationMillis = (long) ((amplitudeSamples.length * 256 * 1000.0) / sampleRate);
 
         return new AudioData(amplitudeSamples, "Recording", durationMillis, sampleRate, channels);
     }
@@ -82,23 +82,23 @@ public class JavaSoundRecordingGateway implements DisplayRecordingWaveformDAI {
      */
     private double[] convertToAmplitudeSamples(byte[] audioBytes, AudioFormat format,
                                                int bytesRead, int channels) {
-        int sampleSizeInBits = format.getSampleSizeInBits();
-        boolean bigEndian = format.isBigEndian();
+        final int sampleSizeInBits = format.getSampleSizeInBits();
+        final boolean bigEndian = format.isBigEndian();
 
-        int bytesPerSample = sampleSizeInBits / 8;
-        int totalSamples = bytesRead / (bytesPerSample * channels);
+        final int bytesPerSample = sampleSizeInBits / 8;
+        final int totalSamples = bytesRead / (bytesPerSample * channels);
         // Downsample by 256 for more compression
-        int downsampledCount = totalSamples / 256;
+        final int downsampledCount = totalSamples / 256;
 
         if (downsampledCount == 0) {
             return new double[0];
         }
 
-        double[] samples = new double[downsampledCount];
+        final double[] samples = new double[downsampledCount];
 
         for (int i = 0; i < downsampledCount; i++) {
-            int sampleIndex = i * 256;
-            int byteIndex = sampleIndex * bytesPerSample * channels;
+            final int sampleIndex = i * 256;
+            final int byteIndex = sampleIndex * bytesPerSample * channels;
 
             if (byteIndex + bytesPerSample * channels > bytesRead) {
                 break;
@@ -107,7 +107,7 @@ public class JavaSoundRecordingGateway implements DisplayRecordingWaveformDAI {
             long totalSample = 0;
 
             for (int c = 0; c < channels; c++) {
-                int offset = byteIndex + c * bytesPerSample;
+                final int offset = byteIndex + c * bytesPerSample;
 
                 if (offset + bytesPerSample > bytesRead) {
                     break;
@@ -117,15 +117,17 @@ public class JavaSoundRecordingGateway implements DisplayRecordingWaveformDAI {
 
                 if (bytesPerSample == 2) {
                     if (bigEndian) {
-                        sample = ((audioBytes[offset] << 8) | (audioBytes[offset + 1] & 0xFF));
-                    } else {
-                        sample = ((audioBytes[offset + 1] << 8) | (audioBytes[offset] & 0xFF));
+                        sample = audioBytes[offset] << 8 | audioBytes[offset + 1] & 0xFF;
+                    }
+                    else {
+                        sample = audioBytes[offset + 1] << 8 | audioBytes[offset] & 0xFF;
                     }
 
                     if (sample > 32767) {
                         sample -= 65536;
                     }
-                } else if (bytesPerSample == 1) {
+                }
+                else if (bytesPerSample == 1) {
                     sample = audioBytes[offset] & 0xFF;
                     if (sample > 127) {
                         sample -= 256;
@@ -135,7 +137,7 @@ public class JavaSoundRecordingGateway implements DisplayRecordingWaveformDAI {
                 totalSample += sample;
             }
 
-            double avgSample = totalSample / (double) channels;
+            final double avgSample = totalSample / (double) channels;
             samples[i] = avgSample / 32768.0;
         }
 
