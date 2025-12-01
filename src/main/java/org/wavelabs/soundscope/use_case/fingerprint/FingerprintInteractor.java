@@ -29,12 +29,13 @@ public class FingerprintInteractor implements FingerprintIB {
             final AudioFormat format = userDataAccessObject.getAudioFormat();
 
             // 120 seconds is the standard AcoustID max
-            int secondsToProcess = 120;
+
+            final int secondsToProcess = 120;
             int bytesPerSample = format.getSampleSizeInBits() / 8;
-            int frameSize = format.getChannels() * bytesPerSample;
+            final int frameSize = format.getChannels() * bytesPerSample;
             int maxBytes = (int) (secondsToProcess * format.getSampleRate() * frameSize);
 
-            int bytesLengthToProcess = Math.min(bytes.length, maxBytes);
+            final int bytesLengthToProcess = Math.min(bytes.length, maxBytes);
 
             final Fingerprinter fingerprinter =
                 new Fingerprinter((int) format.getSampleRate(), format.getChannels());
@@ -47,23 +48,28 @@ public class FingerprintInteractor implements FingerprintIB {
 
             song.setFingerprint(output.getFingerprint());
 
-            AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
+            final AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
             if (buffer != null) {
                 song.setDuration((int) buffer.getDurationSeconds());
-            } else if (bytes != null && bytes.length > 0) {
-                int sampleRate = (int) format.getSampleRate();
-                int channels = format.getChannels();
+            }
+            else if (bytes != null && bytes.length > 0) {
+                final int sampleRate = (int) format.getSampleRate();
+                final int channels = format.getChannels();
                 bytesPerSample = format.getSampleSizeInBits() / 8;
-                double durationSeconds =
+                final double durationSeconds =
                     (double) bytes.length / (sampleRate * channels * bytesPerSample);
                 song.setDuration((int) durationSeconds);
             }
 
             fingerprintPresenter.prepareSuccessView(output);
-        } catch (NullPointerException e) {
+        }
+
+        catch (NullPointerException e) {
             fingerprintPresenter.prepareFailView(
                 "Audio data could not be found. Please record or load an audio file first.");
-        } catch (ChromaprintException e) {
+        }
+
+        catch (ChromaprintException e) {
             fingerprintPresenter.prepareFailView("Chromaprint error:\n" + e.getMessage());
         }
     }
