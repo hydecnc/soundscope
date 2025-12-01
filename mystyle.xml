@@ -352,8 +352,7 @@
         <module name="IllegalCatch">
             <property name="illegalClassNames"
                       value="java.lang.Throwable,
-                       java.lang.RuntimeException,
-                       java.lang.NullPointerException"/>
+                       java.lang.RuntimeException"/>
         </module>
         <module name="IllegalInstantiation">
             <property name="classes"
@@ -366,7 +365,6 @@
         <module name="IllegalToken">
             <property name="tokens" value="LABELED_STAT"/>
             <property name="tokens" value="LITERAL_NATIVE"/>
-            <property name="tokens" value="LITERAL_VOLATILE"/>
             <property name="tokens" value="LITERAL_ASSERT"/>
         </module>
         <module name="IllegalTokenText">
@@ -510,11 +508,6 @@
         <module name="PackageDeclaration"/>
         <module name="ParameterAssignment"/>
         <module name="RequireThis"/>
-        <module name="ReturnCount">
-            <property name="max" value="2"/>
-            <property name="maxForVoid" value="1"/>
-            <property name="format" value="^create"/>
-        </module>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
         <module name="StringLiteralEquality"/>
@@ -688,11 +681,7 @@
                        SuppressWarnings, FunctionalInterface, NoSuchMethodException,
                        InvocationTargetException, IllegalAccessException"/>
         </module>
-        <module name="CyclomaticComplexity">
-            <property name="switchBlockAsSingleDecisionPoint" value="true"/>
-        </module>
         <module name="JavaNCSS"/>
-        <module name="NPathComplexity"/>
 
         <!-- Misc -->
         <module name="ArrayTypeStyle"/>
@@ -788,9 +777,6 @@
 
         <!-- Size Violations -->
         <module name="AnonInnerLength"/>
-        <module name="ExecutableStatementCount">
-            <property name="max" value="30"/>
-        </module>
         <module name="LambdaBodyLength"/>
         <module name="MethodCount">
             <property name="maxTotal" value="34"/>

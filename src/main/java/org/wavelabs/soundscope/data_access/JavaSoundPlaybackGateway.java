@@ -31,7 +31,7 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
 
     @Override
     public AudioRecording loadAudio(String sourcePath)
-        throws IOException, UnsupportedAudioFileException, NullPointerException {
+            throws IOException, UnsupportedAudioFileException, NullPointerException {
         Objects.requireNonNull(sourcePath, "sourcePath must not be null");
         final File file = new File(sourcePath);
         if (!file.exists()) {
@@ -126,7 +126,12 @@ public class JavaSoundPlaybackGateway implements PlayRecordingDAI {
     @Override
     public long getTotalFrames() {
         synchronized (lock) {
-            return audioInputStream != null ? audioInputStream.getFrameLength() : -1;
+            if (audioInputStream != null) {
+                return audioInputStream.getFrameLength();
+            }
+            else {
+                return -1;
+            }
         }
     }
 

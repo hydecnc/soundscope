@@ -21,10 +21,11 @@ public class IdentifyInteractor implements IdentifyIB {
                 identifier.getClosestMatchMetadata(song.getFingerprint(), song.getDuration());
             song.setMetadata(metadata);
 
-            IdentifyOD outputData = new IdentifyOD(song.getMetadata().title(), song.getMetadata().album());
+            final IdentifyOD outputData = new IdentifyOD(song.getMetadata().title(), song.getMetadata().album());
             identifyOutputBoundary.updateSongAttributes(outputData);
-        } catch (IdentifyDAI.FingerprintMatchNotFoundException e) {
-            identifyOutputBoundary.presentError(e.getMessage());
+        }
+        catch (IdentifyDAI.FingerprintMatchNotFoundException exception) {
+            identifyOutputBoundary.presentError(exception.getMessage());
         }
     }
 }

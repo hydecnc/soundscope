@@ -11,7 +11,6 @@ public class IdentifyPresenter implements IdentifyOB {
         this.mainViewModel = mainViewModel;
     }
 
-
     @Override
     public void updateSongAttributes(IdentifyOD outputData) {
         mainViewModel.getState().setSongTitle(outputData.songTitle());

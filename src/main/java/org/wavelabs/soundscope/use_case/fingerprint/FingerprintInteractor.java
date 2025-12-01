@@ -33,7 +33,7 @@ public class FingerprintInteractor implements FingerprintIB {
             final int secondsToProcess = 120;
             int bytesPerSample = format.getSampleSizeInBits() / 8;
             final int frameSize = format.getChannels() * bytesPerSample;
-            int maxBytes = (int) (secondsToProcess * format.getSampleRate() * frameSize);
+            final int maxBytes = (int) (secondsToProcess * format.getSampleRate() * frameSize);
 
             final int bytesLengthToProcess = Math.min(bytes.length, maxBytes);
 
@@ -64,13 +64,13 @@ public class FingerprintInteractor implements FingerprintIB {
             fingerprintPresenter.prepareSuccessView(output);
         }
 
-        catch (NullPointerException e) {
+        catch (NullPointerException exception) {
             fingerprintPresenter.prepareFailView(
                 "Audio data could not be found. Please record or load an audio file first.");
         }
 
-        catch (ChromaprintException e) {
-            fingerprintPresenter.prepareFailView("Chromaprint error:\n" + e.getMessage());
+        catch (ChromaprintException exception) {
+            fingerprintPresenter.prepareFailView("Chromaprint error:\n" + exception.getMessage());
         }
     }
 }

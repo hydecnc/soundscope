@@ -35,7 +35,7 @@ public class JavaSoundRecordingGateway implements DisplayRecordingWaveformDAI {
      * This allows the waveform to build progressively from left to right as recording continues.
      *
      * @return AudioData containing amplitude samples and metadata from all recorded data,
-     * or null if not currently recording or no data available
+     *         or null if not currently recording or no data available
      */
     @Override
     public AudioData getCurrentRecordingBuffer() {
