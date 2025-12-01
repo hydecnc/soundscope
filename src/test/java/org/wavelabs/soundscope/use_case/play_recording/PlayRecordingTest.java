@@ -32,7 +32,7 @@ public class PlayRecordingTest {
     @Test
     public void ConstructorNullOBDoesNotThrowException() {
         PlayRecording interactorWithNullOB = new PlayRecording(mockDAI, null);
-        
+
         // Test pause
         interactorWithNullOB.pause();
         Assert.assertTrue(mockDAI.pausePlaybackCalled);
@@ -51,7 +51,7 @@ public class PlayRecordingTest {
         PlayRecordingID inputData2 = new PlayRecordingID("path/to/audio2.wav", false);
         interactorWithNullOB.play(inputData2);
         // Should catch exception and safely ignore null OB
-        
+
         // Test updateState
         interactorWithNullOB.updateState();
         // Should return safely
@@ -68,8 +68,10 @@ public class PlayRecordingTest {
 
         interactor.play(inputData);
 
-        Assert.assertTrue("stopPlayback should be called before loading", mockDAI.stopPlaybackCalled);
-        Assert.assertEquals("loadAudio should be called with correct path", "path/to/audio.wav", mockDAI.loadedPath);
+        Assert.assertTrue("stopPlayback should be called before loading",
+                mockDAI.stopPlaybackCalled);
+        Assert.assertEquals("loadAudio should be called with correct path", "path/to/audio.wav",
+                mockDAI.loadedPath);
         Assert.assertTrue("startPlayback should be called", mockDAI.startPlaybackCalled);
         Assert.assertTrue("playbackStarted should be called", mockOB.playbackStartedCalled);
     }
@@ -86,7 +88,8 @@ public class PlayRecordingTest {
         PlayRecordingID inputData2 = new PlayRecordingID("path/to/audio.wav", false);
         interactor.play(inputData2);
 
-        Assert.assertNull("loadAudio should NOT be called for same file without restart", mockDAI.loadedPath);
+        Assert.assertNull("loadAudio should NOT be called for same file without restart",
+                mockDAI.loadedPath);
         Assert.assertTrue("startPlayback should be called", mockDAI.startPlaybackCalled);
         Assert.assertTrue("playbackStarted should be called", mockOB.playbackStartedCalled);
     }
@@ -104,7 +107,8 @@ public class PlayRecordingTest {
         interactor.play(inputData2);
 
         Assert.assertTrue("stopPlayback should be called", mockDAI.stopPlaybackCalled);
-        Assert.assertEquals("loadAudio should be called for restart", "path/to/audio.wav", mockDAI.loadedPath);
+        Assert.assertEquals("loadAudio should be called for restart", "path/to/audio.wav",
+                mockDAI.loadedPath);
         Assert.assertTrue("startPlayback should be called", mockDAI.startPlaybackCalled);
     }
 
@@ -121,7 +125,8 @@ public class PlayRecordingTest {
         interactor.play(inputData2);
 
         Assert.assertTrue("stopPlayback should be called", mockDAI.stopPlaybackCalled);
-        Assert.assertEquals("loadAudio should be called for new file", "path/to/audio2.wav", mockDAI.loadedPath);
+        Assert.assertEquals("loadAudio should be called for new file", "path/to/audio2.wav",
+                mockDAI.loadedPath);
         Assert.assertTrue("startPlayback should be called", mockDAI.startPlaybackCalled);
     }
 
@@ -133,7 +138,8 @@ public class PlayRecordingTest {
         interactor.play(inputData);
 
         Assert.assertTrue("playbackError should be called", mockOB.playbackErrorCalled);
-        Assert.assertEquals("Error message should match", "Failed to load audio file", mockOB.errorMessage);
+        Assert.assertEquals("Error message should match", "Failed to load audio file",
+                mockOB.errorMessage);
     }
 
     @Test
@@ -161,8 +167,10 @@ public class PlayRecordingTest {
         Assert.assertTrue("updateMainState should be called", mockOB.updateMainStateCalled);
         Assert.assertNotNull("updateData should not be null", mockOB.lastUpdateData);
         Assert.assertTrue("isPlaying should be true", mockOB.lastUpdateData.isPlaying());
-        Assert.assertEquals("framesPlayed should be 100", 100, mockOB.lastUpdateData.framesPlayed());
-        Assert.assertFalse("playingFinished should be false", mockOB.lastUpdateData.playingFinished());
+        Assert.assertEquals("framesPlayed should be 100", 100,
+                mockOB.lastUpdateData.framesPlayed());
+        Assert.assertFalse("playingFinished should be false",
+                mockOB.lastUpdateData.playingFinished());
     }
 
     @Test
@@ -174,7 +182,8 @@ public class PlayRecordingTest {
         interactor.updateState();
 
         Assert.assertTrue("updateMainState should be called", mockOB.updateMainStateCalled);
-        Assert.assertTrue("playingFinished should be true", mockOB.lastUpdateData.playingFinished());
+        Assert.assertTrue("playingFinished should be true",
+                mockOB.lastUpdateData.playingFinished());
     }
 
     // Mock classes
@@ -198,7 +207,8 @@ public class PlayRecordingTest {
         }
 
         @Override
-        public AudioRecording loadAudio(String sourcePath) throws IOException, UnsupportedAudioFileException {
+        public AudioRecording loadAudio(String sourcePath)
+                throws IOException, UnsupportedAudioFileException {
             if (shouldThrowOnLoad) {
                 throw new IOException("Mock IO Exception");
             }
@@ -284,3 +294,4 @@ public class PlayRecordingTest {
         }
     }
 }
+

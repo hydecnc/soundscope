@@ -1,8 +1,8 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
-import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioFormat;<<<<<<<HEAD
 
-import org.wavelabs.soundscope.entity.AudioData;
+import org.wavelabs.soundscope.entity.AudioData;=======>>>>>>>b8f4510(feat:add tests and simplify calculation of audio length)
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.ChromaprintException;
 
@@ -16,7 +16,7 @@ public class FingerprintInteractor implements FingerprintIB {
     private final Song song;
 
     public FingerprintInteractor(FingerprintDAI userDataAccessObject, Song song,
-                                 FingerprintOB fingerprintOutputBoundary) {
+            FingerprintOB fingerprintOutputBoundary) {
         this.userDataAccessObject = userDataAccessObject;
         this.fingerprintPresenter = fingerprintOutputBoundary;
         this.song = song;
@@ -38,7 +38,7 @@ public class FingerprintInteractor implements FingerprintIB {
             final int bytesLengthToProcess = Math.min(bytes.length, maxBytes);
 
             final Fingerprinter fingerprinter =
-                new Fingerprinter((int) format.getSampleRate(), format.getChannels());
+                    new Fingerprinter((int) format.getSampleRate(), format.getChannels());
             fingerprinter.start();
             fingerprinter.processChunk(bytes, bytesLengthToProcess);
             fingerprinter.stop();
@@ -48,25 +48,15 @@ public class FingerprintInteractor implements FingerprintIB {
 
             song.setFingerprint(output.getFingerprint());
 
-            final AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
-            if (buffer != null) {
-                song.setDuration((int) buffer.getDurationSeconds());
-            }
-            else if (bytes != null && bytes.length > 0) {
-                final int sampleRate = (int) format.getSampleRate();
-                final int channels = format.getChannels();
-                bytesPerSample = format.getSampleSizeInBits() / 8;
-                final double durationSeconds =
-                    (double) bytes.length / (sampleRate * channels * bytesPerSample);
-                song.setDuration((int) durationSeconds);
-            }
+            int duration = (int) (bytes.length / (format.getFrameSize() * format.getFrameRate()));
+            song.setDuration(duration);
 
             fingerprintPresenter.prepareSuccessView(output);
         }
 
         catch (NullPointerException exception) {
             fingerprintPresenter.prepareFailView(
-                "Audio data could not be found. Please record or load an audio file first.");
+                    "Audio data could not be found. Please record or load an audio file first.");
         }
 
         catch (ChromaprintException exception) {
