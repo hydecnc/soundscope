@@ -1,6 +1,7 @@
 package org.wavelabs.soundscope.use_case.fingerprint;
 
 import javax.sound.sampled.AudioFormat;
+
 import org.wavelabs.soundscope.entity.AudioData;
 import org.wavelabs.soundscope.entity.Song;
 import org.wavelabs.soundscope.use_case.fingerprint.chromaprint.ChromaprintException;
@@ -15,7 +16,7 @@ public class FingerprintInteractor implements FingerprintIB {
     private final Song song;
 
     public FingerprintInteractor(FingerprintDAI userDataAccessObject, Song song,
-            FingerprintOB fingerprintOutputBoundary) {
+                                 FingerprintOB fingerprintOutputBoundary) {
         this.userDataAccessObject = userDataAccessObject;
         this.fingerprintPresenter = fingerprintOutputBoundary;
         this.song = song;
@@ -28,15 +29,16 @@ public class FingerprintInteractor implements FingerprintIB {
             final AudioFormat format = userDataAccessObject.getAudioFormat();
 
             // 120 seconds is the standard AcoustID max
-            int secondsToProcess = 120;
-            int bytesPerSample = format.getSampleSizeInBits() / 8;
-            int frameSize = format.getChannels() * bytesPerSample;
-            int maxBytes = (int) (secondsToProcess * format.getSampleRate() * frameSize);
 
-            int bytesLengthToProcess = Math.min(bytes.length, maxBytes);
+            final int secondsToProcess = 120;
+            int bytesPerSample = format.getSampleSizeInBits() / 8;
+            final int frameSize = format.getChannels() * bytesPerSample;
+            final int maxBytes = (int) (secondsToProcess * format.getSampleRate() * frameSize);
+
+            final int bytesLengthToProcess = Math.min(bytes.length, maxBytes);
 
             final Fingerprinter fingerprinter =
-                    new Fingerprinter((int) format.getSampleRate(), format.getChannels());
+                new Fingerprinter((int) format.getSampleRate(), format.getChannels());
             fingerprinter.start();
             fingerprinter.processChunk(bytes, bytesLengthToProcess);
             fingerprinter.stop();
@@ -46,24 +48,29 @@ public class FingerprintInteractor implements FingerprintIB {
 
             song.setFingerprint(output.getFingerprint());
 
-            AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
+            final AudioData buffer = userDataAccessObject.getCurrentRecordingBuffer();
             if (buffer != null) {
                 song.setDuration((int) buffer.getDurationSeconds());
-            } else if (bytes != null && bytes.length > 0) {
-                int sampleRate = (int) format.getSampleRate();
-                int channels = format.getChannels();
+            }
+            else if (bytes != null && bytes.length > 0) {
+                final int sampleRate = (int) format.getSampleRate();
+                final int channels = format.getChannels();
                 bytesPerSample = format.getSampleSizeInBits() / 8;
-                double durationSeconds =
-                        (double) bytes.length / (sampleRate * channels * bytesPerSample);
+                final double durationSeconds =
+                    (double) bytes.length / (sampleRate * channels * bytesPerSample);
                 song.setDuration((int) durationSeconds);
             }
 
             fingerprintPresenter.prepareSuccessView(output);
-        } catch (NullPointerException e) {
+        }
+
+        catch (NullPointerException exception) {
             fingerprintPresenter.prepareFailView(
-                    "Audio data could not be found. Please record or load an audio file first.");
-        } catch (ChromaprintException e) {
-            fingerprintPresenter.prepareFailView("Chromaprint error:\n" + e.getMessage());
+                "Audio data could not be found. Please record or load an audio file first.");
+        }
+
+        catch (ChromaprintException exception) {
+            fingerprintPresenter.prepareFailView("Chromaprint error:\n" + exception.getMessage());
         }
     }
 }

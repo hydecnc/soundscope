@@ -1,7 +1,7 @@
 package org.wavelabs.soundscope.use_case.save_recording;
 
 /**
- * Input Data for save recording use case
+ * Input Data for save recording use case.
  * includes the file path
  */
 public class SaveRecordingID {
@@ -11,5 +11,7 @@ public class SaveRecordingID {
         this.filePath = filePath;
     }
 
-    public String getFilePath() { return filePath; }
+    public String getFilePath() {
+        return filePath;
+    }
 }

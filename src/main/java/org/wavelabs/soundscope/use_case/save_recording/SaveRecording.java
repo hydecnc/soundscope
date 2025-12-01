@@ -1,9 +1,9 @@
 package org.wavelabs.soundscope.use_case.save_recording;
 
+import java.io.IOException;
+
 import org.wavelabs.soundscope.entity.AudioRecording;
 import org.wavelabs.soundscope.infrastructure.FileSaver;
-
-import java.io.IOException;
 
 public class SaveRecording implements SaveRecordingIB {
     private final SaveRecordingDAI saveRecordingDAO;
@@ -27,14 +27,15 @@ public class SaveRecording implements SaveRecordingIB {
         }
 
         try {
-            boolean success = fileSaver.save(filePath, audioRecording);
+            final boolean success = fileSaver.save(filePath, audioRecording);
             if (!success) {
                 saveRecordingPresenter.presentError("Save failed");
             }
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             saveRecordingPresenter.presentError("IO error while saving");
         }
-
-        saveRecordingPresenter.presentSaveSuccessView(); // end use case
+        saveRecordingPresenter.presentSaveSuccessView();
+        // end use case
     }
 }

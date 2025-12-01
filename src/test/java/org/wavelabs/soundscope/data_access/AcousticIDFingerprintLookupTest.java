@@ -35,7 +35,7 @@ public class AcousticIDFingerprintLookupTest {
         fingerprinter.getClosestMatchID(fingerprint, testDuration);
         long end = System.currentTimeMillis();
 
-        assert(end - start > AcousticIDAPIConstants.REQUEST_SPACING_MILLIS);
+        assert(end - start > AcousticIdApiConstants.REQUEST_SPACING_MILLIS);
     }
 
     /**
