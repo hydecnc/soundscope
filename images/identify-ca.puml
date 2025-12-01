@@ -45,7 +45,6 @@ package "Application Business Rules" as ABR #pink {
 
   interface "IdentifyIB\n(Input Boundary)" as InputBoundary
   }
-  class "IdentifyID\n(Input Data)" as InputData
 
   interface "IdentifyOB\n(Output Boundary)" as OutputBoundary
   class "IdentifyOD\n(Output Data)" as OutputData
@@ -68,7 +67,6 @@ package "Frameworks\n&\nDrivers" as "FD2" #lightblue {
 second -[hidden]up-> Controller
 second -[hidden]down-> Presenter
 
-Interactor -[norank]-> InputData
 
 DataAccess -up--> Entity
 Interactor -right-> Entity
@@ -90,13 +88,11 @@ EBR -[hidden]down--- FD
 Controller -[hidden]down-> Presenter
 Presenter -[hidden]down-> ViewModel
 
-InputData -[hidden]down- InputBoundary
 InputBoundary -[hidden]down- OutputBoundary
 OutputBoundary -[hidden]down- OutputData
 
 Presenter -left|> OutputBoundary
 Presenter -left-> OutputData
-Controller -left-> InputData
 Controller -left-> InputBoundary
 ' STEP 2 Controller to Input Boundary
 
