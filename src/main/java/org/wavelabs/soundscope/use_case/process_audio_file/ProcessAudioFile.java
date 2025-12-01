@@ -1,11 +1,11 @@
 package org.wavelabs.soundscope.use_case.process_audio_file;
 
+import java.io.File;
+import java.io.IOException;
+
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.wavelabs.soundscope.entity.AudioData;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Use Case Interactor for processing audio files.
@@ -51,26 +51,27 @@ public class ProcessAudioFile implements ProcessAudioFileIB {
     @Override
     public void execute(ProcessAudioFileID inputData) {
         try {
-            File file = inputData.getFile();
-            AudioData audioData = processAudioFileDAO.processAudioFile(file);
+            final File file = inputData.getFile();
+            final AudioData audioData = processAudioFileDAO.processAudioFile(file);
 
-            ProcessAudioFileOD outputData = new ProcessAudioFileOD(
+            final ProcessAudioFileOD outputData = new ProcessAudioFileOD(
                 audioData,
                 file.getName()
             );
 
             outputBoundary.present(outputData);
 
-        } catch (UnsupportedAudioFileException e) {
+        }
+        catch (UnsupportedAudioFileException exception) {
             outputBoundary.presentError("Unsupported audio format", inputData.getFile().getName());
-        } catch (IOException e) {
+        }
+        catch (IOException exception) {
             outputBoundary.presentError("File appears to be corrupted or cannot be read",
                 inputData.getFile().getName());
-        } catch (Exception e) {
+        }
+        catch (Exception exception) {
             outputBoundary.presentError("An unexpected error occurred:\n" + e.getMessage(),
                 inputData.getFile().getName());
         }
     }
 }
-
-

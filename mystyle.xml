@@ -637,7 +637,6 @@
         <module name="BooleanExpressionComplexity">
             <property name="max" value="7"/>
         </module>
-        <module name="JavaNCSS"/>
 
         <!-- Misc -->
         <module name="ArrayTypeStyle"/>

@@ -2,8 +2,8 @@ package org.wavelabs.soundscope.use_case.play_recording;
 
 /**
  * Input Data for the PlayRecording use case.
- * <p>
- * This class encapsulates the necessary information to initiate audio playback,
+ *
+ * <p>This class encapsulates the necessary information to initiate audio playback,
  * including the source path of the audio file and whether to restart playback from the beginning. It is used by the
  * use case interactor to determine how to handle playback requests.
  *
@@ -19,6 +19,7 @@ public class PlayRecordingID {
      *
      * @param sourcePath           a string representing the path to audio file
      * @param restartFromBeginning whether to restart from the start or not
+     * @throws IllegalArgumentException for blank source paths
      */
     public PlayRecordingID(String sourcePath, boolean restartFromBeginning) {
         if (sourcePath == null || sourcePath.isBlank()) {

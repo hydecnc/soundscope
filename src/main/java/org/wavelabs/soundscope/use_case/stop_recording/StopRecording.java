@@ -20,7 +20,7 @@ public class StopRecording implements StopRecordingIB {
         recorder.stop();
 
         // extract and save the resulting byte[] to audioRecording object
-        AudioRecording audioRecording = new AudioRecording(recorder.getRecordingBytes(), format);
+        final AudioRecording audioRecording = new AudioRecording(recorder.getRecordingBytes(), format);
         // toss the object to the DAO
         stopRecordingDAO.setAudioRecording(audioRecording);
     }

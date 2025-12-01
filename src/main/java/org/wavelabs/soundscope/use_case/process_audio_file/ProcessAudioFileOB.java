@@ -21,5 +21,3 @@ public interface ProcessAudioFileOB {
      */
     void presentError(String errorMessage, String fileName);
 }
-
-

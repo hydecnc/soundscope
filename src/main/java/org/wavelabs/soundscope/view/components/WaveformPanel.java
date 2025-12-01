@@ -1,13 +1,5 @@
 package org.wavelabs.soundscope.view.components;
 
-import javax.swing.JPanel;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-
-import org.wavelabs.soundscope.entity.AudioData;
-import org.wavelabs.soundscope.view.UIStyle;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
@@ -17,12 +9,22 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 
+import javax.swing.JPanel;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+
+import org.wavelabs.soundscope.entity.AudioData;
+import org.wavelabs.soundscope.view.UIStyle;
+
 /**
  * High-performance waveform panel that displays audio waveform.
- * * <p>This class is part of the Frameworks & Drivers layer and provides
+ *
+ * <p>This class is part of the Frameworks & Drivers layer and provides
  * a custom JPanel for displaying audio waveforms with optimized rendering.
  * Uses cached envelope arrays and background computation for smooth performance.
- * * <p><strong>Rendering Strategy:</strong> Uses a modified Linear/Power scale
+ *
+ * <p><strong>Rendering Strategy:</strong> Uses a modified Linear/Power scale
  * rather than Logarithmic (dB). This preserves visual silence for low-volume
  * sections while maintaining dynamic range for high-volume sections.
  */
@@ -30,18 +32,20 @@ public class WaveformPanel extends JPanel {
     // Rendering Configuration
     private static final int SAMPLES_PER_PIXEL = 8;
     private static final int DISPLAY_INTERVAL_SECONDS = 30;
-    private static final long MIN_REPAINT_INTERVAL_MS = 16; // ~60fps cap
+    // ~60fps cap
+    private static final long MIN_REPAINT_INTERVAL_MS = 16;
     // Visual Tuning
     // Lower values boost small volumes more. Higher values compress high volumes more.
     // 0.5 = square root (boosts small volumes significantly)
     // 0.7 = moderate boost for small volumes while still showing high volumes
     private static final double AMPLITUDE_POWER_SCALE = 0.7;
-    private static final double VERTICAL_PADDING_PERCENT = 0.95; // Use 95% of available height
+    // Use 95% of available height
+    private static final double VERTICAL_PADDING_PERCENT = 0.95;
     // Core Data
     private double[] waveformData;
-    private double durationSeconds = 0;
+    private double durationSeconds;
     private int sampleRate = 44100;
-    private volatile double currentPlaybackPositionSeconds = 0.0;
+    private volatile double currentPlaybackPositionSeconds;
     // Caching for Performance
     private double cachedSampleWidth;
     private int cachedSamplesIn30Seconds;
@@ -51,9 +55,9 @@ public class WaveformPanel extends JPanel {
     private float[] cachedMinPerPixel;
     private int cachedEnvelopeWidth = -1;
     private int cachedEnvelopeHeight = -1;
-    private volatile boolean envelopeComputationInProgress = false;
+    private volatile boolean envelopeComputationInProgress;
 
-    private long lastRepaintTime = 0;
+    private long lastRepaintTime;
 
     /**
      * Constructs a WaveformPanel with default settings.
@@ -66,7 +70,8 @@ public class WaveformPanel extends JPanel {
         ));
 
         setDoubleBuffered(true);
-        setOpaque(true); // Performance hint
+        // Performance hint
+        setOpaque(true);
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
@@ -81,22 +86,21 @@ public class WaveformPanel extends JPanel {
 
     /**
      * Updates the waveform display with new audio data.
-     * * @param audioData The AudioData object containing amplitude samples and metadata
+     * @param audioData The AudioData object containing amplitude samples and metadata
      */
     public void updateWaveform(AudioData audioData) {
         boolean audioDataChanged = false;
 
         if (audioData != null) {
-            double[] newWaveformData = audioData.getAmplitudeSamples();
-            double newDurationSeconds = audioData.getDurationSeconds();
-            int newSampleRate = audioData.getSampleRate();
+            final double[] newWaveformData = audioData.getAmplitudeSamples();
+            final double newDurationSeconds = audioData.getDurationSeconds();
+            final int newSampleRate = audioData.getSampleRate();
 
             // Check for reference equality first, then structural changes
-            if (waveformData != newWaveformData ||
-                (waveformData != null && newWaveformData != null &&
-                    (waveformData.length != newWaveformData.length ||
-                        durationSeconds != newDurationSeconds ||
-                        sampleRate != newSampleRate))) {
+            if (waveformData != newWaveformData
+                || waveformData != null && newWaveformData != null
+                    && (waveformData.length != newWaveformData.length
+                    || durationSeconds != newDurationSeconds || sampleRate != newSampleRate)) {
                 audioDataChanged = true;
             }
 
@@ -107,7 +111,8 @@ public class WaveformPanel extends JPanel {
             if (audioDataChanged) {
                 updatePanelSize();
             }
-        } else {
+        }
+        else {
             if (waveformData != null) {
                 audioDataChanged = true;
             }
@@ -129,7 +134,9 @@ public class WaveformPanel extends JPanel {
             invalidateEnvelopeCache();
             // Compute immediately if small enough, otherwise async
             if (waveformData != null && waveformData.length > 0) {
-                if (getWidth() > 0) computeEnvelope();
+                if (getWidth() > 0) {
+                    computeEnvelope();
+                }
             }
             computeEnvelopeAsync();
         }
@@ -137,25 +144,43 @@ public class WaveformPanel extends JPanel {
         repaintThrottled();
     }
 
+    /**
+     * Updates the waveform display with new audio data and playback position.
+     * @param audioData the audio data for the waveform
+     * @param playbackPositionSeconds playback position in seconds
+     */
+    public void updateWaveform(AudioData audioData, double playbackPositionSeconds) {
+        final boolean positionChanged = Math.abs(this.currentPlaybackPositionSeconds - playbackPositionSeconds) > 0.001;
+        this.currentPlaybackPositionSeconds = playbackPositionSeconds;
+
+        updateWaveform(audioData);
+
+        if (positionChanged && !dataChanged) {
+            repaintThrottled();
+        }
+    }
+
     private void updatePanelSize() {
         if (waveformData != null && waveformData.length > 0) {
             int samplesIn30Seconds = (sampleRate * DISPLAY_INTERVAL_SECONDS) / 256;
             // Prevent division by zero
-            if (samplesIn30Seconds == 0) samplesIn30Seconds = 1;
-            int numberOfIntervals = (int) Math.ceil((double) waveformData.length / samplesIn30Seconds);
-            int widthFor30Seconds = samplesIn30Seconds / SAMPLES_PER_PIXEL;
+            if (samplesIn30Seconds == 0) {
+                samplesIn30Seconds = 1;
+            }
+            final int numberOfIntervals = (int) Math.ceil((double) waveformData.length / samplesIn30Seconds);
+            final int widthFor30Seconds = samplesIn30Seconds / SAMPLES_PER_PIXEL;
             int preferredWidth = numberOfIntervals * widthFor30Seconds;
 
             preferredWidth = Math.max(preferredWidth, widthFor30Seconds);
 
-            Dimension newSize = new Dimension(preferredWidth, UIStyle.Dimensions.WAVEFORM_HEIGHT);
+            final Dimension newSize = new Dimension(preferredWidth, UIStyle.Dimensions.WAVEFORM_HEIGHT);
             setPreferredSize(newSize);
             setSize(newSize);
             setMinimumSize(newSize);
             setMaximumSize(new Dimension(Integer.MAX_VALUE, UIStyle.Dimensions.WAVEFORM_HEIGHT));
 
             revalidate();
-            Container parent = getParent();
+            final Container parent = getParent();
             if (parent != null) {
                 parent.revalidate();
                 if (parent instanceof JViewport) {
@@ -166,21 +191,8 @@ public class WaveformPanel extends JPanel {
     }
 
     /**
-     * Updates the waveform display with new audio data and playback position.
-     */
-    public void updateWaveform(AudioData audioData, double playbackPositionSeconds) {
-        boolean positionChanged = Math.abs(this.currentPlaybackPositionSeconds - playbackPositionSeconds) > 0.001;
-        this.currentPlaybackPositionSeconds = playbackPositionSeconds;
-
-        updateWaveform(audioData);
-
-        if (positionChanged && !dataChanged) {
-            repaintThrottled();
-        }
-    }
-
-    /**
      * Updates only the playback position without recalculating waveform paths.
+     * @param playbackPositionSeconds seconds in playback position
      */
     public void updatePlaybackPosition(double playbackPositionSeconds) {
         if (Math.abs(this.currentPlaybackPositionSeconds - playbackPositionSeconds) > 0.001) {
@@ -200,11 +212,11 @@ public class WaveformPanel extends JPanel {
             return;
         }
 
-        Container parent = getParent();
+        final Container parent = getParent();
         if (parent instanceof JViewport) {
-            JViewport viewport = (JViewport) parent;
-            int panelWidth = getWidth();
-            int viewportWidth = viewport.getWidth();
+            final JViewport viewport = (JViewport) parent;
+            final int panelWidth = getWidth();
+            final int viewportWidth = viewport.getWidth();
 
             if (panelWidth <= viewportWidth) {
                 // Content fits in viewport, no need to scroll
@@ -213,16 +225,19 @@ public class WaveformPanel extends JPanel {
 
             // Calculate the position based on the current duration
             // Use the same logic as updatePanelSize to determine pixel position
-            double currentDuration = audioData.getDurationSeconds();
+            final double currentDuration = audioData.getDurationSeconds();
             int samplesIn30Seconds = (sampleRate * DISPLAY_INTERVAL_SECONDS) / 256;
-            if (samplesIn30Seconds == 0) samplesIn30Seconds = 1;
+            if (samplesIn30Seconds == 0) {
+                samplesIn30Seconds = 1;
+            }
 
-            int widthFor30Seconds = samplesIn30Seconds / SAMPLES_PER_PIXEL;
-            double pixelsPerSecond = (double) widthFor30Seconds / DISPLAY_INTERVAL_SECONDS;
-            int currentPixelPosition = (int) (currentDuration * pixelsPerSecond);
+            final int widthFor30Seconds = samplesIn30Seconds / SAMPLES_PER_PIXEL;
+            final double pixelsPerSecond = (double) widthFor30Seconds / DISPLAY_INTERVAL_SECONDS;
+            final int currentPixelPosition = (int) (currentDuration * pixelsPerSecond);
 
             // Scroll to show the latest part with some padding
-            int scrollX = Math.min(Math.max(0, currentPixelPosition - viewportWidth + 50), panelWidth - viewportWidth);
+            final int scrollX = Math.min(Math.max(0, currentPixelPosition - viewportWidth + 50),
+                    panelWidth - viewportWidth);
 
             // Scroll smoothly to the latest position
             final int finalScrollX = scrollX;
@@ -233,7 +248,7 @@ public class WaveformPanel extends JPanel {
     }
 
     private void repaintThrottled() {
-        long currentTime = System.currentTimeMillis();
+        final long currentTime = System.currentTimeMillis();
         if (currentTime - lastRepaintTime >= MIN_REPAINT_INTERVAL_MS) {
             lastRepaintTime = currentTime;
             repaint();
@@ -252,19 +267,21 @@ public class WaveformPanel extends JPanel {
             return;
         }
 
-        int w = getWidth();
-        int h = getHeight();
+        final int w = getWidth();
+        final int h = getHeight();
 
-        if (w <= 0 || h <= 0) return;
+        if (w <= 0 || h <= 0) {
+            return;
+        }
 
-        if (w == cachedEnvelopeWidth && h == cachedEnvelopeHeight &&
-            cachedMaxPerPixel != null && cachedMinPerPixel != null) {
+        if (w == cachedEnvelopeWidth && h == cachedEnvelopeHeight
+            && cachedMaxPerPixel != null && cachedMinPerPixel != null) {
             return;
         }
 
         envelopeComputationInProgress = true;
 
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+        final SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
                 computeEnvelope();
@@ -277,7 +294,8 @@ public class WaveformPanel extends JPanel {
                 dataChanged = false;
                 if (SwingUtilities.isEventDispatchThread()) {
                     repaintThrottled();
-                } else {
+                }
+                else {
                     SwingUtilities.invokeLater(WaveformPanel.this::repaintThrottled);
                 }
             }

@@ -1,11 +1,11 @@
 package org.wavelabs.soundscope.use_case.process_audio_file;
 
+import java.io.File;
+import java.io.IOException;
+
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.wavelabs.soundscope.entity.AudioData;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Data Access Interface for ProcessAudioFileUseCase.
@@ -23,5 +23,3 @@ public interface ProcessAudioFileDAI {
      */
     AudioData processAudioFile(File file) throws UnsupportedAudioFileException, IOException;
 }
-
-

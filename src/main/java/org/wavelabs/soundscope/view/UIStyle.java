@@ -1,6 +1,8 @@
 package org.wavelabs.soundscope.view;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
 
 /**
  * Centralized UI styling constants and theme configuration.
@@ -13,11 +15,12 @@ import java.awt.*;
  * <p>This class cannot be instantiated and contains only static nested
  * classes with public static final fields.
  */
-public class UIStyle {
+public final class UIStyle {
     /**
      * Private constructor to prevent instantiation.
      */
-    private UIStyle() {}
+    private UIStyle() {
+    }
 
     public static final class Colors {
         public static final Color BACKGROUND_PRIMARY = new Color(230, 242, 255);
@@ -31,8 +34,10 @@ public class UIStyle {
         public static final Color TEXT_SECONDARY = new Color(102, 102, 102);
         
         public static final Color WAVEFORM_STROKE = new Color(0, 100, 255);
-        public static final Color WAVEFORM_PLAYED = Color.RED; // Red for played portion
-        public static final Color WAVEFORM_CLIPPED = new Color(255, 165, 0); // Orange for clipped/overload portions
+        // Red for played portion
+        public static final Color WAVEFORM_PLAYED = Color.RED;
+        // Orange for clipped/overload portions
+        public static final Color WAVEFORM_CLIPPED = new Color(255, 165, 0);
         public static final Color WAVEFORM_BACKGROUND = Color.WHITE;
         public static final Color PLAYBACK_INDICATOR = Color.RED;
     }
@@ -82,5 +87,3 @@ public class UIStyle {
         public static final Cursor DEFAULT = new Cursor(Cursor.DEFAULT_CURSOR);
     }
 }
-
-

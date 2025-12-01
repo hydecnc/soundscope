@@ -6,7 +6,7 @@ package org.wavelabs.soundscope.interface_adapter;
  * <p>This class is part of the Interface Adapters layer and provides
  * standardized time formatting for the application.
  */
-public class TimeFormatter {
+public final class TimeFormatter {
 
     /**
      * Private constructor to prevent instantiation.
@@ -21,8 +21,8 @@ public class TimeFormatter {
      * @return Formatted time string
      */
     public static String formatTime(double seconds) {
-        int minutes = (int) (seconds / 60);
-        int secs = (int) (seconds % 60);
+        final int minutes = (int) (seconds / 60);
+        final int secs = (int) (seconds % 60);
         return String.format("%d:%02d", minutes, secs);
     }
 }

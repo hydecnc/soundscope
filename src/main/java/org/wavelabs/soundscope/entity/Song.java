@@ -1,6 +1,6 @@
 package org.wavelabs.soundscope.entity;
 
-public class Song { //TODO: javadoc
+public class Song {
     private SongMetadata metadata;
     private int duration;
     private String fingerprint;
@@ -30,13 +30,13 @@ public class Song { //TODO: javadoc
     }
 
     /**
-     * Stores all metadata needed for a song
+     * Stores all metadata needed for a song.
      *
-     * @param title
-     * @param musicBrainzID
-     * @param acoustIDTrackID
-     * @param album
-     * @param artists
+     * @param title title of song
+     * @param musicBrainzID id for musicBrainz (I'm guessing)
+     * @param acoustIDTrackID acoustID track id for API
+     * @param album album of song
+     * @param artists artists of song
      */
     public record SongMetadata(
         String title,

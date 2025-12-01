@@ -1,10 +1,10 @@
 package org.wavelabs.soundscope.use_case.play_recording;
 
-import org.wavelabs.soundscope.entity.AudioRecording;
-
 import java.io.IOException;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
+
+import org.wavelabs.soundscope.entity.AudioRecording;
 
 /**
  * Data Access Interface for audio playback operations.
