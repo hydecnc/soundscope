@@ -1,0 +1,121 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+
+left to right direction
+
+title Display Recording Waveform - UML
+
+package "use_case" {
+  interface DisplayRecordingWaveformIB {
+    + execute(DisplayRecordingWaveformID)
+  }
+  
+  class DisplayRecordingWaveform {
+    - displayRecordingWaveformDAO: DisplayRecordingWaveformDAI
+    - outputBoundary: DisplayRecordingWaveformOB
+  }
+  
+  class DisplayRecordingWaveformID {
+  }
+  
+  interface DisplayRecordingWaveformOB {
+    + present(DisplayRecordingWaveformOD)
+    + presentError(String)
+  }
+  
+  class DisplayRecordingWaveformOD {
+    - audioData: AudioData
+    + getAudioData(): AudioData
+  }
+  
+  interface DisplayRecordingWaveformDAI {
+    + getCurrentRecordingBuffer(): AudioData
+  }
+}
+
+package "interface_adapter" {
+  class DisplayRecordingWaveformController {
+    - displayWaveformInteractor: DisplayRecordingWaveformIB
+    + execute()
+  }
+  
+  class DisplayRecordingWaveformPresenter {
+    - viewModel: WaveformViewModel
+  }
+  
+  class WaveformViewModel {
+    - audioData: AudioData
+    - outputText: String
+    + getAudioData(): AudioData
+    + setAudioData(AudioData)
+    + setOutputText(String)
+  }
+}
+
+package "data_access" {
+  class JavaSoundRecordingGateway {
+    - recorder: Recorder
+    + getCurrentRecordingBuffer(): AudioData
+    - convertToAmplitudeSamples(byte[], AudioFormat, int, int): double[]
+  }
+}
+
+package "entity" {
+  class AudioData {
+    - amplitudeSamples: double[]
+    - filePath: String
+    - durationMillis: long
+    - sampleRate: int
+    - channels: int
+    + getAmplitudeSamples(): double[]
+    + getFilePath(): String
+    + getDurationMillis(): long
+    + getSampleRate(): int
+    + getChannels(): int
+    + getDurationSeconds(): double
+  }
+}
+
+package "view" {
+  class WaveformPanel {
+    - waveformData: double[]
+    - durationSeconds: double
+    - sampleRate: int
+    - currentPlaybackPositionSeconds: double
+    + updateWaveform(AudioData)
+    + updateWaveform(AudioData, double)
+    + updatePlaybackPosition(double)
+    + scrollToLatest(AudioData)
+  }
+}
+
+DisplayRecordingWaveform .up.|> DisplayRecordingWaveformIB
+DisplayRecordingWaveform -right-> DisplayRecordingWaveformDAI : uses
+DisplayRecordingWaveform -right-> DisplayRecordingWaveformOB : calls
+DisplayRecordingWaveform .down.> DisplayRecordingWaveformID : receives
+DisplayRecordingWaveform .down.> DisplayRecordingWaveformOD : creates
+
+DisplayRecordingWaveformController -down-> DisplayRecordingWaveformIB : calls
+DisplayRecordingWaveformController .down.> DisplayRecordingWaveformID : creates
+
+DisplayRecordingWaveformPresenter .up.|> DisplayRecordingWaveformOB
+DisplayRecordingWaveformPresenter -down-> WaveformViewModel : updates
+DisplayRecordingWaveformPresenter .down.> DisplayRecordingWaveformOD : receives
+
+JavaSoundRecordingGateway .up.|> DisplayRecordingWaveformDAI
+JavaSoundRecordingGateway -down-> AudioData : creates
+
+WaveformPanel -down-> WaveformViewModel : observes
+WaveformPanel -down-> DisplayRecordingWaveformController : invokes
+DisplayRecordingWaveformOD -down-> AudioData : contains
+WaveformViewModel -down-> AudioData : contains
+
+@enduml
+
