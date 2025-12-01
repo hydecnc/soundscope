@@ -44,23 +44,30 @@ import org.wavelabs.soundscope.view.components.WaveformPanel;
 
 public class MainView extends JPanel implements ActionListener, PropertyChangeListener {
     private final MainViewModel mainViewModel;
-    //Button code
+    // Button code
     private final JPanel buttonPanel = new JPanel();
-    private final JButton openButton, saveAsButton, playPauseButton,
-        recordButton, fingerprintButton, identifyButton;
-    //Waveform panel code
+    private final JButton openButton;
+    private final JButton saveAsButton;
+    private final JButton playPauseButton;
+    private final JButton recordButton;
+    private final JButton fingerprintButton;
+    private final JButton identifyButton;
+    // Waveform panel code
     private final WaveformPanel waveformPanel;
     private final TimelinePanel timelinePanel;
     private final JScrollPane waveformScrollPane;
     private final JScrollPane timelineScrollPane;
     private final WaveformViewModel waveformViewModel;
-    //Info panel
+    // Info panel
     private final JPanel infoPanel = new JPanel();
-    private final JTextField fingerprintInfo, songTitleInfo, albumInfo;
+    private final JTextField fingerprintInfo;
+    private final JTextField songTitleInfo;
+    private final JTextField albumInfo;
     private final JLabel timeLabel = new JLabel("0:00 / 0:00");
-    //Controllers for the various use cases
+    // Controllers for the various use cases
     private FingerprintController fingerprintController;
-    private DisplayRecordingWaveformController waveformController; //TODO: set this up; is it necessary?
+    // TODO: set this up; is it necessary?
+    private DisplayRecordingWaveformController waveformController;
     private IdentifyController identifyController;
     private PlayRecordingController playRecordingController;
     private ProcessAudioFileController processAudioFileController;
@@ -69,14 +76,15 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
     private StopRecordingController stopRecordingController;
     private DisplayRecordingWaveformController displayRecordingWaveformController;
 
-    //TODO: migrate App Builder stuff here
+    // TODO: migrate App Builder stuff here
     public MainView(MainViewModel mainViewModel, WaveformViewModel waveformViewModel) {
         this.mainViewModel = mainViewModel;
-        this.waveformViewModel = waveformViewModel; //TODO: rename waveform view model to something else since
+        this.waveformViewModel = waveformViewModel;
+        // TODO: rename waveform view model to something else since
         // it doesn't extend ViewModel and therefore isn't a View Model
         mainViewModel.addPropertyChangeListener(this);
 
-        //Sets the title
+        // Sets the title
         final JLabel title = new JLabel(MainViewModel.TITLE);
         title.setFont(new Font("Sans Serif", Font.BOLD, 36));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -89,7 +97,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         setupScrollPanes();
 
         // Create container for timeline and waveform
-        JPanel waveformContainer = new JPanel(new BorderLayout());
+        final JPanel waveformContainer = new JPanel(new BorderLayout());
         waveformContainer.add(timelineScrollPane, BorderLayout.NORTH);
         waveformContainer.add(waveformScrollPane, BorderLayout.CENTER);
 
@@ -130,7 +138,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
 
         infoPanel.setMaximumSize(MainViewModel.MAX_INFO_PANEL_DIMENSIONS);
 
-        //Sets up main panel
+        // Sets up main panel
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.X_AXIS));
@@ -154,75 +162,82 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         waveformScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
 
         // Synchronize scrolling between timeline and waveform
-        timelineScrollPane.getViewport().addChangeListener(e -> {
-            JViewport timelineViewport = timelineScrollPane.getViewport();
-            JViewport waveformViewport = waveformScrollPane.getViewport();
+        timelineScrollPane.getViewport().addChangeListener(event -> {
+            final JViewport timelineViewport = timelineScrollPane.getViewport();
+            final JViewport waveformViewport = waveformScrollPane.getViewport();
             waveformViewport.setViewPosition(timelineViewport.getViewPosition());
         });
 
-        waveformScrollPane.getViewport().addChangeListener(e -> {
-            JViewport timelineViewport = timelineScrollPane.getViewport();
-            JViewport waveformViewport = waveformScrollPane.getViewport();
+        waveformScrollPane.getViewport().addChangeListener(event -> {
+            final JViewport timelineViewport = timelineScrollPane.getViewport();
+            final JViewport waveformViewport = waveformScrollPane.getViewport();
             timelineViewport.setViewPosition(waveformViewport.getViewPosition());
         });
 
         // Calculate width for 30 seconds: account for 256x downsampling
-        int widthFor30Seconds = ((44100 * 30) / 256) / 8;
+        final int widthFor30Seconds = ((44100 * 30) / 256) / 8;
         timelineScrollPane.setPreferredSize(new Dimension(widthFor30Seconds, 30));
         waveformScrollPane.setPreferredSize(
             new Dimension(widthFor30Seconds, UIStyle.Dimensions.WAVEFORM_HEIGHT));
 
-
-        javax.swing.Timer timer = new javax.swing.Timer(100, e -> {
-            if (waveformViewModel.getAudioData() != null) {
-                // Get playback position from playback use case (works for both playing and paused)
-                double playbackPositionSeconds = 0.0;
-
-                long framesPlayed = mainViewModel.getState().getFramesPlayed();
-                int sampleRate = waveformViewModel.getAudioData().getSampleRate();
-                if (sampleRate > 0 && framesPlayed > 0) {
-                    playbackPositionSeconds = (double) framesPlayed / sampleRate;
-                }
-
-                // Update time label
-                double totalDuration = waveformViewModel.getAudioData().getDurationSeconds();
-                timeLabel.setText(TimeFormatter.formatTime(playbackPositionSeconds) + " / " +
-                    TimeFormatter.formatTime(totalDuration));
-
-                // Only update audio data if it changed, otherwise just update playback position
-                // This avoids recalculating waveform paths every 100ms
-                waveformPanel.updateWaveform(waveformViewModel.getAudioData(),
-                    playbackPositionSeconds);
-
-                // Update timeline with same data (only if audio data changed)
-                if (timelinePanel != null) {
-                    timelinePanel.updateTimeline(
-                        waveformViewModel.getAudioData().getDurationSeconds(),
-                        waveformViewModel.getAudioData().getSampleRate());
-                }
-                // Ensure scroll pane is updated after waveform changes
-                waveformScrollPane.revalidate();
-                waveformScrollPane.repaint();
-            }
-
-            // Add play button update logic from main
-            String desired = mainViewModel.getState().isPlaying() ? MainViewModel.PAUSE_TEXT : MainViewModel.PLAY_TEXT;
-            if (!desired.equals(playPauseButton.getText())) {
-                playPauseButton.setText(desired);
-
-            }
+        final javax.swing.Timer timer = new javax.swing.Timer(100, event -> {
+            timerEvent();
         });
         timer.start();
     }
 
+    private void timerEvent() {
+        if (waveformViewModel.getAudioData() != null) {
+            // Get playback position from playback use case (works for both playing and paused)
+            double playbackPositionSeconds = 0.0;
+
+            final long framesPlayed = mainViewModel.getState().getFramesPlayed();
+            final int sampleRate = waveformViewModel.getAudioData().getSampleRate();
+            if (sampleRate > 0 && framesPlayed > 0) {
+                playbackPositionSeconds = (double) framesPlayed / sampleRate;
+            }
+
+            // Update time label
+            final double totalDuration = waveformViewModel.getAudioData().getDurationSeconds();
+            timeLabel.setText(TimeFormatter.formatTime(playbackPositionSeconds) + " / "
+                    + TimeFormatter.formatTime(totalDuration));
+
+            // Only update audio data if it changed, otherwise just update playback position
+            // This avoids recalculating waveform paths every 100ms
+            waveformPanel.updateWaveform(waveformViewModel.getAudioData(),
+                playbackPositionSeconds);
+
+            // Update timeline with same data (only if audio data changed)
+            if (timelinePanel != null) {
+                timelinePanel.updateTimeline(
+                    waveformViewModel.getAudioData().getDurationSeconds(),
+                    waveformViewModel.getAudioData().getSampleRate());
+            }
+            // Ensure scroll pane is updated after waveform changes
+            waveformScrollPane.revalidate();
+            waveformScrollPane.repaint();
+        }
+
+        final String desired;
+        // Add play button update logic from main
+        if (mainViewModel.getState().isPlaying()) {
+            desired = MainViewModel.PAUSE_TEXT;
+        }
+        else {
+            desired = MainViewModel.PLAY_TEXT;
+        }
+        if (!desired.equals(playPauseButton.getText())) {
+            playPauseButton.setText(desired);
+        }
+    }
+
     @NotNull
     private JButton getFingerprintButton() {
-        JButton fingerprintButton = new JButton(MainViewModel.FINGERPRINT_TEXT);
+        final JButton fingerprintButton = new JButton(MainViewModel.FINGERPRINT_TEXT);
         fingerprintButton.setPreferredSize(MainViewModel.DEFAULT_BUTTON_DIMENSIONS);
 
         fingerprintButton.addActionListener(e -> {
             fingerprintController.execute();
-
         });
 
         return fingerprintButton;

@@ -344,11 +344,6 @@
         <module name="ExplicitInitialization"/>
         <module name="FallThrough"/>
         <module name="FinalLocalVariable"/>
-        <module name="HiddenField">
-            <property name="ignoreConstructorParameter" value="true"/>
-            <property name="ignoreSetter" value="true"/>
-            <property name="setterCanReturnItsClass" value="true"/>
-        </module>
         <module name="IllegalCatch">
             <property name="illegalClassNames"
                       value="java.lang.Throwable,
