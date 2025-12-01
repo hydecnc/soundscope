@@ -121,6 +121,7 @@ public class MainView extends JPanel implements ActionListener, PropertyChangeLi
         // Sets up info panel
         fingerprintInfo = new JTextField(MainViewModel.FINGERPRINT_INFO_START);
         songTitleInfo = new JTextField(MainViewModel.SONG_TITLE_INFO_START);
+        artistInfo = new JTextField(MainViewModel.)
         albumInfo = new JTextField(MainViewModel.ALBUM_INFO_START);
 
         fingerprintInfo.setMinimumSize(MainViewModel.MIN_INFO_DIMENSIONS);
