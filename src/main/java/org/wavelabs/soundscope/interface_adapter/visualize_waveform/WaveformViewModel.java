@@ -16,7 +16,6 @@ public class WaveformViewModel {
     private AudioData audioData;
     private String outputText;
 
-
     /**
      * Gets the audio data to be visualized.
      *
@@ -42,7 +41,5 @@ public class WaveformViewModel {
      */
     public void setOutputText(String outputText) {
         this.outputText = outputText;
-    } //TODO: this is never accessed; figure out how to get rid of it
-
-
+    } // TODO: this is never accessed; figure out how to get rid of it
 }

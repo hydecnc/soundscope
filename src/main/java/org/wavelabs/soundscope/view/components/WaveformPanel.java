@@ -314,19 +314,21 @@ public class WaveformPanel extends JPanel {
             return;
         }
 
-        int w = getWidth();
-        int h = getHeight();
+        final int w = getWidth();
+        final int h = getHeight();
 
-        if (w <= 0 || h <= 0) return;
-
-        // Return early if cache is already valid for this size
-        if (w == cachedEnvelopeWidth && h == cachedEnvelopeHeight &&
-            cachedMaxPerPixel != null && cachedMinPerPixel != null) {
+        if (w <= 0 || h <= 0) {
             return;
         }
 
-        int totalPixels = (int) Math.ceil(waveformData.length / (double) SAMPLES_PER_PIXEL);
-        int pixelsToCompute = Math.min(totalPixels, w);
+        // Return early if cache is already valid for this size
+        if (w == cachedEnvelopeWidth && h == cachedEnvelopeHeight
+            && cachedMaxPerPixel != null && cachedMinPerPixel != null) {
+            return;
+        }
+
+        final int totalPixels = (int) Math.ceil(waveformData.length / (double) SAMPLES_PER_PIXEL);
+        final int pixelsToCompute = Math.min(totalPixels, w);
 
         if (pixelsToCompute <= 0) {
             invalidateEnvelopeCache();
@@ -335,14 +337,14 @@ public class WaveformPanel extends JPanel {
 
         // Allocate only what is needed, or reuse if possible (GC optimization could be done here, 
         // but re-allocating on resize is generally acceptable)
-        float[] newMaxCache = new float[pixelsToCompute];
-        float[] newMinCache = new float[pixelsToCompute];
+        final float[] newMaxCache = new float[pixelsToCompute];
+        final float[] newMinCache = new float[pixelsToCompute];
 
-        int block = SAMPLES_PER_PIXEL;
+        final int block = SAMPLES_PER_PIXEL;
 
         for (int px = 0; px < pixelsToCompute; px++) {
-            int iStart = px * block;
-            int iEnd = Math.min(iStart + block, waveformData.length);
+            final int iStart = px * block;
+            final int iEnd = Math.min(iStart + block, waveformData.length);
 
             if (iStart >= waveformData.length) {
                 newMaxCache[px] = 0.0f;
@@ -350,22 +352,34 @@ public class WaveformPanel extends JPanel {
                 continue;
             }
 
-            double localMax = -1.0; // Amplitudes are -1.0 to 1.0
+            // Amplitudes are -1.0 to 1.0
+            double localMax = -1.0;
             double localMin = 1.0;
 
             // Inner loop: find peak within the sample block representing this pixel
             for (int i = iStart; i < iEnd; i++) {
-                double v = waveformData[i];
-                if (v > localMax) localMax = v;
-                if (v < localMin) localMin = v;
+                final double v = waveformData[i];
+                if (v > localMax) {
+                    localMax = v;
+                }
+                if (v < localMin) {
+                    localMin = v;
+                }
             }
 
             // Safety clamp
-            if (localMax < -1.0) localMax = -1.0;
-            if (localMax > 1.0) localMax = 1.0;
-            if (localMin < -1.0) localMin = -1.0;
-            if (localMin > 1.0) localMin = 1.0;
-
+            if (localMax < -1.0) {
+                localMax = -1.0;
+            }
+            if (localMax > 1.0) {
+                localMax = 1.0;
+            }
+            if (localMin < -1.0) {
+                localMin = -1.0;
+            }
+            if (localMin > 1.0) {
+                localMin = 1.0;
+            }
             newMaxCache[px] = (float) localMax;
             newMinCache[px] = (float) localMin;
         }
@@ -378,15 +392,20 @@ public class WaveformPanel extends JPanel {
 
         // Update scaling factors used for playback cursor
         cachedSamplesIn30Seconds = (sampleRate * DISPLAY_INTERVAL_SECONDS) / 256;
-        if (cachedSamplesIn30Seconds == 0) cachedSamplesIn30Seconds = 1;
+        if (cachedSamplesIn30Seconds == 0) {
+            cachedSamplesIn30Seconds = 1;
+        }
 
-        int widthFor30Seconds = cachedSamplesIn30Seconds / SAMPLES_PER_PIXEL;
+        final int widthFor30Seconds = cachedSamplesIn30Seconds / SAMPLES_PER_PIXEL;
         cachedSampleWidth = (double) widthFor30Seconds / cachedSamplesIn30Seconds;
     }
 
     /**
      * Converts a raw amplitude (-1.0 to 1.0) to a vertical pixel offset from center.
      * Uses a Power scale to boost small volumes while compressing high volumes.
+     * @param amp amplitude
+     * @param height height in integer
+     * @return double value for the amplitude
      */
     private double mapAmplitude(double amp, int height) {
         // 1. Absolute Value
@@ -400,12 +419,12 @@ public class WaveformPanel extends JPanel {
         // Power = 1.0 is Linear (no compression)
         // Power > 1.0 compresses small volumes (not what we want)
         // Using 0.7 gives good visibility to small volumes while still showing high volumes
-        double normalized = Math.pow(absAmp, AMPLITUDE_POWER_SCALE);
+        final double normalized = Math.pow(absAmp, AMPLITUDE_POWER_SCALE);
 
         // 4. Scale to pixels and ensure it never exceeds half the height
-        double halfHeight = height / 2.0;
-        double usableHeight = halfHeight * VERTICAL_PADDING_PERCENT;
-        double offset = normalized * usableHeight;
+        final double halfHeight = height / 2.0;
+        final double usableHeight = halfHeight * VERTICAL_PADDING_PERCENT;
+        final double offset = normalized * usableHeight;
 
         // 5. Clamp to ensure we never exceed the usable height
         return Math.min(offset, usableHeight);
@@ -419,7 +438,7 @@ public class WaveformPanel extends JPanel {
             return;
         }
 
-        Graphics2D g2d = (Graphics2D) g;
+        final Graphics2D g2d = (Graphics2D) g;
         // Optimize rendering quality
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
@@ -428,15 +447,18 @@ public class WaveformPanel extends JPanel {
         g2d.setColor(getBackground());
         g2d.fillRect(0, 0, getWidth(), getHeight());
 
-        int width = getWidth();
-        int height = getHeight();
+        final int width = getWidth();
+        final int height = getHeight();
 
         // 2. Check Cache Validity
         if (dataChanged || width != cachedEnvelopeWidth || height != cachedEnvelopeHeight) {
             if (cachedMaxPerPixel == null || cachedEnvelopeWidth != width) {
                 // If critical mismatch, compute strictly now (avoids empty flash)
-                if (width > 0) computeEnvelope();
-            } else if (!envelopeComputationInProgress) {
+                if (width > 0) {
+                    computeEnvelope();
+                }
+            }
+            else if (!envelopeComputationInProgress) {
                 // Otherwise update in background
                 computeEnvelopeAsync();
             }
@@ -446,21 +468,21 @@ public class WaveformPanel extends JPanel {
             return;
         }
 
-        double halfY = height / 2.0;
-        int pixelsToDraw = Math.min(cachedMaxPerPixel.length, width);
+        final double halfY = height / 2.0;
+        final int pixelsToDraw = Math.min(cachedMaxPerPixel.length, width);
 
         // 3. Calculate Playback Cursor X
-        double playbackPos = currentPlaybackPositionSeconds;
+        final double playbackPos = currentPlaybackPositionSeconds;
         int playbackX = -1;
         if (playbackPos > 0 && durationSeconds > 0 && sampleRate > 0 && cachedSampleWidth > 0) {
             // Note: 256 divisor comes from previous logic, likely related to how audio is chunked in your system.
             // Ensure this constant matches your AudioData chunking logic.
-            int playbackSampleIndex = (int) (playbackPos * sampleRate / 256);
+            final int playbackSampleIndex = (int) (playbackPos * sampleRate / 256);
             playbackX = (int) (playbackSampleIndex * cachedSampleWidth);
         }
 
-        Color unplayedColor = UIStyle.Colors.WAVEFORM_STROKE;
-        Color playedColor = UIStyle.Colors.WAVEFORM_PLAYED;
+        final Color unplayedColor = UIStyle.Colors.WAVEFORM_STROKE;
+        final Color playedColor = UIStyle.Colors.WAVEFORM_PLAYED;
 
         // 4. Draw Waveform Lines
         // Using a loop of drawLine is surprisingly fast in Java2D for < 2000 lines.
@@ -470,11 +492,12 @@ public class WaveformPanel extends JPanel {
         Color currentColor = unplayedColor;
 
         for (int px = 0; px < pixelsToDraw; px++) {
-            float minVal = cachedMinPerPixel[px];
-            float maxVal = cachedMaxPerPixel[px];
+            final float minVal = cachedMinPerPixel[px];
+            final float maxVal = cachedMaxPerPixel[px];
 
-            double yMaxOffset = mapAmplitude(maxVal, height);
-            double yMinOffset = mapAmplitude(minVal, height); // mapAmplitude handles abs internally
+            // mapAmplitude handles abs internally
+            final double yMaxOffset = mapAmplitude(maxVal, height);
+            final double yMinOffset = mapAmplitude(minVal, height);
 
             // Calculate screen coordinates
             int yTop = (int) (halfY - yMaxOffset);
@@ -488,13 +511,20 @@ public class WaveformPanel extends JPanel {
             if (yTop == yBottom && (maxVal > 0.001 || minVal < -0.001)) {
                 if (yBottom < height - 1) {
                     yBottom++;
-                } else if (yTop > 0) {
+                }
+                else if (yTop > 0) {
                     yTop--;
                 }
             }
 
+            final Color targetColor;
             // Determine Color (Played vs Unplayed)
-            Color targetColor = (playbackX >= 0 && px <= playbackX) ? playedColor : unplayedColor;
+            if (playbackX >= 0 && px <= playbackX) {
+                targetColor = playedColor;
+            }
+            else {
+                targetColor = unplayedColor;
+            }
 
             // State change minimization
             if (currentColor != targetColor) {
@@ -508,7 +538,8 @@ public class WaveformPanel extends JPanel {
         // 5. Draw Playback Head Line
         if (playbackX >= 0 && playbackX < width) {
             g2d.setColor(UIStyle.Colors.PLAYBACK_INDICATOR);
-            g2d.setStroke(new BasicStroke(1.5f)); // Slightly thinner for precision
+            // Slightly thinner for precision
+            g2d.setStroke(new BasicStroke(1.5f));
             g2d.drawLine(playbackX, 0, playbackX, height);
         }
     }

@@ -42,7 +42,7 @@ public class WaveformPresenter implements ProcessAudioFileOB {
     public void present(ProcessAudioFileOD outputData) {
         viewModel.setAudioData(outputData.getAudioData());
 
-        String metadata = formatAudioMetadata(outputData.getAudioData());
+        final String metadata = formatAudioMetadata(outputData.getAudioData());
         viewModel.setOutputText(
             "File loaded: " + outputData.getFileName() + "<br>" + metadata
         );
@@ -59,7 +59,7 @@ public class WaveformPresenter implements ProcessAudioFileOB {
      */
     @Override
     public void presentError(String errorMessage, String fileName) {
-        String formattedError = formatError(errorMessage, fileName);
+        final String formattedError = formatError(errorMessage, fileName);
         viewModel.setOutputText(formattedError);
     }
 
@@ -74,7 +74,7 @@ public class WaveformPresenter implements ProcessAudioFileOB {
             return "";
         }
 
-        String duration = String.format("%.2f", audioData.getDurationSeconds());
+        final String duration = String.format("%.2f", audioData.getDurationSeconds());
         return String.format(
             "Duration: %ss | Sample Rate: %d Hz | Channels: %d",
             duration,
@@ -92,16 +92,16 @@ public class WaveformPresenter implements ProcessAudioFileOB {
      */
     private String formatError(String errorMessage, String fileName) {
         if (errorMessage.contains("Unsupported")) {
-            return "Unsupported audio format.<br>" +
-                "Please use WAV format only.<br>" +
-                "File: " + fileName;
-        } else if (errorMessage.contains("corrupted")) {
-            return "File appears to be corrupted or cannot be read.<br>" +
-                "Please try a different file or re-record.";
-        } else {
+            return "Unsupported audio format.<br>"
+                    + "Please use WAV format only.<br>"
+                    + "File: " + fileName;
+        }
+        else if (errorMessage.contains("corrupted")) {
+            return "File appears to be corrupted or cannot be read.<br>"
+                    + "Please try a different file or re-record.";
+        }
+        else {
             return "Error: " + errorMessage + "<br>File: " + fileName;
         }
     }
 }
-
-
