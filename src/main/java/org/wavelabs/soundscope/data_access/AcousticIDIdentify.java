@@ -47,7 +47,7 @@ public final class AcousticIDIdentify implements IdentifyDAI {
      * Ensures there's always only one class instance.
      * @return An instance of AcousticIDIdentify class
      */
-    public static AcousticIDIdentify getAcousicIDIDentify() {
+    public static AcousticIDIdentify getAcousicIDIdentify() {
         if (instance == null) {
             instance = new AcousticIDIdentify();
         }

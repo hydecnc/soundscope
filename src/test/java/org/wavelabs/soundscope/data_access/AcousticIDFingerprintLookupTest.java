@@ -15,7 +15,7 @@ public class AcousticIDFingerprintLookupTest {
      */
     @Test
     public void matchIDTest(){
-        AcousticIDIdentify identifier = AcousticIDIdentify.getAcousicIDIDentify();
+        AcousticIDIdentify identifier = AcousticIDIdentify.getAcousicIDIdentify();
 
         String result = identifier.getClosestMatchID(fingerprint, testDuration);
         String expectedResult = "9ff43b6a-4f16-427c-93c2-92307ca505e0";
@@ -28,7 +28,7 @@ public class AcousticIDFingerprintLookupTest {
      */
     @Test
     public void APIQuerySpacingTest(){
-        AcousticIDIdentify fingerprinter = AcousticIDIdentify.getAcousicIDIDentify();
+        AcousticIDIdentify fingerprinter = AcousticIDIdentify.getAcousicIDIdentify();
 
         long start = System.currentTimeMillis();
         fingerprinter.getClosestMatchID(fingerprint, testDuration);
@@ -43,7 +43,7 @@ public class AcousticIDFingerprintLookupTest {
      */
     @Test
     public void matchWithMetadataTest(){
-        AcousticIDIdentify fingerprinter = AcousticIDIdentify.getAcousicIDIDentify();
+        AcousticIDIdentify fingerprinter = AcousticIDIdentify.getAcousicIDIdentify();
 
         Song.SongMetadata resultMetadata = fingerprinter.getClosestMatchMetadata(fingerprint, testDuration);
 

@@ -216,7 +216,7 @@ public class AppBuilder {
      * @return the AppBuilder instance for method chaining
      */
     public AppBuilder addIdentifyUseCase() {
-        final IdentifyDAI identifier = AcousticIDIdentify.getAcousicIDIDentify();
+        final IdentifyDAI identifier = AcousticIDIdentify.getAcousicIDIdentify();
         final IdentifyOB identifyOutputBoundary = new IdentifyPresenter(mainViewModel);
         final IdentifyIB identifyInteractor = new IdentifyInteractor(song, identifyOutputBoundary, identifier);
 
