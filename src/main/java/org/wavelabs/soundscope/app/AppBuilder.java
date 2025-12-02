@@ -69,7 +69,7 @@ public class AppBuilder {
     private WaveformViewModel waveformViewModel;
 
     private JPanel mainPanel;
-    private FileDAO fileDAO = new FileDAO();
+    private final FileDAO fileDAO = new FileDAO();
     private Song song = new Song();
 
     /**
@@ -99,8 +99,6 @@ public class AppBuilder {
      * @return the AppBuilder instance for method chaining
      */
     public AppBuilder addFileSaveUseCase() {
-        fileDAO.setFileSaver(new ByteArrayFileSaver());
-
         final SaveRecordingOB saveRecordingOutput = new SaveRecordingPresenter(mainViewModel);
         final SaveRecordingIB saveRecordingInteractor = new SaveRecording(fileDAO, saveRecordingOutput);
 
@@ -132,8 +130,6 @@ public class AppBuilder {
      * @return the AppBuilder instance for method chaining
      */
     public AppBuilder addStartRecordUseCase() {
-        fileDAO.setRecorder(new JavaMicRecorder());
-
         final RecordingOB recordingOutput = new RecordingPresenter(mainViewModel);
 
         final StartRecordingIB startRecordingInteractor = new StartRecording(fileDAO, recordingOutput);

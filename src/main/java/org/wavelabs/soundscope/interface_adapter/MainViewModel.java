@@ -21,7 +21,8 @@ public class MainViewModel extends ViewModel<MainState> {
             "process audio", "Processing Error",
             "identify", "Identify Error",
             "fingerprint", "Fingerprint Error",
-            "playing", "Playback Error"
+            "playing", "Playback Error",
+            "recording", "Recording Error"
     );
 
     public static final String FINGERPRINT_INFO_START = "Fingerprint: ";

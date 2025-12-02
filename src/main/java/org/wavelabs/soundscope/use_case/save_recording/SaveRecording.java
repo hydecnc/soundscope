@@ -2,9 +2,6 @@ package org.wavelabs.soundscope.use_case.save_recording;
 
 import java.io.IOException;
 
-import org.wavelabs.soundscope.entity.AudioRecording;
-import org.wavelabs.soundscope.infrastructure.FileSaver;
-
 public class SaveRecording implements SaveRecordingIB {
     private final SaveRecordingDAI saveRecordingDAO;
     private final SaveRecordingOB saveRecordingPresenter;
@@ -17,17 +14,15 @@ public class SaveRecording implements SaveRecordingIB {
     @Override
     public void execute(SaveRecordingID inputData) {
         final String filePath = inputData.getFilePath();
-        final AudioRecording audioRecording = saveRecordingDAO.getAudioRecording();
-        final FileSaver fileSaver = saveRecordingDAO.getFileSaver();
 
         // check if audio recording is null for preventing NPE
-        if (audioRecording == null) {
+        if (!saveRecordingDAO.hasAudioRecording()) {
             saveRecordingPresenter.presentError("Recording is empty");
             return;
         }
 
         try {
-            final boolean success = fileSaver.save(filePath, audioRecording);
+            boolean success = saveRecordingDAO.saveToFile(filePath);
             if (!success) {
                 saveRecordingPresenter.presentError("Save failed");
             }

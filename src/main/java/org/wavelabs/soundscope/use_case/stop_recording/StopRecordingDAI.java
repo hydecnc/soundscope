@@ -16,50 +16,6 @@ import org.wavelabs.soundscope.infrastructure.Recorder;
  * systems and storage mechanisms.</p>
  */
 public interface StopRecordingDAI {
-
-    /**
-     * Returns the recorder currently used for capturing audio.
-     *
-     * <p>This recorder is expected to be in a recording state prior to the
-     * stop operation, as the stop-recording use case relies on it to finalize
-     * the captured audio data.</p>
-     *
-     * @return the active recorder; never {@code null}
-     */
-    Recorder getRecorder();
-
-    /**
-     * Updates or replaces the recorder used during recording.
-     *
-     * <p>This allows different recorder implementations (e.g., actual hardware,
-     * mock recorder, or simulated input) to be configured at runtime or during
-     * testing.</p>
-     *
-     * @param recorder
-     *         the recorder to set; must not be {@code null}
-     */
-    void setRecorder(Recorder recorder);
-
-    /**
-     * Returns the in-memory audio recording associated with the current
-     * recording session.
-     *
-     * <p>This {@link AudioRecording} object typically stores the accumulated
-     * audio bytes and format information built during recording.</p>
-     *
-     * @return the current audio recording; never {@code null}
-     */
-    AudioRecording getAudioRecording();
-
-    /**
-     * Updates the in-memory audio recording.
-     *
-     * <p>This method allows the use case to store the final result of the
-     * recording session once audio capture has been stopped and processed.</p>
-     *
-     * @param audioRecording
-     *         the audio recording to set; must not be {@code null}
-     */
-    void setAudioRecording(AudioRecording audioRecording);
+    void stopRecording();
 }
 

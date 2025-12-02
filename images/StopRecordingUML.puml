@@ -1,0 +1,79 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+left to right direction
+
+title Stop Recording - UML
+
+package "use_case" {
+  interface StopRecordingIB {
+    + execute()
+  }
+  
+  class StopRecording {
+    - stopRecordingDAO: StopRecordingDAI
+    + execute()
+  }
+  
+  interface StopRecordingDAI {
+    + stopRecording()
+  }
+}
+
+package "interface_adapter" {
+  class StopRecordingController {
+    - stopRecordingInteractor: StopRecordingIB
+    + execute()
+  }
+}
+
+package "data_access" {
+  class FileDAO {
+    - recorder: Recorder
+    - audioRecording: AudioRecording
+    + stopRecording()
+  }
+}
+
+package "infrastructure" {
+  interface Recorder {
+    + start()
+    + stop()
+    + isRecording(): boolean
+    + getRecordingBytes(): byte[]
+    + getAudioFormat(): AudioFormat
+  }
+}
+
+package "entity" {
+  class AudioRecording {
+    - data: byte[]
+    - format: AudioFormat
+    + getData(): byte[]
+    + getSize(): int
+    + getDurationSeconds(): double
+    + getFormat(): AudioFormat
+  }
+}
+
+package "view" {
+  class MainView
+}
+
+StopRecording .up.|> StopRecordingIB
+StopRecording -right-> StopRecordingDAI : uses
+
+StopRecordingController -down-> StopRecordingIB : calls
+
+FileDAO .up.|> StopRecordingDAI
+FileDAO -down-> Recorder : uses
+FileDAO -down-> AudioRecording : creates
+
+MainView -down-> StopRecordingController : invokes
+
+@enduml

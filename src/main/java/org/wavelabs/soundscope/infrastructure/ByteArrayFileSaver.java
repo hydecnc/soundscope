@@ -11,6 +11,10 @@ import javax.sound.sampled.AudioSystem;
 
 import org.wavelabs.soundscope.entity.AudioRecording;
 
+
+/**
+ * Actual Implementation of FileSaver in ByteArray data.
+ */
 public class ByteArrayFileSaver implements FileSaver {
     /**
      * Saves audio file from audio recording.
@@ -19,6 +23,7 @@ public class ByteArrayFileSaver implements FileSaver {
      * @return true iff save was success
      * @throws IOException if errored during saving process
      */
+    @Override
     public boolean save(String filePath, AudioRecording audioRecording) throws IOException {
         final byte[] audioData = audioRecording.getData();
         final AudioFormat format = audioRecording.getFormat();

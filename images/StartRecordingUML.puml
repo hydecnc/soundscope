@@ -1,0 +1,96 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+left to right direction
+
+title Start Recording - UML
+
+package "use_case" {
+  interface StartRecordingIB {
+    + execute()
+  }
+  
+  class StartRecording {
+    - startRecordingDataObject: StartRecordingDAI
+    - recordingOB: RecordingOB
+    - updateSpacingMls: long
+    + execute()
+    + updateRecording()
+  }
+  
+  interface RecordingOB {
+    + updateRecordingState(RecordingOD)
+  }
+  
+  class RecordingOD {
+    + isPlaying: boolean
+  }
+  
+  interface StartRecordingDAI {
+    + getRecorder(): Recorder
+    + setRecorder(Recorder)
+  }
+}
+
+package "interface_adapter" {
+  class StartRecordingController {
+    - startRecordingInteractor: StartRecordingIB
+    + execute()
+  }
+  
+  class RecordingPresenter {
+    - mainViewModel: MainViewModel
+    + updateRecordingState(RecordingOD)
+  }
+  
+  class MainViewModel {
+    - state: MainState
+  }
+}
+
+package "data_access" {
+  class FileDAO {
+    - recorder: Recorder
+    - audioRecording: AudioRecording
+    + startRecording()
+    + isRecording(): boolean
+  }
+}
+
+package "infrastructure" {
+  interface Recorder {
+    + start()
+    + stop()
+    + isRecording(): boolean
+    + getRecordingBytes(): byte[]
+    + getAudioFormat(): AudioFormat
+  }
+}
+
+package "view" {
+  class MainView
+}
+
+StartRecording .up.|> StartRecordingIB
+StartRecording -right-> StartRecordingDAI : uses
+StartRecording -right-> RecordingOB : calls
+StartRecording .down.> RecordingOD : creates
+
+StartRecordingController -down-> StartRecordingIB : calls
+
+RecordingPresenter .up.|> RecordingOB
+RecordingPresenter -down-> MainViewModel : updates
+RecordingPresenter .down.> RecordingOD : receives
+
+FileDAO .up.|> StartRecordingDAI
+FileDAO -down-> Recorder : uses
+
+MainView -down-> MainViewModel : observes
+MainView -down-> StartRecordingController : invokes
+
+@enduml

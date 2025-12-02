@@ -31,5 +31,12 @@ public interface RecordingOB {
      *         structured recording-state data; must not be {@code null}
      */
     void updateRecordingState(RecordingOD outputData);
+
+    /**
+     * Error during save recording.
+     * Present the according view.
+     * @param message String message including the details of the error
+     */
+    void presentError(String message);
 }
 

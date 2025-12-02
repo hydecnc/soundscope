@@ -16,4 +16,11 @@ public class RecordingPresenter implements RecordingOB {
         mainViewModel.getState().setRecording(outputData.isPlaying());
         mainViewModel.firePropertyChange("recording");
     }
+
+    @Override
+    public void presentError(String message) {
+        mainViewModel.getState().setErrorState(true);
+        mainViewModel.getState().setErrorMessage(message);
+        mainViewModel.firePropertyChange("recording");
+    }
 }

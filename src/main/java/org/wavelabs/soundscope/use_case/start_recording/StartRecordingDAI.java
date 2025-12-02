@@ -1,7 +1,5 @@
 package org.wavelabs.soundscope.use_case.start_recording;
 
-import org.wavelabs.soundscope.infrastructure.Recorder;
-
 /**
  * Data Access Interface (DAI) for the start-recording use case.
  *
@@ -15,28 +13,7 @@ import org.wavelabs.soundscope.infrastructure.Recorder;
  * specific audio-capture API or hardware implementation.</p>
  */
 public interface StartRecordingDAI {
-
-    /**
-     * Returns the recorder used to capture audio input.
-     *
-     * <p>This recorder object provides methods for starting, stopping, and
-     * querying the state of the recording session. It is typically injected or
-     * configured during application startup.</p>
-     *
-     * @return the recorder instance; never {@code null}
-     */
-    Recorder getRecorder();
-
-    /**
-     * Updates the recorder used for capturing audio.
-     *
-     * <p>This method allows for dynamic replacement of the recorder, which is
-     * particularly useful for testing or switching between different audio
-     * input sources.</p>
-     *
-     * @param recorder
-     *         the recorder instance to set; must not be {@code null}
-     */
-    void setRecorder(Recorder recorder);
+    void startRecording() throws UnsupportedOperationException;
+    boolean isRecording();
 }
 

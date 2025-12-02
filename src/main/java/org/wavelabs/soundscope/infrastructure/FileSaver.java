@@ -1,9 +1,11 @@
 package org.wavelabs.soundscope.infrastructure;
 
+import org.wavelabs.soundscope.entity.AudioRecording;
 import java.io.IOException;
 
-import org.wavelabs.soundscope.entity.AudioRecording;
-
+/**
+ * FileSaver Interface used in Save Recording use case.
+ */
 public interface FileSaver {
     /**
      * Saves the audio recording to file.
