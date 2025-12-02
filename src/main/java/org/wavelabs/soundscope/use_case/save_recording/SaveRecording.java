@@ -2,12 +2,6 @@ package org.wavelabs.soundscope.use_case.save_recording;
 
 import java.io.IOException;
 
-<<<<<<< recording-test-case
-=======
-import org.wavelabs.soundscope.entity.AudioRecording;
-import org.wavelabs.soundscope.infrastructure.FileSaver;
-
->>>>>>> main
 public class SaveRecording implements SaveRecordingIB {
     private final SaveRecordingDAI saveRecordingDAO;
     private final SaveRecordingOB saveRecordingPresenter;
