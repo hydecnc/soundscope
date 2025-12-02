@@ -1,17 +1,17 @@
 package org.wavelabs.soundscope.data_access;
 
 /**
- * Stores constants for the AcousticID API.
+ * Stores constants for the AcoustID API.
  */
-public class AcousticIdApiConstants {
-    public static final String ACOUSTICID_API_URL = "https://api.acoustid.org/v2/lookup";
+public class AcoustIDApiConstants {
+    public static final String ACOUST_ID_API_URL = "https://api.acoustid.org/v2/lookup";
     public static final String METADATA_REQUEST = "recordings+releasegroups+compress";
 
     public static final String STATUS_CODE = "status";
     public static final String SUCCESS_CODE = "ok";
     public static final String RESULTS_CODE = "results";
     public static final String MATCH_QUALITY_CODE = "score";
-    public static final String ACOUSTICID_TRACK_ID_CODE = "id";
+    public static final String ACOUST_ID_TRACK_ID_CODE = "id";
     public static final String DURATION_CODE = "duration";
     public static final String MUSICBRAINZ_ID_CODE = "id";
     public static final String RECORDINGS_CODE = "recordings";
