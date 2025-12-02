@@ -1,0 +1,102 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+left to right direction
+
+title Load Audio File - UML
+
+package "use_case" {
+  interface ProcessAudioFileIB {
+    + play(ProcessAudioFileID)
+    + pause()
+    + stop()
+  }
+
+  class ProcessAudioFile {
+    - playbackGateway: ProcessAudioFileDAI
+    - outputBoundary: ProcessAudioFileOB
+    - loadedSourcePath: String
+  }
+
+  class ProcessAudioFileID {
+    - sourcePath: String
+    - restartFromBeginning: boolean
+  }
+
+  interface ProcessAudioFileOB {
+    + playbackStarted()
+    + playbackPaused()
+    + playbackStopped()
+  }
+
+  class ProcessAudioFileOD {
+    + isPlaying: boolean
+    + playingFinished: boolean
+    + framesPlayed: long
+  }
+
+  interface ProcessAudioFileDAI {
+    + loadAudio(String): AudioRecording
+    + startPlayback()
+    + pausePlayback()
+  }
+}
+
+package "interface_adapter" {
+  class ProcessAudioFileController {
+    - ProcessAudioFileInteractor: ProcessAudioFileIB
+  }
+
+  class ProcessAudioFilePresenter {
+    - mainViewModel: MainViewModel
+  }
+
+  class MainViewModel {
+    - state: MainState
+  }
+}
+
+package "data_access" {
+  class JavaSoundPlaybackGateway {
+    - audioFile: File
+    - audioInputStream: AudioInputStream
+    - format: AudioFormat
+  }
+}
+
+package "entity" {
+  class AudioRecording {
+    - data: byte[]
+    - format: AudioFormat
+  }
+}
+
+package "view" {
+  class MainView
+}
+
+ProcessAudioFile .up.|> ProcessAudioFileIB
+ProcessAudioFile -right-> ProcessAudioFileDAI : uses
+ProcessAudioFile -right-> ProcessAudioFileOB : calls
+ProcessAudioFile .down.> ProcessAudioFileID : receives
+ProcessAudioFile .down.> ProcessAudioFileOD : creates
+
+ProcessAudioFileController -down-> ProcessAudioFileIB : calls
+ProcessAudioFileController .down.> ProcessAudioFileID : creates
+
+ProcessAudioFilePresenter .up.|> ProcessAudioFileOB
+ProcessAudioFilePresenter -down-> MainViewModel : updates
+ProcessAudioFilePresenter .down.> ProcessAudioFileOD : receives
+
+JavaSoundPlaybackGateway .up.|> ProcessAudioFileDAI
+JavaSoundPlaybackGateway -down-> AudioRecording : loads
+
+MainView -down-> MainViewModel : observes
+MainView -down-> ProcessAudioFileController : invokes
+
+@enduml

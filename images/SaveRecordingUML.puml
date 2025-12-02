@@ -1,0 +1,102 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+left to right direction
+
+title Save Recording - UML
+
+package "use_case" {
+  interface SaveRecordingIB {
+    + play(SaveRecordingID)
+    + pause()
+    + stop()
+  }
+
+  class SaveRecording {
+    - playbackGateway: SaveRecordingDAI
+    - outputBoundary: SaveRecordingOB
+    - loadedSourcePath: String
+  }
+
+  class SaveRecordingID {
+    - sourcePath: String
+    - restartFromBeginning: boolean
+  }
+
+  interface SaveRecordingOB {
+    + playbackStarted()
+    + playbackPaused()
+    + playbackStopped()
+  }
+
+  class SaveRecordingOD {
+    + isPlaying: boolean
+    + playingFinished: boolean
+    + framesPlayed: long
+  }
+
+  interface SaveRecordingDAI {
+    + loadAudio(String): AudioRecording
+    + startPlayback()
+    + pausePlayback()
+  }
+}
+
+package "interface_adapter" {
+  class SaveRecordingController {
+    - SaveRecordingInteractor: SaveRecordingIB
+  }
+
+  class SaveRecordingPresenter {
+    - mainViewModel: MainViewModel
+  }
+
+  class MainViewModel {
+    - state: MainState
+  }
+}
+
+package "data_access" {
+  class JavaSoundPlaybackGateway {
+    - audioFile: File
+    - audioInputStream: AudioInputStream
+    - format: AudioFormat
+  }
+}
+
+package "entity" {
+  class AudioRecording {
+    - data: byte[]
+    - format: AudioFormat
+  }
+}
+
+package "view" {
+  class MainView
+}
+
+SaveRecording .up.|> SaveRecordingIB
+SaveRecording -right-> SaveRecordingDAI : uses
+SaveRecording -right-> SaveRecordingOB : calls
+SaveRecording .down.> SaveRecordingID : receives
+SaveRecording .down.> SaveRecordingOD : creates
+
+SaveRecordingController -down-> SaveRecordingIB : calls
+SaveRecordingController .down.> SaveRecordingID : creates
+
+SaveRecordingPresenter .up.|> SaveRecordingOB
+SaveRecordingPresenter -down-> MainViewModel : updates
+SaveRecordingPresenter .down.> SaveRecordingOD : receives
+
+JavaSoundPlaybackGateway .up.|> SaveRecordingDAI
+JavaSoundPlaybackGateway -down-> AudioRecording : loads
+
+MainView -down-> MainViewModel : observes
+MainView -down-> SaveRecordingController : invokes
+
+@enduml

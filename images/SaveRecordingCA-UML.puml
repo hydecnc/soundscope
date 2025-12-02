@@ -1,0 +1,122 @@
+@startuml
+skinparam nodesep 20
+
+skinparam dpi 250
+
+skinparam titleFontSize 18
+skinparam defaultFontSize 10
+skinparam classFontSize 10
+skinparam packageFontSize 11
+title Save Audio Use Case - Clean Architecture
+
+
+allowmixing
+
+skinparam linetype ortho
+
+skinparam packageStyle rectangle
+
+skinparam package {
+  BackgroundColor #ADD8E6
+  FontColor black
+  BorderColor white
+  TitleAlignment right
+}
+
+skinparam class {
+  BackgroundColor white
+  FontColor black
+  BorderColor black
+}
+
+package "Frameworks\n&\nDrivers" as FD #lightblue {
+  database "Audio Files\n(Database)" as Database
+  class "JavaSoundPlaybackGateway\n(Data Access)" as DataAccess
+}
+
+package "Enterprise\nBusiness\nRules" as EBR #lightyellow {
+  class "AudioRecording\n(Entity)" as Entity
+}
+
+package "Application Business Rules" as ABR #pink {
+
+  together {
+  class "SaveRecording\n(Use Case Interactor)" as Interactor
+
+  interface "SaveRecordingIB\n(Input Boundary)" as InputBoundary
+  }
+  class "SaveRecordingID\n(Input Data)" as InputData
+
+  interface "SaveRecordingOB\n(Output Boundary)" as OutputBoundary
+  class "SaveRecordingOD\n(Output Data)" as OutputData
+  interface "SaveRecordingDAI\n(Data Access Interface)" as DataAccessInterface
+}
+
+together{
+package " " as foo #white {
+package "Interface Adapters" #lightgreen {
+  class "SaveRecordingController\n(Controller)" as Controller
+  class "SaveRecordingPresenter\n(Presenter)" as Presenter
+  class "MainViewModel\n(View Model)" as ViewModel
+}
+
+package "Frameworks\n&\nDrivers" as "FD2" #lightblue {
+  class "MainView\n(View)" as View
+}
+}
+
+second -[hidden]up-> Controller
+second -[hidden]down-> Presenter
+
+Interactor -[norank]-> InputData
+
+DataAccess -up--> Entity
+Interactor -right-> Entity
+'STEP 5 Use Case Interactor to Entities
+Presenter -down-> ViewModel
+'STEP 7 Presenter to View Model
+View -up-> ViewModel
+DataAccess -[norank]--> Database
+'STEP 4 Data Access to Database
+DataAccess -up-|> DataAccessInterface
+View -up-----> Controller
+'STEP 1 View to Controller
+
+EBR -[hidden]down- FD
+"Interface Adapters" -[hidden]down- FD
+EBR -[hidden]down--- FD
+"Interface Adapters" -[hidden]right- ABR
+
+Controller -[hidden]down-> Presenter
+Presenter -[hidden]down-> ViewModel
+
+InputData -[hidden]down- InputBoundary
+InputBoundary -[hidden]down- OutputBoundary
+OutputBoundary -[hidden]down- OutputData
+
+Presenter -left|> OutputBoundary
+Presenter -left-> OutputData
+Controller -left-> InputData
+Controller -left-> InputBoundary
+' STEP 2 Controller to Input Boundary
+
+Interactor -[norank]-> OutputBoundary
+' STEP 6 Use Case Interactor to Output Boundary
+Interactor -[norank]-> OutputData
+Interactor -down--> DataAccessInterface
+' STEP 3 Use Case Interactor to Data Access Interface
+
+Interactor -[norank]-|> InputBoundary
+
+FD2 -[hidden]up-> OutputData
+
+FD2 -[hidden]up-> OutputData
+
+FD -[hidden]right---------> FD2
+
+hide empty members
+
+hide hideme
+hide second
+
+@enduml
