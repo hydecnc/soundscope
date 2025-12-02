@@ -31,7 +31,7 @@ skinparam class {
 
 package "Frameworks\n&\nDrivers" as FD #lightblue {
   database "Audio Files\n(Database)" as Database
-  class "AcousticIDIdentify\n(Data Access)" as DataAccess
+  class "AcoustIDIdentify\n(Data Access)" as DataAccess
 }
 
 package "Enterprise\nBusiness\nRules" as EBR #lightyellow {

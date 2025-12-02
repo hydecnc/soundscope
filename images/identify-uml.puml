@@ -1,0 +1,127 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam dpi 200
+skinparam defaultFontSize 8
+skinparam classFontSize 8
+skinparam packageFontSize 9
+skinparam nodesep 15
+skinparam ranksep 30
+skinparam responseMessageBelowArrow true
+
+
+left to right direction
+
+title Identify - UML Diagram
+
+package "use_case" {
+  interface IdentifyIB {
+    + identify()
+  }
+
+  class IdentifyInteractor {
+    - song: Song
+    - identifyOutputBoundary: IdentifyOB
+    - identifier: IdentifyDAI
+    + identify()
+  }
+
+  interface IdentifyOB {
+    + updateSongAttributes(IdentifyOD)
+    + presentError(String)
+  }
+
+  record IdentifyOD {
+    - songTitle: String
+    - artists: String[]
+    - album: String
+  }
+
+  interface IdentifyDAI {
+    + getClosestMatchID(String, int): String
+    + getClosestMatchMetadata(String, int): Song.SongMetadata
+  }
+}
+
+package "interface_adapter" {
+  class IdentifyController {
+    - identifyInteractor: IdentifyIB
+    + identify()
+  }
+
+  class IdentifyPresenter {
+    - mainViewModel: MainViewModel
+    + updateSongAttributes(IdentifyOD)
+    + presentError(String)
+  }
+
+  class MainViewModel {
+    - state: MainState
+    + firePropertyChange(String)
+  }
+}
+
+package "data_access" {
+  class AcoustIDIdentify {
+    - requestScheduler: ScheduledExecutorService
+    - client: OkHttpClient
+    - requestQueue: BlockingQueue<QueuedRequest>
+    - getAPIKey(): String
+    - running: boolean
+    - parseJSONApiResults(Response): Song.SongMetadata
+    - processNextAPIRequest()
+    - addAPIRequest(String, int): CompletableFuture<Response>
+    + getClosestMatchID(String, int): String
+    + getClosestMatchMetadata(String, int): Song.SongMetadata
+  }
+}
+
+package "entity" {
+  class Song {
+    - metadata: Song.SongMetadata
+    - duration: int
+    - fingerprint: String
+    + getMetadata(): Song.SongMetadata
+    + setMetadata(Song.SongMetadata)
+    + getDuration(): int
+    + setDuration(int)
+    + getFingerprint(): String
+    + setFingerprint(String)
+  }
+
+  record SongMetadata{
+    - title: String
+    - musicBrainzID: String
+    - acoustIDTrackID: String
+    - album: String
+    - artists: String[]
+  }
+}
+
+package "view" {
+  class MainView {
+    - mainViewModel: MainViewModel
+  }
+}
+
+IdentifyInteractor .up.|> IdentifyIB
+IdentifyInteractor -right-> IdentifyDAI : uses
+IdentifyInteractor -right-> IdentifyOB : calls
+IdentifyInteractor .down.> IdentifyOD : creates
+
+IdentifyController -down-> IdentifyIB : calls
+
+IdentifyPresenter .up.|> IdentifyOB
+IdentifyPresenter -down-> MainViewModel : updates
+IdentifyPresenter .down.> IdentifyOD : receives
+
+AcoustIDIdentify .up.|> IdentifyDAI
+AcoustIDIdentify -down-> SongMetadata : creates
+
+MainView --> MainViewModel : observes
+MainView -down-> IdentifyController : invokes
+IdentifyInteractor -down-> Song : contains
+
+Song +-- SongMetadata
+
+@enduml
