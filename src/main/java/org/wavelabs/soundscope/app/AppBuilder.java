@@ -6,7 +6,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
-import org.wavelabs.soundscope.data_access.AcousticIDIdentify;
+import org.wavelabs.soundscope.data_access.AcoustIDIdentify;
 import org.wavelabs.soundscope.data_access.FileDAO;
 import org.wavelabs.soundscope.data_access.JavaSoundAudioFileGateway;
 import org.wavelabs.soundscope.data_access.JavaSoundPlaybackGateway;
@@ -216,7 +216,7 @@ public class AppBuilder {
      * @return the AppBuilder instance for method chaining
      */
     public AppBuilder addIdentifyUseCase() {
-        final IdentifyDAI identifier = AcousticIDIdentify.getAcousicIDIdentify();
+        final IdentifyDAI identifier = AcoustIDIdentify.getAcoustIDIdentify();
         final IdentifyOB identifyOutputBoundary = new IdentifyPresenter(mainViewModel);
         final IdentifyIB identifyInteractor = new IdentifyInteractor(song, identifyOutputBoundary, identifier);
 
