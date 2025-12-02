@@ -2,6 +2,7 @@ package org.wavelabs.soundscope.infrastructure;
 
 import javax.sound.sampled.*;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class JavaMicRecorder implements Recorder {
     private volatile boolean isRecording = false;
@@ -17,14 +18,13 @@ public class JavaMicRecorder implements Recorder {
      * At creation, checks for the audio format and audio line compatibility.
      *
      * @throws UnsupportedOperationException if the audio format is not supported
-     * @throws IllegalStateException if the audio line cannot be opened
      */
-    public JavaMicRecorder() {
+    public JavaMicRecorder() throws UnsupportedAudioFileException {
         this.isRecording = false;
 
         // check if the audio line is compatible
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-        if (!AudioSystem.isLineSupported(info)) throw new RuntimeException("Audio Format not supported");
+        if (!AudioSystem.isLineSupported(info)) throw new UnsupportedAudioFileException("Audio Format not supported");
 
         // audio line compatible: open audio line
         try {
@@ -108,20 +108,5 @@ public class JavaMicRecorder implements Recorder {
 
         System.out.println("Starting to record...");
     }
-    
-    /**
-     * Gets the current audio buffer for real-time waveform display.
-     * 
-     * @return The current audio buffer, or null if not recording
-     */
-    public byte[] getCurrentBuffer() {
-        synchronized (bufferLock) {
-            if (currentBuffer == null) {
-                return null;
-            }
-            byte[] copy = new byte[currentBuffer.length];
-            System.arraycopy(currentBuffer, 0, copy, 0, currentBuffer.length);
-            return copy;
-        }
-    }
+
 }

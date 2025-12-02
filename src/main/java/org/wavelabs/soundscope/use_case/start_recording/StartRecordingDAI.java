@@ -1,8 +1,8 @@
 package org.wavelabs.soundscope.use_case.start_recording;
 
-import org.wavelabs.soundscope.infrastructure.Recorder;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 public interface StartRecordingDAI {
-    void startRecording();
+    void startRecording() throws UnsupportedAudioFileException;
     boolean isRecording();
 }

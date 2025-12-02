@@ -20,7 +20,8 @@ public class MainViewModel extends ViewModel<MainState>{
             "process audio", "Processing Error",
             "identify", "Identify Error",
             "fingerprint", "Fingerprint Error",
-            "playing", "Playback Error"
+            "playing", "Playback Error",
+            "recording", "Recording Error"
     );
     public final static String FINGERPRINT_INFO_START = "Fingerprint: ";
     public final static int FINGERPRINT_DISPLAY_LENGTH = 20;

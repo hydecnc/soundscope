@@ -26,14 +26,20 @@ public class FileDAO implements StartRecordingDAI,
                                 DisplayRecordingWaveformDAI,
                                 FingerprintDAI{
     private final FileSaver fileSaver = new ByteArrayFileSaver();
-    private final Recorder recorder = new JavaMicRecorder();
+    private Recorder recorder;
     private AudioRecording audioRecording;
 
     @Override
-    public boolean hasAudioRecording() { return audioRecording != null; }
+    public boolean hasAudioRecording() {
+        return audioRecording != null;
+    }
 
     @Override
-    public void startRecording() { recorder.start(); }
+    public void startRecording() throws UnsupportedAudioFileException {
+        if (recorder == null)
+            recorder = new JavaMicRecorder();
+        recorder.start();
+    }
 
     @Override
     public void stopRecording() {
@@ -45,7 +51,9 @@ public class FileDAO implements StartRecordingDAI,
     }
 
     @Override
-    public boolean isRecording() { return recorder.isRecording(); }
+    public boolean isRecording() {
+        return recorder.isRecording();
+    }
 
     @Override
     public boolean saveToFile(String filePath) throws IOException {
