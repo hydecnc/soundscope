@@ -1,0 +1,105 @@
+@startuml
+skinparam nodesep 20
+
+skinparam dpi 250
+
+skinparam titleFontSize 18
+skinparam defaultFontSize 10
+skinparam classFontSize 10
+skinparam packageFontSize 11
+title Stop Recording Use Case - Clean Architecture
+
+
+allowmixing
+
+skinparam linetype ortho
+
+skinparam packageStyle rectangle
+
+skinparam package {
+  BackgroundColor #ADD8E6
+  FontColor black
+  BorderColor white
+  TitleAlignment right
+}
+
+skinparam class {
+  BackgroundColor white
+  FontColor black
+  BorderColor black
+}
+
+package "Frameworks\n&\nDrivers" as FD #lightblue {
+  database "Recording Buffer\n(Memory)" as Database
+  class "FileDAO\n(Data Access)" as DataAccess
+  class "JavaMicRecorder\n(Recorder Implementation)" as RecorderImpl
+  interface "Recorder\n(Infrastructure Interface)" as RecorderInterface
+}
+
+package "Enterprise\nBusiness\nRules" as EBR #lightyellow {
+  class "AudioRecording\n(Entity)" as Entity
+}
+
+package "Application Business Rules" as ABR #pink {
+
+  together {
+  class "StopRecording\n(Use Case Interactor)" as Interactor
+
+  interface "StopRecordingIB\n(Input Boundary)" as InputBoundary
+  }
+
+  interface "StopRecordingDAI\n(Data Access Interface)" as DataAccessInterface
+}
+
+together{
+package " " as foo #white {
+package "Interface Adapters" #lightgreen {
+  class "StopRecordingController\n(Controller)" as Controller
+}
+
+package "Frameworks\n&\nDrivers" as "FD2" #lightblue {
+  class "MainView\n(View)" as View
+}
+}
+
+second -[hidden]up-> Controller
+
+DataAccess -up--> Entity
+DataAccess -down-> RecorderInterface
+DataAccess -down-> RecorderImpl
+Interactor -right-> Entity
+Interactor -down-> RecorderInterface
+'STEP 5 Use Case Interactor to Entities
+RecorderImpl .up.|> RecorderInterface
+View -up-> Controller
+DataAccess -[norank]--> Database
+'STEP 4 Data Access to Database
+DataAccess -up-|> DataAccessInterface
+View -up-----> Controller
+'STEP 1 View to Controller
+
+EBR -[hidden]down- FD
+"Interface Adapters" -[hidden]down- FD
+EBR -[hidden]down--- FD
+"Interface Adapters" -[hidden]right- ABR
+
+Controller -left-> InputBoundary
+' STEP 2 Controller to Input Boundary
+
+Interactor -down--> DataAccessInterface
+' STEP 3 Use Case Interactor to Data Access Interface
+
+Interactor -[norank]-|> InputBoundary
+
+FD2 -[hidden]up-> InputBoundaryundary
+
+FD2 -[hidden]up-> InputBoundary
+
+FD -[hidden]right---------> FD2
+
+hide empty members
+
+hide hideme
+hide second
+
+@enduml
