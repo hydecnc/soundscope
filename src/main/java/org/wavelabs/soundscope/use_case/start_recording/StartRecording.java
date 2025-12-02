@@ -1,8 +1,5 @@
 package org.wavelabs.soundscope.use_case.start_recording;
 
-import org.wavelabs.soundscope.infrastructure.Recorder;
-
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -38,11 +35,7 @@ public class StartRecording implements StartRecordingIB {
      */
     @Override
     public void execute(){
-        try {
-            startRecordingDataObject.startRecording();
-        } catch (UnsupportedAudioFileException e){
-            recordingPresenter.presentError("Unable to start recording");
-        }
+        startRecordingDataObject.startRecording();
     }
 
     // Updates recording status every so often

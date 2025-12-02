@@ -19,12 +19,12 @@ public class JavaMicRecorder implements Recorder {
      *
      * @throws UnsupportedOperationException if the audio format is not supported
      */
-    public JavaMicRecorder() throws UnsupportedAudioFileException {
+    public JavaMicRecorder() throws UnsupportedOperationException {
         this.isRecording = false;
 
         // check if the audio line is compatible
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-        if (!AudioSystem.isLineSupported(info)) throw new UnsupportedAudioFileException("Audio Format not supported");
+        if (!AudioSystem.isLineSupported(info)) throw new UnsupportedOperationException("Audio Format not supported");
 
         // audio line compatible: open audio line
         try {

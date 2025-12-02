@@ -35,7 +35,7 @@ public class FileDAO implements StartRecordingDAI,
     }
 
     @Override
-    public void startRecording() throws UnsupportedAudioFileException {
+    public void startRecording() throws UnsupportedOperationException {
         if (recorder == null)
             recorder = new JavaMicRecorder();
         recorder.start();
