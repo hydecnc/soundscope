@@ -69,9 +69,5 @@ public class ProcessAudioFile implements ProcessAudioFileIB {
             outputBoundary.presentError("File appears to be corrupted or cannot be read",
                 inputData.getFile().getName());
         }
-        catch (Exception exception) {
-            outputBoundary.presentError("An unexpected error occurred:\n" + exception.getMessage(),
-                inputData.getFile().getName());
-        }
     }
 }
