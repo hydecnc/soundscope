@@ -1,19 +1,18 @@
 package org.wavelabs.soundscope.use_case.play_recording;
 
-import org.wavelabs.soundscope.data_access.AcousticIDIdentify;
-
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.wavelabs.soundscope.data_access.AcousticIDAPIConstants.REQUEST_SPACING_MILLIS;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class PlayRecording implements PlayRecordingIB {
-    private final long UPDATE_SPACING_MILLIS = 50;
-    private final static ScheduledExecutorService updateScheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE =
+            Executors.newSingleThreadScheduledExecutor();
+
+    private final long updateSpacingMls = 50;
     private final PlayRecordingDAI playbackGateway;
     private final PlayRecordingOB outputBoundary;
     private String loadedSourcePath;
@@ -22,7 +21,7 @@ public class PlayRecording implements PlayRecordingIB {
         this.playbackGateway = Objects.requireNonNull(playbackGateway, "playbackGateway must not be null");
         this.outputBoundary = outputBoundary;
         if (this.outputBoundary != null) {
-            updateScheduler.schedule(this::updateState, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
+            SCHEDULED_EXECUTOR_SERVICE.schedule(this::updateState, updateSpacingMls, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -32,7 +31,7 @@ public class PlayRecording implements PlayRecordingIB {
             throw new IllegalArgumentException("audioSource must not be null");
         }
 
-        boolean needsReload = audioSource.shouldRestartFromBeginning()
+        final boolean needsReload = audioSource.shouldRestartFromBeginning()
                 || loadedSourcePath == null
                 || !loadedSourcePath.equals(audioSource.getSourcePath());
 
@@ -41,7 +40,8 @@ public class PlayRecording implements PlayRecordingIB {
             try {
                 playbackGateway.loadAudio(audioSource.getSourcePath());
                 loadedSourcePath = audioSource.getSourcePath();
-            } catch (IOException | UnsupportedAudioFileException e) {
+            }
+            catch (IOException | UnsupportedAudioFileException exception) {
                 if (outputBoundary != null) {
                     outputBoundary.playbackError("Failed to load audio file");
                 }
@@ -70,17 +70,19 @@ public class PlayRecording implements PlayRecordingIB {
         }
     }
 
-    //Updates the main state
-    public void updateState(){
+    /**
+     * Updates the main state.
+     */
+    public void updateState() {
         if (outputBoundary == null) {
             return;
         }
-        PlayRecordingOD updateData = new PlayRecordingOD(
+        final PlayRecordingOD updateData = new PlayRecordingOD(
                 playbackGateway.isPlaying(),
                 playbackGateway.getFramesPlayed() >= playbackGateway.getTotalFrames(),
                 playbackGateway.getFramesPlayed()
         );
         outputBoundary.updateMainState(updateData);
-        updateScheduler.schedule(this::updateState, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
+        SCHEDULED_EXECUTOR_SERVICE.schedule(this::updateState, updateSpacingMls, TimeUnit.MILLISECONDS);
     }
 }

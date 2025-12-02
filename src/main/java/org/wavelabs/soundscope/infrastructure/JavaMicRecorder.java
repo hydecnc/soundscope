@@ -1,17 +1,22 @@
 package org.wavelabs.soundscope.infrastructure;
 
-import javax.sound.sampled.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.TargetDataLine;
+
 public class JavaMicRecorder implements Recorder {
-    private volatile boolean isRecording = false;
+    private final AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
+    private final Object bufferLock = new Object();
+    private volatile boolean isRecording;
     private Thread recordingThread;
     private TargetDataLine line;
     private ByteArrayOutputStream recordingByteData;
-    private final AudioFormat format = new AudioFormat(44100.0f, 16, 1, true, false);
     private volatile byte[] currentBuffer;
-    private final Object bufferLock = new Object();
 
     /**
      * Creates a new JavaMicRecorder, with default audio format.
@@ -30,7 +35,8 @@ public class JavaMicRecorder implements Recorder {
         try {
             line = (TargetDataLine) AudioSystem.getLine(info);
             line.open(format);
-        } catch (LineUnavailableException ex) {
+        } 
+        catch (LineUnavailableException ex) {
             throw new IllegalStateException("Failed to open audio line.");
         }
     }
@@ -43,7 +49,9 @@ public class JavaMicRecorder implements Recorder {
      */
     @Override
     public void start() {
-        if (isRecording) return;
+        if (isRecording) {
+            return;
+        }
 
         // set up variables for the recording
         isRecording = true;
@@ -59,24 +67,33 @@ public class JavaMicRecorder implements Recorder {
         try {
             // wait until thread ends completely
             recordingThread.join();
-        } catch (InterruptedException e) {
+        } 
+        catch (InterruptedException exception) {
             System.out.println("Recording thread interrupted");
         }
 
         System.out.println("Recording ended.");
         System.out.println("Byte size: " + recordingByteData.size());
-        System.out.println("Recording length: " + (recordingByteData.size() / (44100.0 * 2 * 2)) + " seconds");
+        final double sampleRate = format.getSampleRate();
+        final int bytesPerSample = format.getSampleSizeInBits() / 8;
+        final int channels = format.getChannels();
+        final double bytesPerSecond = sampleRate * bytesPerSample * channels;
+        System.out.println("Recording length: " + (recordingByteData.size() / bytesPerSecond) + " seconds");
     }
 
     @Override
-    public boolean isRecording() { return this.isRecording; }
+    public boolean isRecording() {
+        return this.isRecording;
+    }
 
     @Override
     public byte[] getRecordingBytes() {
         return recordingByteData.toByteArray();
     }
 
-    public AudioFormat getAudioFormat() { return format; }
+    public AudioFormat getAudioFormat() {
+        return format;
+    }
 
     /**
      * Creates a thread that will be active as long as isRecording is true.
@@ -84,29 +101,49 @@ public class JavaMicRecorder implements Recorder {
      */
     private void startRecordingThread() {
         line.start();
-        recordingThread = new Thread(() -> {
-            int numBytesRead = 0;
-            byte[] data = new byte[line.getBufferSize() / 5];
-            while (isRecording) {
-                // read the next chunk of data from line
-                numBytesRead = line.read(data, 0, data.length);
-                recordingByteData.write(data, 0, numBytesRead);
-                
-                // Update current buffer for real-time waveform display
-                synchronized (bufferLock) {
-                    currentBuffer = new byte[numBytesRead];
-                    System.arraycopy(data, 0, currentBuffer, 0, numBytesRead);
-                }
-            }
-
-            line.stop();
-            synchronized (bufferLock) {
-                currentBuffer = null;
-            }
-        });
+        recordingThread = new Thread(this::recordingThread);
         recordingThread.start();
 
         System.out.println("Starting to record...");
     }
 
+    /**
+     * Extracted method for recording thread, in compliance with checkstyle lambda body length.
+     */
+    private void recordingThread() {
+        int numBytesRead = 0;
+        final byte[] data = new byte[line.getBufferSize() / 5];
+        while (isRecording) {
+            // read the next chunk of data from line
+            numBytesRead = line.read(data, 0, data.length);
+            recordingByteData.write(data, 0, numBytesRead);
+
+            // Update current buffer for real-time waveform display
+            synchronized (bufferLock) {
+                currentBuffer = new byte[numBytesRead];
+                System.arraycopy(data, 0, currentBuffer, 0, numBytesRead);
+            }
+        }
+
+        line.stop();
+        synchronized (bufferLock) {
+            currentBuffer = null;
+        }
+    }
+
+    /**
+     * Gets the current audio buffer for real-time waveform display.
+     *
+     * @return The current audio buffer, or null if not recording
+     */
+    public byte[] getCurrentBuffer() {
+        synchronized (bufferLock) {
+            if (currentBuffer == null) {
+                return null;
+            }
+            final byte[] copy = new byte[currentBuffer.length];
+            System.arraycopy(currentBuffer, 0, copy, 0, currentBuffer.length);
+            return copy;
+        }
+    }
 }

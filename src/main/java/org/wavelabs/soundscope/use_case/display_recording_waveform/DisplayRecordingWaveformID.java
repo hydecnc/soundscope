@@ -7,7 +7,7 @@ package org.wavelabs.soundscope.use_case.display_recording_waveform;
 public class DisplayRecordingWaveformID {
     // Currently no input data needed, but structure is maintained for future extensibility
     // and consistency with Clean Architecture pattern
-    
+
     /**
      * Constructs a new DisplayRecordingWaveformID.
      */

@@ -7,15 +7,16 @@ import org.wavelabs.soundscope.use_case.identify.IdentifyOD;
 public class IdentifyPresenter implements IdentifyOB {
     private final MainViewModel mainViewModel;
 
-    public  IdentifyPresenter(MainViewModel mainViewModel) {
+    public IdentifyPresenter(MainViewModel mainViewModel) {
         this.mainViewModel = mainViewModel;
     }
-
 
     @Override
     public void updateSongAttributes(IdentifyOD outputData) {
         mainViewModel.getState().setSongTitle(outputData.songTitle());
         mainViewModel.getState().setAlbum(outputData.album());
+        String artists = String.join(", ",  outputData.artists());
+        mainViewModel.getState().setArtists(artists);
         mainViewModel.firePropertyChange("identify");
     }
 

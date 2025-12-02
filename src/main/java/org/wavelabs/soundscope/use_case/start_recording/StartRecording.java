@@ -19,23 +19,30 @@ import java.util.concurrent.TimeUnit;
  * </ul>
  */
 public class StartRecording implements StartRecordingIB {
+    private static final ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE =
+            Executors.newSingleThreadScheduledExecutor();
     private final StartRecordingDAI startRecordingDataObject;
     private final RecordingOB recordingPresenter;
     private final long UPDATE_SPACING_MILLIS = 100;
-    private final static ScheduledExecutorService updateScheduler = Executors.newSingleThreadScheduledExecutor();
 
     public StartRecording(StartRecordingDAI startRecordingDAI, RecordingOB recordingOB) {
         this.startRecordingDataObject = startRecordingDAI;
         this.recordingPresenter = recordingOB;
-        updateScheduler.schedule(this::updateRecording, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
+        this.recordingOB = recordingOB;
+        SCHEDULED_EXECUTOR_SERVICE.schedule(this::updateRecording, updateSpacingMls, TimeUnit.MILLISECONDS);
     }
 
     /**
-     * execute the actual use case
+     * Execute the actual use case.
      */
     @Override
     public void execute(){
-        startRecordingDataObject.startRecording();
+        try {
+            startRecordingDataObject.startRecording();
+        } catch (UnsupportedOperationException e) {
+            String UNSUPPORTED_AUDIO_ERROR_MESSAGE = "Unsupported Audio Line";
+            recordingPresenter.presentError(UNSUPPORTED_AUDIO_ERROR_MESSAGE);
+        }
     }
 
     // Updates recording status every so often
@@ -44,6 +51,6 @@ public class StartRecording implements StartRecordingIB {
                 startRecordingDataObject.isRecording()
         );
         recordingPresenter.updateRecordingState(outputData);
-        updateScheduler.schedule(this::updateRecording, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
+        SCHEDULED_EXECUTOR_SERVICE.schedule(this::updateRecording, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
     }
 }

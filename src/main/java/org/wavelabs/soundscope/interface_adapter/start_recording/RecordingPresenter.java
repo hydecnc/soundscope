@@ -5,7 +5,7 @@ import org.wavelabs.soundscope.use_case.start_recording.RecordingOB;
 import org.wavelabs.soundscope.use_case.start_recording.RecordingOD;
 
 public class RecordingPresenter implements RecordingOB {
-    public MainViewModel mainViewModel;
+    private MainViewModel mainViewModel;
 
     public RecordingPresenter(MainViewModel mainViewModel) {
         this.mainViewModel = mainViewModel;

@@ -8,14 +8,14 @@ package org.wavelabs.soundscope.use_case.display_recording_waveform;
 public interface DisplayRecordingWaveformOB {
     /**
      * Receives the output data from the use case.
-     * 
+     *
      * @param outputData The output data containing processed audio information for display
      */
     void present(DisplayRecordingWaveformOD outputData);
-    
+
     /**
      * Receives an error from the use case.
-     * 
+     *
      * @param errorMessage The error message
      */
     void presentError(String errorMessage);
