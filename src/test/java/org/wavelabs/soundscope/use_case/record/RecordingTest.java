@@ -15,7 +15,7 @@ public class RecordingTest {
     private MockRecordingOB mockOB;
     private StartRecording startRecordingInteractor;
     private StopRecording stopRecordingInteractor;
-    private final String UNAVAILABLE_LINE_ERROR_MESSAGE = "Line not available";
+    private final String UNAVAILABLE_LINE_ERROR_MESSAGE = "Unsupported Audio Line";
 
     @Before
     public void setUp() {
@@ -39,7 +39,7 @@ public class RecordingTest {
         Assert.assertTrue("DAI internal state must be recording", mockDAI.isRecording());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testStartRecordingDAIThrowsError() {
         mockDAI.reset();
         mockOB.reset();
@@ -52,8 +52,19 @@ public class RecordingTest {
 
         // assert
         Assert.assertTrue("OB must present an error", mockOB.errorProvoked);
-        Assert.assertTrue("Error message should contain 'Failed to start'", mockOB.errorMessage.contains(UNAVAILABLE_LINE_ERROR_MESSAGE));
+        Assert.assertTrue("Error message should explain line unavailability.", mockOB.errorMessage.contains(UNAVAILABLE_LINE_ERROR_MESSAGE));
         Assert.assertFalse("Internal state should NOT be recording", mockDAI.isRecording());
+    }
+
+    @Test
+    public void testStartRecordingODUpdatesProperly() {
+        mockDAI.reset();
+        mockOB.reset();
+
+        mockDAI.isRecording = true;
+        startRecordingInteractor.updateRecording();
+        Assert.assertTrue("Update state must be called", mockOB.updateRecordingStateCalled);
+        Assert.assertTrue("Recording state must be updated", mockOB.recordingState.isPlaying());
     }
 
     @Test
