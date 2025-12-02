@@ -28,8 +28,7 @@ public class StartRecording implements StartRecordingIB {
     public StartRecording(StartRecordingDAI startRecordingDAI, RecordingOB recordingOB) {
         this.startRecordingDataObject = startRecordingDAI;
         this.recordingPresenter = recordingOB;
-        this.recordingOB = recordingOB;
-        SCHEDULED_EXECUTOR_SERVICE.schedule(this::updateRecording, updateSpacingMls, TimeUnit.MILLISECONDS);
+        SCHEDULED_EXECUTOR_SERVICE.schedule(this::updateRecording, UPDATE_SPACING_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     /**
